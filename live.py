@@ -61,7 +61,7 @@ def check(ch):
     elif details:
         m = re.search(r'"channelId":"(UC[\w-]{22})"', details)
         out["channel_id"] = m.group(1) if m else None
-    is_live = '"isLive":true' in (details or page)
+    is_live = '"isLive":true' in page
     out["dbg"] = f"{st}|live={is_live}|video={bool(vid)}|{len(page) // 1000}k"
     out["title"] = html.unescape(title.group(1)) if title else ""
     if st == "LIVE_STREAM_OFFLINE" and sched and vid:

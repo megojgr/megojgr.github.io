@@ -2,7 +2,8 @@ name: Tägliche News
 
 on:
   schedule:
-    # Stündlich, damit Nachrichten und die Live-Übersicht frisch bleiben. GitHub startet oft ein paar Minuten später.
+    # Zusätzliche Absicherung. GitHub startet zeitgesteuerte Läufe bei diesem Repository bisher nicht zuverlässig,
+    # deshalb stößt sich der Workflow unten selbst jede Stunde wieder an (Job "naechster").
     # Schwere Quellen (Konflikte, Schiffsverkehr, Träger) laden sich nur alle paar Stunden neu (siehe config.json).
     # Ins Archiv wird nur um 04 und 16 Uhr UTC geschrieben (morgens und nachmittags), damit es nicht überläuft.
     - cron: "10 * * * *"
@@ -12,14 +13,14 @@ permissions:
   contents: write   # Tagesarchiv in archive/ ins Repo schreiben
   pages: write
   id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  actions: write    # damit der Lauf den nächsten Lauf anstoßen darf
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: mego-build
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -61,9 +62,33 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Kette ohne Token: Der Lauf wartet knapp eine Stunde und startet dann den nächsten.
+  # Das darf der eingebaute GITHUB_TOKEN (workflow_dispatch löst als einzige Ausnahme neue Läufe aus).
+  # Es wartet immer nur ein Lauf: Ein neuer Warte-Job ersetzt den alten (cancel-in-progress),
+  # so verdoppeln sich Ketten auch bei mehreren manuellen Starts nicht.
+  naechster:
+    needs: [build, deploy]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    concurrency:
+      group: mego-naechster
+      cancel-in-progress: true
+    steps:
+      - name: Knapp eine Stunde warten, dann nächsten Lauf starten
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sleep 3240
+          gh workflow run daily.yml --ref main

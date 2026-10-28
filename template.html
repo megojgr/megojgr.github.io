@@ -1272,7 +1272,7 @@ async function refresh() {
       toast("busy", "Suche nach einem neueren Stand …");
       const d = await fetchLatest();
       if (d.generated === before.generated) {
-        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Neue Stände erscheinen, sobald GitHub einen Abruf ausführt. Mit einem Token unter ⚙ startest du ihn sofort selbst.`, { ms: 11000 });
+        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. GitHub holt rund jede Stunde automatisch neue Daten. Mit einem Token unter ⚙ startest du den Abruf sofort selbst.`, { ms: 11000 });
         return;
       }
       fresh = d;
@@ -1337,7 +1337,7 @@ function openSettings() {
   dlg.replaceChildren(h("div", { class: "dlg" },
     h("div", { class: "top" }, h("h2", {}, "Einstellungen"), h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     h("h3", { class: "sec2" }, "Sofort-Update"),
-    h("p", { class: "note" }, "Geplant ist ein stündlicher Abruf bei GitHub, den GitHub aber nicht zuverlässig startet. Mit einem Token startet „Aktualisieren“ sofort einen neuen Abruf (Ergebnis nach etwa 1 bis 2 Minuten), und die Seite holt sich beim Öffnen von selbst frische Daten, wenn die vorhandenen älter als eine Stunde sind. Ohne Token lädt der Knopf nur den zuletzt veröffentlichten Stand."),
+    h("p", { class: "note" }, "Die Seite holt sich rund jede Stunde automatisch neue Daten: Jeder Abruf bei GitHub startet nach etwa 55 Minuten den nächsten, dazu ist kein Token nötig. Mit einem Token startet „Aktualisieren“ sofort einen neuen Abruf (Ergebnis nach etwa 1 bis 2 Minuten), und die Seite holt sich beim Öffnen von selbst frische Daten, wenn die vorhandenen älter als eine Stunde sind. Ohne Token lädt der Knopf nur den zuletzt veröffentlichten Stand."),
     h("ol", { class: "steps" },
       h("li", {}, h("a", { href: prefill, style: "text-decoration:underline" }, "Diesen Link öffnen"), ". GitHub verlangt dabei dein Login. Name, Ablauf von 1 Jahr und das Recht „Actions“ sind schon vorausgefüllt."),
       h("li", {}, `Unter „Repository access“ den Punkt „Only select repositories“ wählen und dann ${repo.split("/")[1]} auswählen.`),

@@ -1,6 +1,6 @@
 """Holt News, Marktdaten und Prediction Markets und baut docs/index.html.
 
-Nur Standardbibliothek. Aufruf:  py collect.py
+Aufruf:  py collect.py   (nur das verschlüsselte Depot braucht zusätzlich: pip install cryptography)
 """
 import datetime as dt
 import html
@@ -14,8 +14,12 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import archive
+import briefings
+import depot
+import elections
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
+from textutil import compile_keywords, count_hits
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "docs"
@@ -24,7 +28,8 @@ NOW = dt.datetime.now(dt.timezone.utc)
 STOPWORDS = set(
     "der die das den dem des ein eine einen einem einer und oder aber mit von für auf aus bei nach über unter "
     "ist sind wird werden wurde wurden hat haben soll sollen will wollen kann nicht auch noch nur wie was wer "
-    "the and for with from that this has have will are was were its their after over into about says say new"
+    "the and for with from that this has have will are was were its their after over into about says say new "
+    "stock price news quote history corporation limited group shares today live update report review"
     .split()
 )
 
@@ -87,7 +92,8 @@ def parse_feed(raw, feed):
         if not (title and link and when):
             continue
         items.append({"title": title, "url": link, "time": when, "summary": summary[:320], "source": source,
-                      "lang": feed.get("lang", "de"), "hint": feed.get("hint", "general"), "google": bool(feed.get("google"))})
+                      "lang": feed.get("lang", "de"), "hint": feed.get("hint", "general"), "google": bool(feed.get("google")),
+                      "private": bool(feed.get("private"))})
     return items
 
 
@@ -97,20 +103,6 @@ def load_feed(feed):
         return feed["name"], items, None
     except Exception as e:
         return feed["name"], [], f"{type(e).__name__}: {e}"
-
-
-def compile_keywords(words):
-    pats = []
-    for w in words:
-        if w.endswith("$"):
-            pats.append(re.compile(r"\b" + re.escape(w[:-1]) + r"\b", re.I))
-        else:
-            pats.append(re.compile(r"\b" + re.escape(w), re.I))
-    return pats
-
-
-def count_hits(pats, title, summary):
-    return sum(2 for p in pats if p.search(title)) + sum(1 for p in pats if p.search(summary))
 
 
 def tokens(title):
@@ -129,7 +121,7 @@ def cluster(items):
     for it in sorted(items, key=lambda x: x["time"], reverse=True):
         it["tok"] = tokens(it["title"])
         for c in clusters:
-            if any(similar(it["tok"], m["tok"]) for m in c):
+            if any(similar(it["tok"], m["tok"]) for m in c[:3]):  # nur mit den ersten, sonst driften Ketten-Cluster
                 c.append(it)
                 break
         else:
@@ -137,9 +129,15 @@ def cluster(items):
     return clusters
 
 
-def build_stories(cfg):
-    results = list(ThreadPoolExecutor(max_workers=8).map(load_feed, cfg["feeds"]))
-    feed_status = [{"name": n, "count": len(i), "error": e} for n, i, e in results]
+def build_stories(cfg, extra_feeds=(), match=None):
+    """Liefert (öffentliche Meldungen, Feed-Status, private Treffer fürs Depot).
+
+    extra_feeds sind private Feeds: ihre Meldungen landen nur in den Depot-Treffern, nie in der öffentlichen Liste.
+    """
+    feeds = [dict(f, private=False) for f in cfg["feeds"]] + list(extra_feeds)
+    results = list(ThreadPoolExecutor(max_workers=8).map(load_feed, feeds))
+    feed_status = [{"name": n, "count": len(i), "error": e}
+                   for (n, i, e), f in zip(results, feeds) if not f.get("private")]
     cutoff = NOW - dt.timedelta(hours=cfg["max_age_hours"])
     block = compile_keywords(cfg["blocklist"])
     topics = {k: compile_keywords(v) for k, v in cfg["topics"].items()}
@@ -154,8 +152,9 @@ def build_stories(cfg):
                 continue
             items.append(it)
 
-    stories = []
+    stories, private = [], []
     for members in cluster(items):
+        public_members = [m for m in members if not m["private"]]
         scores = {k: 0 for k in topics}
         for m in members:
             for k, pats in topics.items():
@@ -165,12 +164,14 @@ def build_stories(cfg):
         topic, top = max(scores.items(), key=lambda kv: kv[1])
         blob = " ".join(m["title"] + " " + m["summary"] for m in members)
         hits = [w for w, p in watch if p.search(blob)]
-        if top < 3 and not hits:
+        depot_match = match(blob) if match else {}
+        public_ok = bool(public_members) and (top >= 3 or bool(hits))
+        if not public_ok and not depot_match:
             continue
         # Leitmeldung: bevorzugt Original-Feed mit Teaser, dann die neueste
         lead = max(members, key=lambda m: (bool(m["summary"]), not m["google"], m["time"]))
         sources, seen = [], set()
-        for m in sorted(members, key=lambda m: m["time"], reverse=True):
+        for m in sorted(public_members or members, key=lambda m: m["time"], reverse=True):
             if m["source"] not in seen:
                 seen.add(m["source"])
                 sources.append({"name": m["source"], "url": m["url"]})
@@ -181,20 +182,24 @@ def build_stories(cfg):
         is_election = any(p.search(headlines) for p in elect)
         score = (3 * len(sources) + min(top, 6) + max(0, 3 - age_h / 8) + min(3 * len(hits), 6)
                  + (3 if is_alert else 0) + (2 if is_election else 0))
-        stories.append({
+        story = {
             "title": lead["title"], "summary": lead["summary"], "url": lead["url"], "lang": lead["lang"],
             "topic": topic, "score": round(score, 2), "time": newest.isoformat(),
             "sources": sources, "watch": hits, "alert": is_alert, "election": is_election,
             "titles": list(dict.fromkeys(m["title"] for m in members))[:5],
-        })
+        }
+        if public_ok:
+            stories.append(story)
+        if depot_match:
+            private.append((story, depot_match))
     stories.sort(key=lambda s: s["score"], reverse=True)
-    return stories, feed_status
+    return stories, feed_status, private
 
 
 def build_heute(stories, per_topic):
     picked = []
-    for topic in ("markets", "world"):
-        picked += [s for s in stories if s["topic"] == topic][:per_topic]
+    for topic, n in per_topic.items():
+        picked += [s for s in stories if s["topic"] == topic][:n]
     picked.sort(key=lambda s: s["score"], reverse=True)
     return picked
 
@@ -260,56 +265,87 @@ def summarize(stories, heute, cfg):
 
 def main():
     cfg = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+    today = NOW.date().isoformat()
+
+    positions, password = depot.load(), os.environ.get("DEPOT_PASSWORT")
+    depot_state = "none"
+    if positions and os.environ.get("GITHUB_ACTIONS") and not password:
+        print("WARNUNG: DEPOT_JSON ist gesetzt, aber DEPOT_PASSWORT fehlt: das Depot wird nicht veröffentlicht")
+        positions, depot_state = None, "no_password"
+    match = depot.matcher(positions) if positions else None
+    extra_feeds = depot.feeds(positions) if positions else []
+
     with ThreadPoolExecutor(max_workers=8) as ex:
         quotes_f = [ex.submit(fetch_quote, q, cfg["alerts"]) for q in cfg["quotes"]]
         pm_f = ex.submit(build_polymarket, cfg)
         kalshi_f = ex.submit(build_kalshi, cfg)
-        stories, feed_status = build_stories(cfg)
+        brief_f = ex.submit(briefings.build, cfg)
+        elect_f = ex.submit(elections.build, cfg, today)
+        stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
         pm_top, pm_window, pm_error = pm_f.result()
         kalshi_all, kalshi_error = kalshi_f.result()
+        brief_list, brief_errors = brief_f.result()
+        election_list, election_note = elect_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
     termine = build_termine(pm_window + pm_top + kalshi_all, cfg["termine_days"])
     heute = build_heute(stories, cfg["heute_per_topic"])
     briefing, ai_status = summarize(stories, heute, cfg)
-    for s in stories:
+    for s in stories + [s for s, _ in private]:
         s.pop("titles", None)
+
+    depot_data = {"state": depot_state}
+    if positions:
+        depot_obj = depot.build(positions, private, cfg["alerts"])
+        depot_data = ({"state": "enc", "enc": depot.encrypt(depot_obj, password)} if password
+                      else {"state": "plain", "data": depot_obj})  # unverschlüsselt nur bei lokalen Läufen
 
     data = {
         "generated": NOW.isoformat(),
+        "repo": os.environ.get("GITHUB_REPOSITORY") or cfg.get("repo", ""),
         "quotes": quotes,
         "briefing": briefing,
         "stories": stories,
         "heute": heute,
+        "briefings": brief_list,
+        "elections": election_list,
         "prediction": prediction,
         "termine": termine,
-        "status": {"feeds": feed_status, "ai": ai_status,
+        "depot": depot_data,
+        "status": {"feeds": feed_status, "ai": ai_status, "elections_note": election_note,
+                   "briefing_errors": brief_errors,
                    "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error}},
     }
-    today = NOW.date().isoformat()
     if os.environ.get("GITHUB_ACTIONS") or "--archive" in sys.argv:
         archive.write(data, today)
     data["history"] = archive.load(cfg["history_days"])
 
     OUT.mkdir(exist_ok=True)
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     page = (ROOT / "template.html").read_text(encoding="utf-8").replace("__DATA__", blob)
     (OUT / "index.html").write_text(page, encoding="utf-8")
 
     for f in feed_status:
-        print(("OK   " if not f["error"] else "FAIL ") + f"{f['name']:<28} {f['count']:>3}  {f['error'] or ''}")
+        if f["error"] or not f["count"]:
+            print(f"FEED-PROBLEM {f['name']}: {f['error'] or 'leer'}")
     alerts = [q["name"] for q in quotes if q["alert"]]
-    print(f"\n{len(stories)} Meldungen ({sum(s['alert'] for s in stories)} Crash-Radar, {sum(s['election'] for s in stories)} Wahlen), "
+    by_topic = {t: sum(s["topic"] == t for s in stories) for t in cfg["topics"]}
+    print(f"{len(feed_status)} Feeds, {len(stories)} Meldungen {by_topic} "
+          f"({sum(s['alert'] for s in stories)} Crash-Radar, {sum(s['election'] for s in stories)} Wahlen), "
           f"{sum(1 for q in quotes if q['price'] is not None)}/{len(quotes)} Kurse, Alarm: {alerts or 'keiner'}")
-    print(f"Prediction Markets: {len(pm_top)} Polymarket, {min(len(kalshi_top), cfg['kalshi']['max_events'])} Kalshi "
-          f"({len(kalshi_all)} Kalshi-Events geladen), {len(termine)} Termine, Verlauf: {len(data['history'])} Tage")
+    print(f"Prediction Markets: {len(pm_top)} Polymarket, {min(len(kalshi_top), cfg['kalshi']['max_events'])} Kalshi, "
+          f"{len(termine)} Termine; Wahlkalender: {len(election_list)} kommende"
+          + (f" ({election_note})" if election_note else ""))
+    print("Sendungen/Briefings: " + (", ".join(b["name"] for b in brief_list) or "keine")
+          + (f"; Fehler: {brief_errors}" if brief_errors else ""))
+    print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")
+          + f" | Verlauf: {len(data['history'])} Tage")
     for name, err in data["status"]["prediction_errors"].items():
         if err:
             print(f"FEHLER {name}: {err}")
-    print("KI: aus" if not ai_status["enabled"] else f"KI: {ai_status['summarized']} Zusammenfassungen")
     print(f"-> {OUT / 'index.html'}")
 
 

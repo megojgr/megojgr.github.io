@@ -41,13 +41,16 @@ def jlist(x):
 
 def fetch_quote(q, alerts):
     url = ("https://query1.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(q["symbol"])
-           + "?interval=1d&range=1mo")
+           + "?interval=1d&range=1y")
     base = {"name": q["name"], "symbol": q["symbol"], "group": q.get("group", "index"),
-            "price": None, "pct": None, "week": None, "month": None, "series": [], "currency": "", "alert": None}
+            "price": None, "pct": None, "week": None, "month": None, "t": [], "c": [], "currency": "", "alert": None,
+            "hi52": None, "lo52": None}
     try:
-        res = json.loads(fetch(url, 15))["chart"]["result"][0]
+        res = json.loads(fetch(url, 20))["chart"]["result"][0]
         meta = res["meta"]
-        closes = [c for c in res["indicators"]["quote"][0].get("close", []) if c is not None]
+        pairs = [(t, c) for t, c in zip(res.get("timestamp", []), res["indicators"]["quote"][0].get("close", []))
+                 if c is not None]
+        closes = [c for _, c in pairs]
         price = meta["regularMarketPrice"]
         pct = meta.get("regularMarketChangePercent")
         if pct is None and len(closes) >= 2:
@@ -63,8 +66,10 @@ def fetch_quote(q, alerts):
             alert = "day"
         elif week is not None and week <= -alerts["week_pct"]:
             alert = "week"
-        base.update(price=price, pct=pct, week=week, month=month, series=[round(c, 4) for c in closes][-22:],
-                    currency=meta.get("currency", ""), alert=alert)
+        base.update(price=price, pct=pct, week=week, month=month, currency=meta.get("currency", ""), alert=alert,
+                    t=[int(t // 86400) for t, _ in pairs], c=[round(c, 4) for c in closes],
+                    hi52=meta.get("fiftyTwoWeekHigh") or (max(closes) if closes else None),
+                    lo52=meta.get("fiftyTwoWeekLow") or (min(closes) if closes else None))
     except Exception as e:
         base["error"] = f"{type(e).__name__}: {e}"[:160]
     return base

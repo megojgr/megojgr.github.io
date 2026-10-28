@@ -1,2 +1,5 @@
 docs/
 __pycache__/
+# Depot-Positionen gehören nicht ins öffentliche Repo (im Workflow kommen sie aus dem Secret DEPOT_JSON)
+depot.json
+depot*.local.json

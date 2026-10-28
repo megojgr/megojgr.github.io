@@ -3,127 +3,264 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Mego News</title>
 <style>
   :root {
-    --bg: #f6f6f3; --card: #ffffff; --ink: #1a1a18; --muted: #6b6b66; --line: #e4e3dd;
-    --accent: #1f5fd6; --up: #1a8a4a; --down: #c23a2b; --chip: #eceae3; --warn-bg: #fdeceb;
+    --bg: #fbfaf6; --paper: #ffffff; --ink: #17160f; --muted: #66645b; --line: #e3e0d5; --soft: #f1efe7;
+    --link: #1b3a6b; --red: #b3261e; --up: #137a4b; --down: #b3261e;
+    --band: #17160f; --band-ink: #f3f1e8; --band-up: #62d493; --band-down: #ff8f84; --shadow: rgba(0,0,0,.35);
+    --serif: Georgia, "Times New Roman", "Noto Serif", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #121211; --card: #1c1c1a; --ink: #ecebe6; --muted: #9a9992; --line: #2f2f2b;
-      --accent: #6b9bff; --up: #4cc27f; --down: #ef6f60; --chip: #2a2a26; --warn-bg: #3a1f1c;
+      --bg: #121210; --paper: #1a1a17; --ink: #efede4; --muted: #a09e93; --line: #2d2c27; --soft: #22221e;
+      --link: #8fb4ff; --red: #ff8f84; --up: #55c88a; --down: #ff8f84;
+      --band: #1f1f1b; --band-ink: #efede4; --band-up: #62d493; --band-down: #ff8f84; --shadow: rgba(0,0,0,.6);
     }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); -webkit-text-size-adjust: 100%; }
   a { color: inherit; text-decoration: none; }
-  header { padding: 14px 16px 0; max-width: 860px; margin: 0 auto; }
-  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
-  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .alertbar { max-width: 860px; margin: 10px auto 0; padding: 0 16px; }
-  .alertbar a { display: block; background: var(--warn-bg); border: 1px solid var(--down); color: var(--ink); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
-  .alertbar b { color: var(--down); }
-  .ticker { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; max-width: 860px; margin: 0 auto; scrollbar-width: none; }
-  .ticker::-webkit-scrollbar { display: none; }
-  .q { flex: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 104px; }
-  .q b { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
-  .q span { font-variant-numeric: tabular-nums; font-size: 14px; }
-  .q em { font-style: normal; font-size: 12px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  a:not([href]) { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
   .up { color: var(--up); } .down { color: var(--down); }
-  nav { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
-  nav div { display: flex; gap: 4px; overflow-x: auto; max-width: 860px; margin: 0 auto; padding: 0 12px; scrollbar-width: none; }
-  nav button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 15px; padding: 12px 10px; cursor: pointer; border-bottom: 2px solid transparent; }
-  nav button[aria-selected="true"] { color: var(--ink); border-color: var(--accent); font-weight: 600; }
-  main { max-width: 860px; margin: 0 auto; padding: 14px 16px 48px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-  .card h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.3; }
-  .card h3 a:hover { color: var(--accent); }
-  .card p { margin: 4px 0 8px; color: var(--muted); font-size: 14px; }
-  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
-  .chip { background: var(--chip); border-radius: 999px; padding: 2px 8px; }
-  .chip.src:hover { color: var(--accent); }
-  .chip.watch { background: var(--accent); color: #fff; }
-  .chip.hot { color: var(--down); }
-  .chip.crash { background: var(--down); color: #fff; }
-  .chip.vote { border: 1px solid var(--accent); background: none; color: var(--accent); }
-  .overview { border-left: 3px solid var(--accent); }
-  .overview ul { margin: 0; padding-left: 18px; }
-  .overview li { margin: 5px 0; font-size: 15px; }
-  .overview h2 { margin-top: 0; }
-  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .filters button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
-  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .row { display: grid; grid-template-columns: minmax(80px, 1.2fr) 2fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 3px 0; }
-  .row .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
-  .pct { font-variant-numeric: tabular-nums; min-width: 78px; text-align: right; }
-  .pct small { font-size: 11px; margin-left: 4px; }
-  .note { color: var(--muted); font-size: 12px; margin: 10px 0 16px; }
-  .empty { color: var(--muted); padding: 28px 0; text-align: center; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 6px; }
-  .qc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
-  .qc.alert { border-color: var(--down); }
-  .qc b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
-  .qc .px { font-variant-numeric: tabular-nums; font-size: 15px; }
-  .qc .px em { font-style: normal; font-size: 12px; margin-left: 6px; }
-  .qc small { display: block; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .spark { width: 100%; height: 28px; margin-top: 4px; display: block; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+  /* Kopf */
+  .mast { border-top: 5px solid var(--ink); background: var(--bg); }
+  .mast-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 12.5px; color: var(--muted); }
+  .mast-bar .grow { flex: 1; }
+  .mast h1 { margin: 0; padding: 2px 0 12px; text-align: center; font: 700 clamp(30px, 6vw, 46px)/1.05 var(--serif); letter-spacing: -.015em; }
+  .btn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 5px 14px; font-size: 13px; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
+  .btn[disabled] { opacity: .55; cursor: progress; }
+  .btn.icon { padding: 5px 10px; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .alertbar a { display: block; background: #b3261e; color: #fff; padding: 8px 0; font-size: 14px; text-align: center; }
+  .alertbar b { text-transform: uppercase; letter-spacing: .06em; font-size: 12px; margin-right: 6px; }
+  .alertbar .up, .alertbar .down { color: #fff; font-weight: 700; }
+
+  /* Börsenband */
+  .band { background: var(--band); color: var(--band-ink); }
+  .band .wrap { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-top: 2px; padding-bottom: 2px; }
+  .band .wrap::-webkit-scrollbar { display: none; }
+  .tk { flex: none; background: none; border: 0; color: inherit; padding: 7px 12px; font-size: 13px; white-space: nowrap; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .tk:hover { background: rgba(255,255,255,.12); }
+  .tk b { font-weight: 600; opacity: .72; margin-right: 6px; }
+  .tk em { font-style: normal; margin-left: 6px; }
+  .tk .up { color: var(--band-up); } .tk .down { color: var(--band-down); }
+  .tk.depot { font-weight: 700; border: 1px solid rgba(255,255,255,.35); margin: 3px 8px 3px 0; padding: 4px 12px; }
+
+  /* Reiter */
+  .tabs { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .tabs .wrap { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .tabs .wrap::-webkit-scrollbar { display: none; }
+  .tabs button { flex: none; background: none; border: 0; padding: 13px 13px 11px; font-size: 12.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); border-bottom: 3px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--ink); }
+  .tabs button:hover { color: var(--ink); }
+
+  main { padding: 6px 0 56px; min-height: 60vh; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
+  @media (min-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } }
+  .narrow { max-width: 760px; }
+
+  .sec { margin: 26px 0 8px; padding-top: 7px; border-top: 2px solid var(--ink); font: 700 12px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .sec span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); font-size: 12px; }
+  .note { color: var(--muted); font-size: 13px; margin: 8px 0 14px; }
+  .note.bad, footer .bad { color: var(--down); }
+  .empty { color: var(--muted); padding: 30px 0; text-align: center; }
+
+  /* Meldungen */
+  .item { padding: 15px 0 16px; border-bottom: 1px solid var(--line); }
+  .kicker { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .kicker .t { margin-left: auto; font-weight: 400; letter-spacing: 0; text-transform: none; }
+  .kicker .red { color: var(--red); }
+  .kicker .tag { background: var(--ink); color: var(--bg); padding: 1px 7px; border-radius: 3px; letter-spacing: .05em; }
+  .kicker .tag.crash { background: var(--red); color: #fff; }
+  .kicker .tag.dep { background: var(--link); color: var(--bg); }
+  .hl { margin: 0; font: 700 20px/1.28 var(--serif); letter-spacing: -.005em; }
+  .hl a:hover { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .item.lead { padding-top: 20px; }
+  .item.lead .hl { font-size: clamp(25px, 4vw, 33px); line-height: 1.18; }
+  .teaser { margin: 7px 0 0; color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+  .srcs { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); }
+  .srcs a:hover { color: var(--link); text-decoration: underline; }
+  .srcs .n { color: var(--red); font-weight: 600; }
+
+  /* Seitenspalte */
+  .side .blk { margin-bottom: 26px; }
+  .qrow { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 12px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 2px; text-align: left; font-size: 14px; font-variant-numeric: tabular-nums; align-items: baseline; }
+  .qrow:hover { background: var(--soft); }
+  .qrow .px { color: var(--muted); }
+  .qrow .pc { min-width: 62px; text-align: right; font-weight: 600; }
+  .mini { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .mini b { display: block; font-weight: 600; }
+  .mini span { color: var(--muted); font-size: 12.5px; }
+  .mini a:hover { color: var(--link); }
+
+  /* Auf einen Blick */
+  .glance { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 14px 18px 8px; margin: 18px 0 4px; }
+  .glance h2 { margin: 0 0 6px; font: 700 12px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+  .glance dl { margin: 0; }
+  .glance .g { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+  .glance .g:first-of-type { border-top: 0; }
+  .glance dt { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+  .glance dd { margin: 0; }
+  .glance dd a:hover { color: var(--link); text-decoration: underline; }
+  @media (max-width: 520px) { .glance .g { grid-template-columns: 1fr; gap: 2px; } }
+
+  /* Kurse, Depot */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+  .qc { text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .qc:hover { border-color: var(--ink); }
+  .qc.alert { border-color: var(--red); box-shadow: inset 3px 0 0 var(--red); }
+  .qc b { display: block; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .qc .px { display: block; font: 600 17px/1.3 var(--sans); font-variant-numeric: tabular-nums; }
+  .qc .px em { font-style: normal; font-size: 12.5px; margin-left: 6px; }
+  .qc small { display: block; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .spark { width: 100%; height: 30px; margin: 5px 0 3px; display: block; }
   .spark polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
   .spark .u { stroke: var(--up); } .spark .d { stroke: var(--down); }
-  .term { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .term:first-of-type { border-top: 0; }
-  .term .lead { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .term .meta { grid-column: 1 / -1; }
-  details.day { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; margin-bottom: 8px; }
-  details.day summary { cursor: pointer; font-weight: 600; }
-  details.day summary span { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
-  details.day ul { margin: 6px 0 10px; padding-left: 18px; font-size: 14px; }
-  footer { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 12px; }
-  footer .bad { color: var(--down); }
+  .prow { display: grid; grid-template-columns: minmax(0, 1fr) 84px auto; gap: 4px 14px; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 2px; font-variant-numeric: tabular-nums; }
+  .prow:hover { background: var(--soft); }
+  .prow .nm { font: 700 17px/1.25 var(--serif); }
+  .prow .nm small { display: block; font: 400 12px/1.4 var(--sans); color: var(--muted); }
+  .prow .pv { text-align: right; font-size: 15px; } .prow .pv small { display: block; font-size: 12px; color: var(--muted); }
+  @media (max-width: 560px) { .prow { grid-template-columns: minmax(0, 1fr) auto; } .prow .spark { display: none; } }
+  .lock { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 22px; max-width: 460px; margin: 24px 0; }
+  .lock h2 { margin: 0 0 6px; font: 700 22px var(--serif); }
+  .lock input[type=password], .dlg input[type=password], .dlg input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink); margin: 10px 0 8px; }
+  .lock label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 12px; }
+
+  /* Filter */
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 12px; }
+  .filters button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 4px 13px; font-size: 13px; }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  /* Wetten */
+  .bet { padding: 14px 0 16px; border-bottom: 1px solid var(--line); }
+  .bet .hl { font-size: 18px; margin-bottom: 8px; }
+  .row { display: grid; grid-template-columns: minmax(80px, 1.2fr) 2fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 3px 0; }
+  .row .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar { height: 7px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--ink); border-radius: 4px; }
+  .pct { font-variant-numeric: tabular-nums; min-width: 78px; text-align: right; font-weight: 600; }
+  .pct small { font-size: 11px; margin-left: 4px; font-weight: 400; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .meta .chip { border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
+
+  /* Kalender, Sendungen */
+  .cal { display: grid; grid-template-columns: 92px 1fr; gap: 2px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .cal .d { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .cal .d small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .cal b { font-family: var(--serif); font-size: 16.5px; }
+  .cal.imp b::after { content: "wichtig"; font: 600 10.5px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--bg); background: var(--ink); border-radius: 3px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
+  .cal a:hover { text-decoration: underline; color: var(--link); }
+  .show { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 14px 18px 12px; margin-bottom: 14px; }
+  .show h3 { margin: 0; font: 700 19px/1.3 var(--serif); }
+  .show h3 a:hover { color: var(--link); text-decoration: underline; }
+  .show .when { font-size: 12.5px; color: var(--muted); margin: 2px 0 8px; }
+  .show ol { margin: 0; padding-left: 20px; font-size: 15px; } .show li { margin: 3px 0; }
+  .term { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .term .lead { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .term .meta { grid-column: 1 / -1; margin-top: 2px; }
+  .term a:hover { color: var(--link); text-decoration: underline; }
+  details.day { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  details.day summary { cursor: pointer; font: 700 17px var(--serif); }
+  details.day summary span { font: 400 13px var(--sans); color: var(--muted); margin-left: 10px; }
+  details.day ul { margin: 8px 0 12px; padding-left: 20px; font-size: 14.5px; } details.day li { margin: 3px 0; }
+  details.day h4 { margin: 10px 0 0; font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+  /* Dialoge */
+  dialog { border: 0; padding: 0; background: var(--paper); color: var(--ink); width: min(760px, 96vw); max-height: 94vh; border-radius: 12px; box-shadow: 0 20px 60px var(--shadow); }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  .dlg { padding: 20px 22px 26px; }
+  .dlg .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .dlg h2 { margin: 2px 0 2px; font: 700 26px/1.2 var(--serif); }
+  .dlg .sub { color: var(--muted); font-size: 13px; }
+  .dlg .big { font: 700 30px/1.2 var(--sans); font-variant-numeric: tabular-nums; margin: 10px 0 0; }
+  .dlg .big small { font-size: 15px; font-weight: 600; margin-left: 10px; }
+  .ranges { display: flex; gap: 6px; margin: 14px 0 6px; flex-wrap: wrap; }
+  .ranges button { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+  .ranges button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .info { font-size: 13px; color: var(--muted); min-height: 20px; font-variant-numeric: tabular-nums; }
+  .chart { width: 100%; height: auto; display: block; touch-action: pan-y; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px 14px; margin: 14px 0 4px; }
+  .stats div { border-top: 1px solid var(--line); padding-top: 5px; font-size: 12px; color: var(--muted); }
+  .stats b { display: block; font: 600 15.5px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 13.5px; }
+  .links a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+  .ids { font-size: 12.5px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px 16px; flex-wrap: wrap; }
+  .ids button { border: 0; background: none; padding: 0; color: inherit; font-size: inherit; text-decoration: underline dotted; }
+  .dlg ol.steps { padding-left: 20px; font-size: 14px; } .dlg ol.steps li { margin: 4px 0; }
+  .dlg .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .dlg h3.sec2 { font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; margin: 22px 0 4px; padding-top: 6px; border-top: 2px solid var(--ink); }
+
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; padding: 18px 0 44px; }
 </style>
 </head>
 <body>
-<header>
-  <h1>Mego News</h1>
-  <div class="sub" id="updated"></div>
+<header class="mast">
+  <div class="wrap">
+    <div class="mast-bar">
+      <span id="today"></span><span class="grow"></span><span id="status" role="status"></span>
+      <button class="btn primary" id="btn-refresh">Aktualisieren</button>
+      <button class="btn icon" id="btn-settings" aria-label="Einstellungen" title="Einstellungen">&#9881;</button>
+    </div>
+    <h1>Mego News</h1>
+  </div>
 </header>
 <div class="alertbar" id="alertbar"></div>
-<div class="ticker" id="ticker"></div>
-<nav><div role="tablist" id="tabs"></div></nav>
-<main id="view"></main>
-<footer id="foot"></footer>
+<div class="band"><div class="wrap" id="ticker"></div></div>
+<nav class="tabs"><div class="wrap" id="tabs" role="tablist"></div></nav>
+<main><div class="wrap" id="view"></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<dialog id="detail"></dialog>
+<dialog id="settings"></dialog>
 
 <script>
-const DATA = __DATA__;
+let DATA = __DATA__;
+let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
+let CURRENT = "heute";
 
 const TABS = [
-  ["heute", "Heute"],
-  ["markets", "Märkte"],
-  ["world", "Welt"],
-  ["termine", "Wahlen & Termine"],
-  ["pm", "Prediction Markets"],
-  ["watch", "Watchlist"],
-  ["verlauf", "Verlauf"],
+  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"],
+  ["germany", "Deutschland"], ["wahlen", "Wahlen & Termine"], ["pm", "Wetten"], ["verlauf", "Archiv"],
 ];
+const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland" };
+
+// ------------------------------------------------------------------ Helfer
 
 function h(tag, attrs, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
     if (k === "class") el.className = v;
     else if (k === "href") { if (/^https?:\/\//.test(v)) { el.href = v; el.target = "_blank"; el.rel = "noopener noreferrer"; } }
     else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v);
+    else el.setAttribute(k, v === true ? "" : v);
   }
   for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
   return el;
 }
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
 
 const de = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 });
 const dePct = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2, minimumFractionDigits: 2, signDisplay: "exceptZero" });
-const pctSpan = (v) => v == null ? "" : h("span", { class: v >= 0 ? "up" : "down" }, dePct.format(v) + " %");
+const pct = (v) => v == null ? "–" : dePct.format(v) + " %";
+const pctSpan = (v) => v == null ? "" : h("span", { class: v >= 0 ? "up" : "down" }, pct(v));
+const price = (v) => v == null ? "–" : de.format(v);
 
 function ago(iso) {
   const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
@@ -131,7 +268,6 @@ function ago(iso) {
   if (min < 1440) return `vor ${Math.round(min / 60)} Std.`;
   return `vor ${Math.round(min / 1440)} Tg.`;
 }
-
 function money(x) {
   if (x >= 1e9) return de.format(x / 1e9) + " Mrd. $";
   if (x >= 1e6) return de.format(x / 1e6) + " Mio. $";
@@ -146,234 +282,603 @@ function volume(x, unit) {
 }
 const probText = (p) => p < 0.01 ? "<1 %" : Math.round(p * 100) + " %";
 const dateDe = (iso) => iso.split("-").reverse().join(".");
+const dayMs = 864e5;
+const dayNum = (iso) => Math.round(new Date(iso + "T12:00:00") / dayMs);
 function dayLabel(iso) {
   const d = new Date(iso + "T12:00:00");
-  const diff = Math.round((d - new Date(new Date().toDateString() + " 12:00")) / 864e5);
-  const base = d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
+  const diff = Math.round((d - new Date(new Date().toDateString() + " 12:00")) / dayMs);
+  const base = d.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
   return diff === 0 ? "Heute, " + base : diff === 1 ? "Morgen, " + base : base;
 }
+const sec = (title, note) => h("div", { class: "sec" }, title, note && h("span", {}, note));
 
-// ---------------------------------------------------------------- Kurse
+// ------------------------------------------------------------------ Daten-Zugriff
+
+const idxQuotes = () => DATA.quotes.filter(q => q.group === "index" && q.price != null);
+const stockQuotes = () => DATA.quotes.filter(q => q.group === "stock" && q.price != null);
+const depotPositions = () => (DEPOT ? DEPOT.positions.filter(p => p.price != null) : []);
+
+// ------------------------------------------------------------------ Diagramme
+
+const SVG = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  return el;
+}
 
 function spark(series) {
-  const NS = "http://www.w3.org/2000/svg", w = 100, ht = 28;
-  const svg = document.createElementNS(NS, "svg");
-  svg.setAttribute("viewBox", `0 0 ${w} ${ht}`);
-  svg.setAttribute("preserveAspectRatio", "none");
-  svg.setAttribute("class", "spark");
+  const w = 100, ht = 30, svg = svgEl("svg", { viewBox: `0 0 ${w} ${ht}`, preserveAspectRatio: "none", class: "spark" });
   if (series.length < 2) return svg;
   const min = Math.min(...series), span = (Math.max(...series) - min) || 1;
-  const pl = document.createElementNS(NS, "polyline");
-  pl.setAttribute("points", series.map((v, i) =>
-    `${(i / (series.length - 1) * w).toFixed(1)},${(ht - 2 - ((v - min) / span) * (ht - 4)).toFixed(1)}`).join(" "));
-  pl.setAttribute("class", series[series.length - 1] >= series[0] ? "u" : "d");
-  svg.append(pl);
+  svg.append(svgEl("polyline", {
+    class: series[series.length - 1] >= series[0] ? "u" : "d",
+    points: series.map((v, i) => `${(i / (series.length - 1) * w).toFixed(1)},${(ht - 2 - ((v - min) / span) * (ht - 4)).toFixed(1)}`).join(" "),
+  }));
+  return svg;
+}
+const lastN = (q, n = 22) => (q.c || []).slice(-n);
+
+// Bereich der Kurswerte für einen Zeitraum: [von, bis)
+function rangeOf(q, key) {
+  const n = q.c.length;
+  if (key === "1M") return [Math.max(0, n - 22), n];
+  if (key === "3M") return [Math.max(0, n - 64), n];
+  if (key === "6M") return [Math.max(0, n - 127), n];
+  if (key === "YTD") {
+    const y = new Date(q.t[n - 1] * dayMs).getUTCFullYear();
+    const first = q.t.findIndex(t => new Date(t * dayMs).getUTCFullYear() === y);
+    return [Math.max(0, first - 1), n];
+  }
+  return [0, n];
+}
+
+function chart(q, key, info) {
+  const [a, b] = rangeOf(q, key), ys = q.c.slice(a, b), ts = q.t.slice(a, b), n = ys.length;
+  const W = 640, H = 250, L = 8, R = 62, T = 12, B = 22;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart" });
+  if (n < 2) { svg.append(svgEl("text", { x: 10, y: 30, fill: "currentColor" })); svg.lastChild.textContent = "Zu wenig Kursdaten."; return svg; }
+  const lo = Math.min(...ys), hi = Math.max(...ys), pad = (hi - lo) * .06 || 1;
+  const min = lo - pad, max = hi + pad;
+  const X = (i) => L + (i / (n - 1)) * (W - L - R), Y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
+  const up = ys[n - 1] >= ys[0], color = up ? "var(--up)" : "var(--down)";
+  for (let g = 0; g <= 3; g++) {
+    const v = min + ((max - min) * g) / 3, y = Y(v);
+    svg.append(svgEl("line", { x1: L, x2: W - R, y1: y, y2: y, stroke: "var(--line)", "stroke-width": 1 }));
+    const t = svgEl("text", { x: W - R + 6, y: y + 4, fill: "var(--muted)", "font-size": 11 });
+    t.textContent = de.format(Math.round(v * 100) / 100);
+    svg.append(t);
+  }
+  const line = ys.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  svg.append(svgEl("polygon", { points: `${X(0)},${H - B} ${line} ${X(n - 1)},${H - B}`, fill: color, opacity: .1 }));
+  svg.append(svgEl("polyline", { points: line, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+  const fmtT = (t) => new Date(t * dayMs).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "UTC" });
+  for (const [i, anchor] of [[0, "start"], [n - 1, "end"]]) {
+    const t = svgEl("text", { x: X(i), y: H - 5, fill: "var(--muted)", "font-size": 11, "text-anchor": anchor });
+    t.textContent = fmtT(ts[i]);
+    svg.append(t);
+  }
+  const vline = svgEl("line", { y1: T, y2: H - B, stroke: "var(--ink)", "stroke-width": 1, opacity: 0 });
+  const dot = svgEl("circle", { r: 4.5, fill: color, stroke: "var(--paper)", "stroke-width": 2, opacity: 0 });
+  svg.append(vline, dot);
+  const cur = q.currency && q.group !== "index" ? " " + q.currency : "";
+  const show = (i, active) => {
+    const change = (ys[i] / ys[0] - 1) * 100;
+    info.replaceChildren(`${fmtT(ts[i])}  ·  ${de.format(ys[i])}${cur}  ·  `, pctSpan(change), " seit ", fmtT(ts[0]));
+    vline.setAttribute("opacity", active ? .5 : 0); dot.setAttribute("opacity", active ? 1 : 0);
+    vline.setAttribute("x1", X(i)); vline.setAttribute("x2", X(i)); dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(ys[i]));
+  };
+  const hit = svgEl("rect", { x: L, y: 0, width: W - L - R, height: H, fill: "transparent" });
+  const move = (e) => {
+    const r = svg.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W;
+    show(Math.max(0, Math.min(n - 1, Math.round(((x - L) / (W - L - R)) * (n - 1)))), true);
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => show(n - 1, false));
+  svg.append(hit);
+  show(n - 1, false);
   return svg;
 }
 
-function quoteCard(q) {
-  return h("div", { class: "qc" + (q.alert ? " alert" : ""), title: q.symbol },
+// ------------------------------------------------------------------ Detailansicht eines Kurses
+
+function openDetail(q, extra) {
+  const dlg = $("detail");
+  let range = "6M";
+  const body = h("div", { class: "dlg" });
+  const ranges = [["1M", "1 Monat"], ["3M", "3 Monate"], ["6M", "6 Monate"], ["YTD", "Jahresbeginn"], ["1J", "1 Jahr"]];
+  const pctBack = (back) => q.c.length > back ? (q.price / q.c[q.c.length - 1 - back] - 1) * 100 : null;
+  const [yA] = rangeOf(q, "YTD");
+  const stat = (label, node) => h("div", {}, label, h("b", {}, node));
+  const fromHi = q.hi52 ? (q.price / q.hi52 - 1) * 100 : null;
+  const cur = q.currency && q.group !== "index" ? " " + q.currency : "";
+
+  const info = h("div", { class: "info" });
+  const chartBox = h("div");
+  const rangeBar = h("div", { class: "ranges" });
+  const draw = () => {
+    chartBox.replaceChildren(chart(q, range, info));
+    rangeBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === range));
+  };
+  for (const [k, label] of ranges) rangeBar.append(h("button", { "data-k": k, onclick: () => { range = k; draw(); } }, label));
+
+  const copy = (txt) => h("button", { title: "Kopieren", onclick: async (e) => { try { await navigator.clipboard.writeText(txt); e.target.textContent = txt + " ✓"; } catch {} } }, txt);
+  const news = extra && extra.news && extra.news.length ? [h("h3", { class: "sec2" }, "Meldungen zu " + extra.short), extra.news.map(s => item(s, { hideTopic: true }))] : [];
+  const ctx = extra && extra.context && extra.context.length ? [h("h3", { class: "sec2" }, "Marktumfeld"), extra.context.map(s => item(s, { hideTopic: true }))] : [];
+  const noNews = extra && !news.length && !ctx.length ? h("p", { class: "note" }, "Zurzeit keine passenden Meldungen in den letzten 36 Stunden.") : null;
+  const search = encodeURIComponent((extra && extra.short) || q.name);
+
+  const add = (...kids) => body.append(...kids.flat(Infinity).filter(k => k != null && k !== false));
+  add(
+    h("div", { class: "top" },
+      h("div", {},
+        h("div", { class: "sub" }, extra ? `${extra.type} aus deinem Depot` : (q.group === "stock" ? "Aktie" : "Markt")),
+        h("h2", {}, extra ? extra.name : q.name)),
+      h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
+    extra && h("div", { class: "ids" }, "WKN ", copy(extra.wkn), "ISIN ", copy(extra.isin), h("span", {}, "Kurs: " + q.symbol)),
+    h("div", { class: "big" }, price(q.price) + cur, q.pct != null && h("small", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct) + " heute")),
+    rangeBar, info, chartBox,
+    h("div", { class: "stats" },
+      stat("1 Woche", pctSpan(pctBack(5))), stat("1 Monat", pctSpan(pctBack(21))), stat("3 Monate", pctSpan(pctBack(63))),
+      stat("6 Monate", pctSpan(pctBack(126))), stat("seit Jahresbeginn", pctSpan(q.c.length > yA ? (q.price / q.c[yA] - 1) * 100 : null)),
+      stat("1 Jahr", pctSpan(q.c.length > 200 ? (q.price / q.c[0] - 1) * 100 : null)),
+      stat("52-Wochen-Hoch", q.hi52 ? [price(q.hi52), " ", pctSpan(fromHi)] : "–"), stat("52-Wochen-Tief", price(q.lo52))),
+    h("div", { class: "links" },
+      h("a", { href: "https://finance.yahoo.com/quote/" + encodeURIComponent(q.symbol) }, "Yahoo Finance"),
+      extra && extra.type === "ETF" && h("a", { href: "https://www.justetf.com/de/etf-profile.html?isin=" + extra.isin }, "justETF"),
+      h("a", { href: "https://news.google.com/search?hl=de&gl=DE&ceid=DE:de&q=" + search }, "Google News")),
+    news, ctx, noNews);
+  dlg.replaceChildren(body);
+  draw();
+  if (!dlg.open) dlg.showModal();
+}
+$("detail").addEventListener("click", (e) => { if (e.target === $("detail")) $("detail").close(); });
+$("settings").addEventListener("click", (e) => { if (e.target === $("settings")) $("settings").close(); });
+
+// ------------------------------------------------------------------ Meldungen
+
+function item(s, o = {}) {
+  return h("article", { class: "item" + (o.lead ? " lead" : "") },
+    h("div", { class: "kicker" },
+      s.alert && h("span", { class: "tag crash" }, "Crash-Radar"),
+      s.election && h("span", { class: "tag" }, "Wahl"),
+      !o.hideTopic && h("span", { class: s.topic === "markets" ? "" : "red" }, TOPIC[s.topic] || ""),
+      s.watch.map(w => h("span", { class: "tag dep" }, w)),
+      h("span", { class: "t" }, ago(s.time))),
+    h("h3", { class: "hl" }, h("a", { href: s.url }, s.title)),
+    s.summary && h("p", { class: "teaser" }, s.summary),
+    h("div", { class: "srcs" },
+      s.sources.length > 2 && h("span", { class: "n" }, `${s.sources.length} Quellen`),
+      s.sources.slice(0, 4).map(x => h("a", { href: x.url }, x.name)),
+      s.lang === "en" && h("span", {}, "Englisch")));
+}
+const items = (list, o) => list.length ? list.map((s, i) => item(s, { ...o, lead: o && o.lead && i === 0 })) : h("div", { class: "empty" }, "Keine Meldungen gefunden.");
+
+// ------------------------------------------------------------------ Bausteine
+
+function quoteCard(q, extra) {
+  return h("button", { class: "qc" + (q.alert ? " alert" : ""), onclick: () => openDetail(q, extra) },
     h("b", {}, q.name),
-    h("div", { class: "px" }, de.format(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, dePct.format(q.pct) + " %")),
-    spark(q.series),
-    h("small", {}, "5 Tage ", q.week != null ? dePct.format(q.week) + " %" : "–", "  ·  1 Monat ", q.month != null ? dePct.format(q.month) + " %" : "–"));
+    h("span", { class: "px" }, price(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct))),
+    spark(lastN(q)),
+    h("small", {}, "1 Woche ", pct(q.week), "  ·  1 Monat ", pct(q.month)));
 }
 
-const quotes = (group) => DATA.quotes.filter(q => q.group === group && q.price != null);
-
-// ---------------------------------------------------------------- Meldungen
-
-function story(s, showTopic) {
-  const topicName = { markets: "Märkte", world: "Welt" }[s.topic];
-  return h("article", { class: "card" },
-    h("h3", {}, h("a", { href: s.url }, s.title)),
-    s.summary && h("p", {}, s.summary),
-    h("div", { class: "meta" },
-      s.alert && h("span", { class: "chip crash" }, "Crash-Radar"),
-      s.election && h("span", { class: "chip vote" }, "Wahl"),
-      showTopic && h("span", { class: "chip" }, topicName),
-      s.ai && h("span", { class: "chip" }, "KI"),
-      s.watch.map(w => h("span", { class: "chip watch" }, w)),
-      s.sources.length > 2 && h("span", { class: "chip hot" }, `${s.sources.length} Quellen`),
-      s.sources.slice(0, 5).map(x => h("a", { class: "chip src", href: x.url }, x.name)),
-      h("span", {}, ago(s.time)),
-      s.lang === "en" && h("span", { class: "chip" }, "EN")));
+function quoteRows(list, extraOf) {
+  return list.map(q => h("button", { class: "qrow", onclick: () => openDetail(q, extraOf ? extraOf(q) : null) },
+    h("span", {}, q.short || q.name), h("span", { class: "px" }, price(q.price)), h("span", { class: "pc " + (q.pct >= 0 ? "up" : "down") }, pct(q.pct))));
 }
 
-function list(items, showTopic) {
-  return items.length ? items.map(s => story(s, showTopic)) : h("div", { class: "empty" }, "Keine Meldungen gefunden.");
+function positionRow(p) {
+  return h("button", { class: "prow", onclick: () => openDetail(p, p) },
+    h("span", { class: "nm" }, p.short, h("small", {}, `${p.type} · WKN ${p.wkn} · ${p.news.length} Meldungen`)),
+    spark(lastN(p)),
+    h("span", { class: "pv" }, price(p.price) + " " + p.currency, h("small", { class: p.pct >= 0 ? "up" : "down" }, pct(p.pct) + " heute")));
 }
 
-// ---------------------------------------------------------------- Prediction Markets
-
-function pmCard(e) {
-  return h("article", { class: "card" },
-    h("h3", {}, h("a", { href: e.url }, e.title)),
-    e.rows.map(r => {
-      const d = r.d1 == null ? null : r.d1 * 100;
-      return h("div", { class: "row" },
-        h("span", { class: "lbl", title: r.label }, r.label),
-        h("div", { class: "bar" }, h("i", { style: `width:${Math.max(1, Math.round(r.p * 100))}%` })),
-        h("span", { class: "pct" }, probText(r.p),
-          d != null && Math.abs(d) >= 0.5 && h("small", { class: d > 0 ? "up" : "down" }, (d > 0 ? "▲" : "▼") + Math.abs(Math.round(d)))));
-    }),
-    e.more > 0 && h("div", { class: "note" }, `+ ${e.more} weitere Optionen`),
-    h("div", { class: "meta", style: "margin-top:8px" },
-      h("span", { class: "chip" }, e.source), h("span", { class: "chip" }, e.category),
-      h("span", {}, "24 Std.: " + volume(e.vol24h, e.unit)),
-      e.end && h("span", {}, "Ende: " + dateDe(e.end))));
+function electionRows(list) {
+  return list.map(e => {
+    const s = new Date(e.date + "T12:00:00"), same = e.date === e.end;
+    const d = e.approx ? s.toLocaleDateString("de-DE", { month: "short" }) : same
+      ? s.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })
+      : `${String(s.getDate()).padStart(2, "0")}.–${new Date(e.end + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}`;
+    return h("div", { class: "cal" + (e.important ? " imp" : "") },
+      h("div", { class: "d" }, d, h("small", {}, e.approx ? "Termin offen" : s.toLocaleDateString("de-DE", { weekday: "long" }))),
+      h("div", {}, h("b", {}, e.country), h("div", {}, h("a", { href: e.url }, e.what || "Wahl"))));
+  });
 }
 
-// ---------------------------------------------------------------- Ansichten
+function nextElections(n, days) {
+  const limit = Date.now() + days * dayMs;
+  return DATA.elections.filter(e => e.important && !e.approx && new Date(e.date + "T12:00:00") <= limit).slice(0, n);
+}
 
-function overview() {
-  const idx = quotes("index");
-  const line = (qs) => qs.flatMap((q, i) => [i ? "  ·  " : "", q.name + " " + de.format(q.price) + " ", pctSpan(q.pct)]);
-  const alerts = idx.concat(quotes("stock")).filter(q => q.alert);
+// ------------------------------------------------------------------ Auf einen Blick
+
+function glance() {
+  const rows = [];
+  const idx = idxQuotes();
+  const line = (qs) => qs.flatMap((q, i) => [i ? "  ·  " : "", `${q.short || q.name} ${price(q.price)} `, pctSpan(q.pct)]);
+  if (idx.length) rows.push(["Märkte", line(idx.slice(0, 4))]);
+  const dp = depotPositions();
+  if (dp.length) rows.push(["Dein Depot", line(dp)]);
+  const alerts = idx.concat(stockQuotes(), dp).filter(q => q.alert);
+  rows.push(["Kursalarm", alerts.length
+    ? alerts.flatMap((q, i) => [i ? "  ·  " : "", `${q.short || q.name} `, pctSpan(q.pct), q.alert === "week" ? ` (5 Tage ${pct(q.week)})` : ""])
+    : "keine auffälligen Bewegungen"]);
   const crash = DATA.stories.filter(s => s.alert);
-  const soon = DATA.termine.filter(t => (new Date(t.end + "T23:59:59") - Date.now()) < 2 * 864e5).slice(0, 3);
+  if (crash.length) rows.push(["Crash-Radar", [h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } }, `${crash.length} Meldung${crash.length > 1 ? "en" : ""}`), " mit Absturz-Stichwörtern"]]);
+  const ne = nextElections(3, 21);
+  if (ne.length) rows.push(["Nächste Wahlen", ne.map((e, i) => [i ? "  ·  " : "", `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })}. ${e.country}`])]);
+  const soon = DATA.termine.filter(t => (new Date(t.end + "T23:59:59") - Date.now()) < 2 * dayMs).slice(0, 3);
+  if (soon.length) rows.push(["Heute & morgen", soon.map((t, i) => (i ? "  ·  " : "") + t.title)]);
+  const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
+  if (ts && ts.topics.length) rows.push(["tagesschau 20 Uhr", [ts.topics.slice(0, 3).join("  ·  "), " ", h("a", { href: "#germany", onclick: (e) => { e.preventDefault(); show("germany"); } }, "alle Themen")]]);
+  const mb = DATA.briefings.find(b => b.name.includes("Morning Briefing"));
+  if (mb) rows.push(["Morning Briefing", h("a", { href: mb.url }, mb.title.replace(/^Morning Briefing:\s*/, ""))]);
   let move = null;
   for (const e of DATA.prediction) for (const r of e.rows.slice(0, 2))
-    if (r.d1 != null && r.p - r.d1 >= 0.03 && r.p <= 0.95 && r.p >= 0.05 && (!move || Math.abs(r.d1) > Math.abs(move.r.d1))) move = { e, r };
-  return h("section", { class: "card overview" },
-    h("h2", {}, "Auf einen Blick"),
-    h("ul", {},
-      idx.length > 0 && h("li", {}, h("b", {}, "Märkte: "), line(idx.slice(0, 4))),
-      h("li", {}, h("b", {}, "Kursalarm: "), alerts.length
-        ? alerts.flatMap((q, i) => [i ? "  ·  " : "", q.name + " ", pctSpan(q.pct), q.alert === "week" ? " (5 Tage " + dePct.format(q.week) + " %)" : ""])
-        : "keine auffälligen Bewegungen"),
-      crash.length > 0 && h("li", {}, h("b", {}, "Crash-Radar: "), `${crash.length} Meldung${crash.length > 1 ? "en" : ""} mit Absturz-Stichwörtern, siehe Märkte`),
-      soon.length > 0 && h("li", {}, h("b", {}, "In den nächsten 2 Tagen: "), soon.map((t, i) => (i ? "  ·  " : "") + t.title)),
-      move && h("li", {}, h("b", {}, "Größte Bewegung bei Wetten: "), `${move.e.title}: ${move.r.label} ${probText(move.r.p)} (${move.r.d1 > 0 ? "+" : ""}${Math.round(move.r.d1 * 100)} Punkte)`)));
+    if (r.d1 != null && r.p - r.d1 >= 0.03 && r.p >= 0.05 && r.p <= 0.95 && (!move || Math.abs(r.d1) > Math.abs(move.r.d1))) move = { e, r };
+  if (move) rows.push(["Wetten", `${move.e.title}: ${move.r.label} ${probText(move.r.p)} (${move.r.d1 > 0 ? "+" : ""}${Math.round(move.r.d1 * 100)} Punkte)`]);
+  return h("section", { class: "glance" }, h("h2", {}, "Auf einen Blick"),
+    h("dl", {}, rows.map(([k, v]) => h("div", { class: "g" }, h("dt", {}, k), h("dd", {}, v)))));
+}
+
+function sidebar() {
+  const dp = depotPositions();
+  const locked = DATA.depot && DATA.depot.state === "enc" && !DEPOT;
+  const ne = nextElections(5, 60);
+  const soon = DATA.termine.slice(0, 4);
+  return h("aside", { class: "side" },
+    h("div", { class: "blk" }, sec("Märkte"), quoteRows(idxQuotes().slice(0, 9))),
+    dp.length > 0 && h("div", { class: "blk" }, sec("Dein Depot", h("a", { href: "#depot", onclick: (e) => { e.preventDefault(); show("depot"); } }, "alle ▸")), quoteRows(dp, (q) => q)),
+    locked && h("div", { class: "blk" }, sec("Dein Depot"), h("button", { class: "btn", onclick: () => show("depot") }, "Mit Passwort entsperren")),
+    ne.length > 0 && h("div", { class: "blk" }, sec("Nächste Wahlen", h("a", { href: "#wahlen", onclick: (e) => { e.preventDefault(); show("wahlen"); } }, "Kalender ▸")),
+      ne.map(e => h("div", { class: "mini" }, h("b", {}, e.country), h("span", {}, `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" })} · ${e.what}`)))),
+    soon.length > 0 && h("div", { class: "blk" }, sec("Entscheidungen"), soon.map(t => h("div", { class: "mini" }, h("a", { href: t.url }, h("b", {}, t.title)), h("span", {}, `${dateDe(t.end)} · ${t.lead.label.slice(0, 24)} ${probText(t.lead.p)}`)))));
+}
+
+// ------------------------------------------------------------------ Ansichten
+
+function lockCard() {
+  const st = DATA.depot ? DATA.depot.state : "none";
+  if (st === "none") return h("div", { class: "lock" }, h("h2", {}, "Depot nicht eingerichtet"), h("p", { class: "note" }, "Lege lokal eine Datei depot.json an und hinterlege sie als GitHub-Secret DEPOT_JSON."));
+  if (st === "no_password") return h("div", { class: "lock" }, h("h2", {}, "Depot noch gesperrt"), h("p", { class: "note" }, "Es fehlt das GitHub-Secret DEPOT_PASSWORT. Ohne Passwort wird das Depot bewusst nicht veröffentlicht."));
+  const err = h("div", { class: "note bad" });
+  const pw = h("input", { type: "password", placeholder: "Passwort", autocomplete: "current-password" });
+  const keep = h("input", { type: "checkbox", checked: true });
+  const go = async () => {
+    err.textContent = "";
+    try { await unlockDepot(pw.value, keep.checked); renderAll(); } catch { err.textContent = "Passwort falsch."; }
+  };
+  pw.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  return h("div", { class: "lock" }, h("h2", {}, "Dein Depot"),
+    h("p", { class: "note" }, "Die Positionen sind verschlüsselt und nur mit deinem Passwort lesbar."),
+    pw, h("label", {}, keep, " Auf diesem Gerät merken"), h("button", { class: "btn primary", onclick: go }, "Entsperren"), err);
 }
 
 const views = {
-  heute: () => [
-    overview(),
-    DATA.briefing && DATA.briefing.length > 0 && h("section", { class: "card overview" },
-      h("h2", {}, "Briefing (KI)"), h("ul", {}, DATA.briefing.map(b => h("li", {}, b)))),
-    h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."),
-    list(DATA.heute, true)],
+  heute: () => h("div", { class: "layout" },
+    h("div", {}, glance(), sec("Top-Meldungen", "letzte 36 Stunden"), items(DATA.heute, { lead: true })),
+    sidebar()),
 
   markets: () => {
     const crash = DATA.stories.filter(s => s.alert).slice(0, 6);
+    const dp = depotPositions();
+    const state = { f: "Alle" };
+    const box = h("div", { class: "narrow" });
+    const bar = h("div", { class: "filters" });
+    const render = () => {
+      const all = DATA.stories.filter(s => s.topic === "markets");
+      const list = state.f === "Watchlist" ? all.filter(s => s.watch.length) : state.f === "Crash-Radar" ? all.filter(s => s.alert) : all;
+      box.replaceChildren(...[items(list.slice(0, 40), { hideTopic: true })].flat(Infinity));
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state.f));
+    };
+    for (const f of ["Alle", "Watchlist", "Crash-Radar"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
+    render();
     return [
-      h("h2", {}, "Indizes, Rohstoffe, Währungen"),
-      h("div", { class: "grid" }, quotes("index").map(quoteCard)),
-      h("h2", {}, "Aktien aus deiner Liste"),
-      h("div", { class: "grid" }, quotes("stock").map(quoteCard)),
-      h("p", { class: "note" }, "Kurse von Yahoo Finance, teils verzögert. Alarm bei großen Tagesbewegungen oder über 5 % Minus in 5 Handelstagen."),
-      crash.length > 0 && [h("h2", {}, "Crash-Radar"), crash.map(s => story(s, false))],
-      h("h2", {}, "Meldungen"),
-      list(DATA.stories.filter(s => s.topic === "markets").slice(0, 40)),
+      sec("Indizes, Rohstoffe, Währungen", "antippen für Verlauf"), h("div", { class: "grid" }, idxQuotes().map(q => quoteCard(q))),
+      dp.length > 0 && [sec("Dein Depot", h("a", { href: "#depot", onclick: (e) => { e.preventDefault(); show("depot"); } }, "Details ▸")), h("div", { class: "grid" }, dp.map(p => quoteCard(p, p)))],
+      sec("Aktien im Blick"), h("div", { class: "grid" }, stockQuotes().map(q => quoteCard(q))),
+      h("p", { class: "note" }, "Kurse von Yahoo Finance, teils verzögert. Alarm bei großen Tagesbewegungen oder mehr als 5 % Minus in 5 Handelstagen. Keine Anlageberatung."),
+      crash.length > 0 && [sec("Crash-Radar", "Meldungen mit Absturz-Stichwörtern"), h("div", { class: "narrow" }, items(crash, { hideTopic: true }))],
+      sec("Meldungen"), bar, box,
     ];
   },
 
-  world: () => list(DATA.stories.filter(s => s.topic === "world").slice(0, 40)),
+  depot: () => {
+    if (!DEPOT) return lockCard();
+    const ps = DEPOT.positions, etfs = ps.filter(p => p.type === "ETF"), stocks = ps.filter(p => p.type !== "ETF");
+    const seen = new Set(), all = [];
+    for (const p of ps) for (const s of p.news) if (!seen.has(s.url)) { seen.add(s.url); all.push(s); }
+    all.sort((a, b) => b.score - a.score);
+    return h("div", { class: "layout" },
+      h("div", {},
+        etfs.length > 0 && [sec("ETFs", "antippen für Verlauf und Meldungen"), etfs.map(positionRow)],
+        stocks.length > 0 && [sec("Aktien"), stocks.map(positionRow)],
+        h("p", { class: "note" }, "Kurse von Yahoo Finance in der Handelswährung des jeweiligen Börsenplatzes, teils verzögert. Die Meldungen werden nach den Namen und Stichwörtern deiner Positionen gesucht."),
+        sec("Meldungen zu deinem Depot"), items(all.slice(0, 15), { hideTopic: true })),
+      h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Heute"), quoteRows(ps.filter(p => p.price != null), (q) => q))));
+  },
 
-  termine: () => {
+  world: () => h("div", { class: "narrow" }, items(DATA.stories.filter(s => s.topic === "world").slice(0, 50), { lead: true, hideTopic: true })),
+
+  germany: () => {
+    const shows = DATA.briefings;
+    return h("div", { class: "layout" },
+      h("div", {},
+        shows.length > 0 && [sec("Sendungen & Briefings"), shows.map(b => h("section", { class: "show" },
+          h("h3", {}, h("a", { href: b.url }, b.title)),
+          h("div", { class: "when" }, ago(b.time)),
+          b.topics.length > 0 && h("ol", {}, b.topics.map(t => h("li", {}, t)))))],
+        sec("Deutschland", "Politik, Gesellschaft, Wirtschaft"), items(DATA.stories.filter(s => s.topic === "germany").slice(0, 50), { hideTopic: true })),
+      sidebar());
+  },
+
+  wahlen: () => {
+    const state = { f: "Wichtige" };
+    const box = h("div");
+    const bar = h("div", { class: "filters" });
+    const render = () => {
+      const list = DATA.elections.filter(e => state.f === "Alle" || e.important);
+      const byMonth = {};
+      for (const e of list) (byMonth[e.date.slice(0, 7)] ||= []).push(e);
+      box.replaceChildren(...Object.entries(byMonth).flatMap(([m, es]) => [
+        sec(new Date(m + "-15T12:00:00").toLocaleDateString("de-DE", { month: "long", year: "numeric" })), ...electionRows(es)]));
+      if (!list.length) box.append(h("div", { class: "empty" }, "Kein Wahlkalender verfügbar."));
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state.f));
+    };
+    for (const f of ["Wichtige", "Alle"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
+    render();
     const byDay = {};
     for (const t of DATA.termine) (byDay[t.end] ||= []).push(t);
-    const votes = DATA.stories.filter(s => s.election).slice(0, 15);
-    return [
-      h("p", { class: "note" }, "Entscheidungen, auf die an Prediction Markets gewettet wird und die in den nächsten 30 Tagen enden: Wahlen, Zinsentscheide, Wirtschaftsdaten. Rechts steht die aktuell führende Option."),
-      Object.keys(byDay).length ? Object.entries(byDay).map(([day, items]) => [
-        h("h2", {}, dayLabel(day)),
-        h("div", { class: "card" }, items.map(t => h("div", { class: "term" },
-          h("a", { href: t.url }, t.title),
-          h("span", { class: "lead" }, t.lead.label.slice(0, 26) + " " + probText(t.lead.p)),
-          h("div", { class: "meta" }, h("span", { class: "chip" }, t.source), h("span", { class: "chip" }, t.category),
-            h("span", {}, "24 Std.: " + volume(t.vol24h, t.unit))))))])
-        : h("div", { class: "empty" }, "Keine anstehenden Termine gefunden."),
-      h("h2", {}, "Aktuelle Wahl-Nachrichten"),
-      list(votes, true),
-    ];
+    const votes = DATA.stories.filter(s => s.election).slice(0, 12);
+    return h("div", { class: "layout" },
+      h("div", {},
+        sec("Wahlkalender", "Quelle: Wikipedia"), bar, box,
+        DATA.status.elections_note && h("p", { class: "note bad" }, DATA.status.elections_note),
+        h("p", { class: "note" }, "Nationale Wahlen und Referenden weltweit. Landtags- und Kommunalwahlen sind meist nicht enthalten. „Wichtige“ sind Länder aus der Liste in config.json."),
+        sec("Aktuelle Wahl-Nachrichten"), items(votes, {})),
+      h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Entscheidungen in 30 Tagen", "laut Wettmärkten"),
+        Object.keys(byDay).length ? Object.entries(byDay).map(([day, ts]) => [
+          h("div", { class: "note", style: "margin:12px 0 0;font-weight:700" }, dayLabel(day)),
+          ts.map(t => h("div", { class: "mini" }, h("a", { href: t.url }, h("b", {}, t.title)), h("span", {}, `${t.lead.label.slice(0, 26)} ${probText(t.lead.p)} · ${t.source}`)))])
+          : h("div", { class: "empty" }, "Keine anstehenden Termine."))));
   },
 
   pm: () => {
     const sources = ["Alle", ...new Set(DATA.prediction.map(e => e.source))];
     const cats = ["Alle", ...new Set(DATA.prediction.map(e => e.category))];
     const state = { src: "Alle", cat: "Alle" };
-    const box = h("div");
+    const box = h("div", { class: "narrow" });
     const bars = { src: h("div", { class: "filters" }), cat: h("div", { class: "filters" }) };
     const render = () => {
       box.replaceChildren(...DATA.prediction
         .filter(e => (state.src === "Alle" || e.source === state.src) && (state.cat === "Alle" || e.category === state.cat))
         .sort((a, b) => b.vol24h / (b.unit === "usd" ? 1 : 3) - a.vol24h / (a.unit === "usd" ? 1 : 3))
-        .map(pmCard));
+        .map(bet));
       if (!box.children.length) box.append(h("div", { class: "empty" }, "Nichts in dieser Auswahl."));
       for (const k of ["src", "cat"]) bars[k].querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state[k]));
     };
-    for (const [k, vals] of [["src", sources], ["cat", cats]])
-      bars[k].append(...vals.map(v => h("button", { onclick: () => { state[k] = v; render(); } }, v)));
+    for (const [k, vals] of [["src", sources], ["cat", cats]]) bars[k].append(...vals.map(v => h("button", { onclick: () => { state[k] = v; render(); } }, v)));
     render();
     const errs = Object.entries(DATA.status.prediction_errors).filter(([, e]) => e);
     return [
-      h("p", { class: "note" }, "Wahrscheinlichkeiten laut Polymarket und Kalshi (Marktpreis = geschätzte Chance). Das sind Stimmungsbilder von Wettenden, keine Fakten. Pfeile zeigen die Veränderung in Prozentpunkten, bei Kalshi ungefähr zum Vortag. Polymarket-Volumen in Dollar, Kalshi in Kontrakten (nicht direkt vergleichbar)."),
+      h("p", { class: "note narrow" }, "Wahrscheinlichkeiten laut Polymarket und Kalshi: der Marktpreis ist die geschätzte Chance. Das sind Stimmungsbilder von Wettenden, keine Fakten. Pfeile zeigen die Veränderung in Prozentpunkten, bei Kalshi ungefähr zum Vortag. Polymarket-Volumen in Dollar, Kalshi in Kontrakten, nicht direkt vergleichbar."),
       errs.map(([n, e]) => h("div", { class: "note bad" }, `${n} nicht erreichbar: ${e}`)),
       bars.src, bars.cat, box];
   },
 
-  watch: () => [
-    h("p", { class: "note" }, "Meldungen, in denen eines deiner Stichwörter vorkommt. Die Liste steht in config.json unter „watchlist“."),
-    list(DATA.stories.filter(s => s.watch.length).slice(0, 40), true)],
-
   verlauf: () => {
-    if (!DATA.history.length) return h("div", { class: "empty" }, "Das Archiv füllt sich ab dem ersten automatischen Lauf auf GitHub, pro Tag eine Zeile.");
-    return [
-      h("p", { class: "note" }, "Die letzten Tage im Rückblick: Kurse, wichtigste Meldungen und Wetten. Pro Tag wird der letzte Stand gespeichert."),
+    if (!DATA.history.length) return h("div", { class: "empty" }, "Das Archiv füllt sich ab dem ersten automatischen Lauf, pro Tag ein Eintrag.");
+    return h("div", { class: "narrow" }, h("p", { class: "note" }, "Die letzten Tage im Rückblick: Kurse, wichtigste Meldungen und Wetten. Pro Tag wird der letzte Stand gespeichert."),
       DATA.history.map((day, i) => {
         const idx = day.quotes.slice(0, 4);
-        return h("details", { class: "day", ...(i === 0 ? { open: "" } : {}) },
+        return h("details", { class: "day", ...(i === 0 ? { open: true } : {}) },
           h("summary", {}, new Date(day.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" }),
-            h("span", {}, idx.length ? idx.map(q => q.name + " " + dePct.format(q.pct) + " %").join("  ·  ") : "")),
-          idx.length > 0 && h("h2", {}, "Kurse"),
-          idx.length > 0 && h("ul", {}, day.quotes.map(q => h("li", {}, q.name + " " + de.format(q.price) + " ", pctSpan(q.pct), q.alert ? " (Alarm)" : ""))),
-          h("h2", {}, "Wichtigste Meldungen"),
+            h("span", {}, idx.map(q => `${q.name} ${pct(q.pct)}`).join("  ·  "))),
+          idx.length > 0 && [h("h4", {}, "Kurse"), h("ul", {}, day.quotes.map(q => h("li", {}, `${q.name} ${price(q.price)} `, pctSpan(q.pct), q.alert ? " (Alarm)" : "")))],
+          h("h4", {}, "Wichtigste Meldungen"),
           h("ul", {}, day.heute.map(s => h("li", {}, h("a", { href: s.url }, s.title), s.alert ? " [Crash-Radar]" : "", s.n > 2 ? ` (${s.n} Quellen)` : ""))),
-          day.pm.length > 0 && h("h2", {}, "Wetten mit dem meisten Handel"),
-          day.pm.length > 0 && h("ul", {}, day.pm.map(p => h("li", {}, h("a", { href: p.url }, p.title), ` – ${p.lead} ${probText(p.p)} (${p.source})`))));
-      })];
+          day.pm.length > 0 && [h("h4", {}, "Wetten mit dem meisten Handel"), h("ul", {}, day.pm.map(p => h("li", {}, h("a", { href: p.url }, p.title), ` – ${p.lead} ${probText(p.p)} (${p.source})`)))]);
+      }));
   },
 };
 
+function bet(e) {
+  return h("article", { class: "bet" },
+    h("h3", { class: "hl" }, h("a", { href: e.url }, e.title)),
+    e.rows.map(r => {
+      const d = r.d1 == null ? null : r.d1 * 100;
+      return h("div", { class: "row" },
+        h("span", { class: "lbl", title: r.label }, r.label),
+        h("div", { class: "bar" }, h("i", { style: `width:${Math.max(1, Math.round(r.p * 100))}%` })),
+        h("span", { class: "pct" }, probText(r.p), d != null && Math.abs(d) >= 0.5 && h("small", { class: d > 0 ? "up" : "down" }, (d > 0 ? "▲" : "▼") + Math.abs(Math.round(d)))));
+    }),
+    e.more > 0 && h("div", { class: "note" }, `+ ${e.more} weitere Optionen`),
+    h("div", { class: "meta" }, h("span", { class: "chip" }, e.source), h("span", { class: "chip" }, e.category),
+      h("span", {}, "24 Std.: " + volume(e.vol24h, e.unit)), e.end && h("span", {}, "Ende: " + dateDe(e.end))));
+}
+
+// ------------------------------------------------------------------ Rahmen: Reiter, Band, Alarm, Fuß
+
 function show(id) {
   if (!views[id]) id = "heute";
+  CURRENT = id;
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.id === id));
-  document.getElementById("view").replaceChildren(...[views[id]()].flat(Infinity).filter(Boolean));
-  try { localStorage.setItem("tab", id); } catch {}
+  $("view").replaceChildren(...[views[id]()].flat(Infinity).filter(Boolean));
+  store.set("tab", id);
   history.replaceState(null, "", "#" + id);
   scrollTo(0, 0);
 }
 
-function init() {
+function renderChrome() {
   const g = new Date(DATA.generated);
-  document.getElementById("updated").textContent =
-    "Stand: " + g.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
+  $("today").textContent = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const stamp = "Stand " + g.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
+  if (!$("status").dataset.busy) $("status").textContent = stamp;
+  $("status").dataset.stamp = stamp;
 
-  const alerts = DATA.quotes.filter(q => q.alert && q.price != null);
-  if (alerts.length) document.getElementById("alertbar").append(
-    h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } },
-      h("b", {}, "Auffällige Bewegung: "),
-      alerts.flatMap((q, i) => [i ? "  ·  " : "", q.name + " ", pctSpan(q.pct)])));
+  $("alertbar").replaceChildren();
+  const alerts = DATA.quotes.concat(depotPositions()).filter(q => q.alert && q.price != null);
+  if (alerts.length) $("alertbar").append(h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } },
+    h("div", { class: "wrap" }, h("b", {}, "Auffällige Bewegung"), alerts.flatMap((q, i) => [i ? "  ·  " : "", `${q.short || q.name} `, h("span", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct))]))));
 
-  document.getElementById("ticker").replaceChildren(...quotes("index").map(q =>
-    h("div", { class: "q" }, h("b", {}, q.name),
-      h("span", {}, de.format(q.price)),
-      q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, dePct.format(q.pct) + " %"))));
+  const tick = (q, extra) => h("button", { class: "tk", onclick: () => openDetail(q, extra) },
+    h("b", {}, q.short || q.name), price(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct)));
+  $("ticker").replaceChildren(
+    h("button", { class: "tk depot", onclick: () => show("depot"), title: "Meine Aktien und ETFs" }, DEPOT ? "Mein Depot ▸" : "Depot ▸"),
+    ...depotPositions().map(p => tick(p, p)), ...idxQuotes().map(q => tick(q)));
 
-  document.getElementById("tabs").replaceChildren(...TABS.map(([id, label]) =>
-    h("button", { role: "tab", "data-id": id, onclick: () => show(id) }, label)));
+  $("tabs").replaceChildren(...TABS.map(([id, label]) => h("button", { role: "tab", "data-id": id, "aria-selected": id === CURRENT, onclick: () => show(id) }, label)));
 
   const failed = DATA.status.feeds.filter(f => f.error);
-  document.getElementById("foot").replaceChildren(
+  $("foot").replaceChildren(
     `${DATA.status.feeds.length - failed.length} von ${DATA.status.feeds.length} Quellen erreichbar. `,
     ...failed.map(f => h("span", { class: "bad" }, `${f.name} ausgefallen. `)),
-    "Nur Überschriften und Teaser, Volltext bei den Originalquellen. Keine Anlageberatung.");
+    "Es werden nur Überschriften und Teaser gezeigt, den Volltext gibt es bei den Originalquellen. Wettquoten und Kurse sind keine Anlageberatung.");
+}
 
-  let start = location.hash.slice(1);
-  if (!views[start]) { try { start = localStorage.getItem("tab"); } catch {} }
-  show(start);
+function renderAll() { renderChrome(); show(CURRENT); }
+
+// ------------------------------------------------------------------ Depot entsperren
+
+async function decryptDepot(enc, pw) {
+  const bytes = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: bytes(enc.salt), iterations: enc.iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: bytes(enc.iv) }, key, bytes(enc.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+async function unlockDepot(pw, remember) {
+  const d = DATA.depot;
+  if (!d) throw new Error("kein Depot");
+  if (d.state === "plain") { DEPOT = d.data; return; }
+  if (d.state !== "enc") throw new Error("gesperrt");
+  DEPOT = await decryptDepot(d.enc, pw);
+  if (remember) store.set("depotpw", pw);
+}
+async function autoUnlock() {
+  DEPOT = null;
+  const d = DATA.depot;
+  if (!d) return;
+  if (d.state === "plain") { DEPOT = d.data; return; }
+  const pw = store.get("depotpw");
+  if (d.state === "enc" && pw) { try { await unlockDepot(pw, false); } catch { store.del("depotpw"); } }
+}
+
+// ------------------------------------------------------------------ Aktualisieren
+
+const setStatus = (t, busy) => { const s = $("status"); s.textContent = t; if (busy) s.dataset.busy = "1"; else delete s.dataset.busy; };
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function fetchLatest() {
+  const url = new URL("data.json", location.href);
+  url.searchParams.set("t", Date.now());
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const d = await r.json();
+  d.history ||= [];
+  return d;
+}
+async function applyData(d) { DATA = d; await autoUnlock(); renderAll(); }
+
+async function dispatchRun(token) {
+  const r = await fetch(`https://api.github.com/repos/${DATA.repo}/actions/workflows/daily.yml/dispatches`, {
+    method: "POST",
+    headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28" },
+    body: JSON.stringify({ ref: "main" }),
+  });
+  if ([401, 403, 404].includes(r.status)) throw new Error("Token ungültig oder ohne Recht „Actions: Read and write“");
+  if (r.status !== 204) throw new Error("GitHub antwortet mit " + r.status);
+}
+
+let refreshing = false;
+async function refresh() {
+  if (refreshing) return;
+  if (location.protocol === "file:") { location.reload(); return; }
+  refreshing = true;
+  const btn = $("btn-refresh");
+  btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }, "↻"), " Lädt …");
+  try {
+    const token = store.get("ghtoken"), before = DATA.generated;
+    if (token) {
+      setStatus("Neuer Abruf wird gestartet …", true);
+      await dispatchRun(token);
+      const t0 = Date.now();
+      while (Date.now() - t0 < 8 * 60000) {
+        setStatus(`Neuer Abruf läuft … ${Math.round((Date.now() - t0) / 1000)} s`, true);
+        await sleep(12000);
+        let d = null;
+        try { d = await fetchLatest(); } catch {}
+        if (d && d.generated !== before) { await applyData(d); setStatus("Neue Meldungen geladen", false); setTimeout(() => setStatus($("status").dataset.stamp), 4000); return; }
+      }
+      setStatus("Der Abruf dauert länger als gewöhnlich. Später erneut versuchen.", false);
+    } else {
+      setStatus("Suche neuen Stand …", true);
+      const d = await fetchLatest();
+      if (d.generated !== before) { await applyData(d); setStatus("Neuer Stand geladen", false); }
+      else setStatus("Das ist schon der neueste Stand. Für sofortigen Neuabruf: Zahnrad → Sofort-Update.", false);
+      setTimeout(() => setStatus($("status").dataset.stamp), 6000);
+    }
+  } catch (e) {
+    setStatus("Fehler: " + e.message, false);
+  } finally {
+    refreshing = false; btn.disabled = false; btn.textContent = "Aktualisieren";
+  }
+}
+$("btn-refresh").addEventListener("click", refresh);
+
+// Beim Zurückkehren zur Seite still prüfen, ob es einen neueren Stand gibt
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible" || refreshing || location.protocol === "file:") return;
+  try { const d = await fetchLatest(); if (d.generated !== DATA.generated) { await applyData(d); setStatus("Neuer Stand geladen", false); setTimeout(() => setStatus($("status").dataset.stamp), 4000); } } catch {}
+});
+
+// ------------------------------------------------------------------ Einstellungen
+
+function openSettings() {
+  const dlg = $("settings");
+  const msg = h("div", { class: "note" });
+  const tok = h("input", { type: "password", placeholder: "github_pat_…", autocomplete: "off" });
+  tok.value = store.get("ghtoken") || "";
+  const repo = DATA.repo || "jaegermilan-dev/mego-news";
+  dlg.replaceChildren(h("div", { class: "dlg" },
+    h("div", { class: "top" }, h("h2", {}, "Einstellungen"), h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
+    h("h3", { class: "sec2" }, "Sofort-Update"),
+    h("p", { class: "note" }, "Ohne Token lädt „Aktualisieren“ nur den zuletzt veröffentlichten Stand (zweimal täglich). Mit einem Token startet der Knopf einen neuen Abruf bei GitHub und lädt das Ergebnis nach etwa ein bis zwei Minuten."),
+    h("ol", { class: "steps" },
+      h("li", {}, "Öffne ", h("a", { href: "https://github.com/settings/personal-access-tokens/new", style: "text-decoration:underline" }, "GitHub → neuen Fine-grained Token"), "."),
+      h("li", {}, `Repository access: „Only select repositories“ → ${repo}.`),
+      h("li", {}, "Permissions → Repository permissions → „Actions“: Read and write."),
+      h("li", {}, "Ablauf z. B. 1 Jahr, Token erzeugen und hier einfügen.")),
+    tok,
+    h("div", { class: "actions" },
+      h("button", { class: "btn primary", onclick: () => { const v = tok.value.trim(); if (v) { store.set("ghtoken", v); msg.textContent = "Token gespeichert (nur auf diesem Gerät)."; } } }, "Speichern"),
+      h("button", { class: "btn", onclick: () => { store.del("ghtoken"); tok.value = ""; msg.textContent = "Token entfernt."; } }, "Entfernen")),
+    msg,
+    h("p", { class: "note" }, "Der Token liegt nur im Browser dieses Geräts und darf ausschließlich Abrufe für dieses Repo starten. Auf fremden Geräten nicht speichern."),
+    h("h3", { class: "sec2" }, "Depot"),
+    h("p", { class: "note" }, DEPOT ? "Dein Depot ist auf diesem Gerät entsperrt." : "Dein Depot ist gesperrt."),
+    h("div", { class: "actions" },
+      h("button", { class: "btn", onclick: () => { store.del("depotpw"); DEPOT = null; renderAll(); dlg.close(); } }, "Passwort auf diesem Gerät vergessen"))));
+  dlg.showModal();
+}
+$("btn-settings").addEventListener("click", openSettings);
+
+// ------------------------------------------------------------------ Start
+
+async function init() {
+  DATA.history ||= [];
+  CURRENT = location.hash.slice(1);
+  if (!views[CURRENT]) CURRENT = store.get("tab");
+  if (!views[CURRENT]) CURRENT = "heute";
+  renderAll();
+  await autoUnlock();
+  renderAll();
 }
 init();
 </script>

@@ -24,15 +24,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Abhängigkeiten installieren
+        run: pip install cryptography
       - name: News sammeln und Seite bauen
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Depot-Positionen und Passwort liegen nur als Secrets, nie im Repo
+          DEPOT_JSON: ${{ secrets.DEPOT_JSON }}
+          DEPOT_PASSWORT: ${{ secrets.DEPOT_PASSWORT }}
         run: python collect.py
       - name: Tagesarchiv speichern
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add archive
+          git add archive cache
           if ! git diff --cached --quiet; then
             git commit -m "Archiv $(date -u +%F)"
             git pull --rebase origin main

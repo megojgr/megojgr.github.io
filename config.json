@@ -1,6 +1,22 @@
 {
   "max_age_hours": 36,
-  "heute_per_topic": 6,
+  "heute_per_topic": {"markets": 6, "world": 6, "germany": 4},
+  "repo": "jaegermilan-dev/mego-news",
+  "elections": {
+    "pages": ["2026_national_electoral_calendar", "2027_national_electoral_calendar"],
+    "max": 80,
+    "important": ["United States", "Germany", "France", "United Kingdom", "Italy", "Spain", "Poland", "Netherlands",
+                  "Hungary", "Austria", "Russia", "Ukraine", "Israel", "Iran", "Turkey", "China", "Taiwan", "Japan",
+                  "India", "South Korea", "Brazil", "Argentina", "Mexico", "Canada", "Australia", "Venezuela",
+                  "European Union"],
+    "extra": []
+  },
+  "briefings": [
+    {"kind": "show", "name": "tagesschau 20 Uhr", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesschau_20_uhr/index~rss2.xml", "link_re": "/tagesschau_20_uhr/ts-\\d+"},
+    {"kind": "show", "name": "tagesthemen", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesthemen/index~rss2.xml", "link_re": "/tagesthemen/tt-\\d+"},
+    {"kind": "google", "name": "Handelsblatt Morning Briefing", "prefix": "Morning Briefing", "url": "https://news.google.com/rss/search?q=%22Morning+Briefing%22+Handelsblatt+when:3d&hl=de&gl=DE&ceid=DE:de"},
+    {"kind": "google", "name": "FAZ Frühdenker", "prefix": "Frühdenker", "url": "https://news.google.com/rss/search?q=Fr%C3%BChdenker+faz.net+when:3d&hl=de&gl=DE&ceid=DE:de"}
+  ],
   "ai": {"enabled": false, "model": "claude-sonnet-5-5", "top_per_topic": 12},
   "history_days": 14,
   "alerts": {"index_day_pct": 2.0, "stock_day_pct": 5.0, "week_pct": 5.0},
@@ -8,7 +24,13 @@
     {"name": "Tagesschau", "url": "https://www.tagesschau.de/index~rss2.xml", "hint": "general", "lang": "de"},
     {"name": "Tagesschau Wirtschaft", "url": "https://www.tagesschau.de/wirtschaft/index~rss2.xml", "hint": "markets", "lang": "de"},
     {"name": "Tagesschau Ausland", "url": "https://www.tagesschau.de/ausland/index~rss2.xml", "hint": "world", "lang": "de"},
-    {"name": "Tagesschau Inland", "url": "https://www.tagesschau.de/inland/index~rss2.xml", "hint": "general", "lang": "de"},
+    {"name": "Tagesschau Inland", "url": "https://www.tagesschau.de/inland/index~rss2.xml", "hint": "germany", "lang": "de"},
+    {"name": "Handelsblatt Politik", "url": "https://www.handelsblatt.com/contentexport/feed/politik", "hint": "germany", "lang": "de"},
+    {"name": "Handelsblatt Finanzen", "url": "https://www.handelsblatt.com/contentexport/feed/finanzen", "hint": "markets", "lang": "de"},
+    {"name": "Handelsblatt Unternehmen", "url": "https://www.handelsblatt.com/contentexport/feed/unternehmen", "hint": "markets", "lang": "de"},
+    {"name": "Zeit Politik", "url": "https://newsfeed.zeit.de/politik/index", "hint": "germany", "lang": "de"},
+    {"name": "Deutschlandfunk Politik", "url": "https://www.deutschlandfunk.de/politikportal-100.rss", "hint": "germany", "lang": "de"},
+    {"name": "Spiegel Politik", "url": "https://www.spiegel.de/politik/index.rss", "hint": "germany", "lang": "de"},
     {"name": "ZDFheute", "url": "https://www.zdf.de/rss/zdf/nachrichten", "hint": "general", "lang": "de"},
     {"name": "Deutschlandfunk", "url": "https://www.deutschlandfunk.de/nachrichten-100.rss", "hint": "general", "lang": "de"},
     {"name": "n-tv", "url": "https://www.n-tv.de/rss", "hint": "general", "lang": "de"},
@@ -59,9 +81,17 @@
       "regierung", "government", "israel", "gaza", "iran", "hamas", "hisbollah", "hezbollah", "libanon", "syrien",
       "nahost", "middle east", "sanktion", "sanction", "geopolit", "waffenstillstand", "ceasefire", "angriff", "attack",
       "rakete", "missile", "militär", "military", "armee", "troops", "eu$", "kreml", "kremlin", "peking", "beijing",
-      "washington", "indien", "india", "nordkorea", "north korea", "venezuela", "referendum", "koalition", "kanzler",
-      "bundestag", "parlament", "parliament", "premier", "prime minister", "netanjahu", "netanyahu", "putsch", "coup",
+      "washington", "indien", "india", "nordkorea", "north korea", "venezuela", "referendum",
+      "parlament", "parliament", "premier", "prime minister", "netanjahu", "netanyahu", "putsch", "coup",
       "vote$", "poll$", "polls$", "diplomat"
+    ],
+    "germany": [
+      "bundestag", "bundesregierung", "bundeskanzler", "kanzler", "merz", "deutschland", "berlin", "cdu", "csu", "spd",
+      "grüne", "afd", "fdp", "linke", "bsw", "landtag", "bundesrat", "bundesland", "bundesländer", "bundeswehr",
+      "bundesverfassungsgericht", "bürgergeld", "rente", "mindestlohn", "deutsche bahn", "bundesbank", "haushalt",
+      "schuldenbremse", "koalition", "ministerpräsident", "bundesminister", "innenminister", "wehrpflicht", "bafög",
+      "pflegeversicherung", "krankenkasse", "heizungsgesetz", "wohngeld", "kita", "lehrer", "polizei", "gewerkschaft",
+      "verdi", "ig metall", "tarif", "deutsche", "deutschen", "bayern", "nrw", "sachsen", "thüringen", "hamburg"
     ]
   },
   "blocklist": [

@@ -3,3 +3,7 @@ __pycache__/
 # Depot-Positionen gehören nicht ins öffentliche Repo (im Workflow kommen sie aus dem Secret DEPOT_JSON)
 depot.json
 depot*.local.json
+# Passwörter und Schlüssel dürfen nie ins Repo
+Passwort*.txt
+*.pw
+.env

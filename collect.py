@@ -19,6 +19,7 @@ import briefings
 import depot
 import elections
 import geo
+import live
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
 from textutil import compile_keywords, count_hits
@@ -283,12 +284,14 @@ def main():
         kalshi_f = ex.submit(build_kalshi, cfg)
         brief_f = ex.submit(briefings.build, cfg)
         elect_f = ex.submit(elections.build, cfg, today)
+        live_f = ex.submit(live.build, cfg)
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
         pm_top, pm_window, pm_error = pm_f.result()
         kalshi_all, kalshi_error = kalshi_f.result()
         brief_list, brief_errors = brief_f.result()
         election_list, election_note = elect_f.result()
+        live_data = live_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
@@ -315,6 +318,7 @@ def main():
         "briefings": brief_list,
         "elections": election_list,
         "geo": geo_data,
+        "live": live_data,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -322,7 +326,8 @@ def main():
                    "briefing_errors": brief_errors,
                    "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error}},
     }
-    if os.environ.get("GITHUB_ACTIONS") or "--archive" in sys.argv:
+    # Stündliche Läufe sollen das Archiv nicht fluten: nur zu den Archivstunden (morgens und nachmittags) speichern
+    if (os.environ.get("GITHUB_ACTIONS") and NOW.hour in cfg["archive_hours"]) or "--archive" in sys.argv:
         archive.write(data, today)
     data["history"] = archive.load(cfg["history_days"])
 
@@ -352,6 +357,9 @@ def main():
           f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
           f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+    lv = live_data["channels"]
+    print(f"Live: {sum(c['state'] == 'live' for c in lv)} live, {sum(c['state'] == 'geplant' for c in lv)} geplant, "
+          f"{live_data['failed']} Abrufe fehlgeschlagen" + (" (alter Stand)" if live_data.get("stale") else ""))
     print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")
           + f" | Verlauf: {len(data['history'])} Tage")
     for name, err in data["status"]["prediction_errors"].items():

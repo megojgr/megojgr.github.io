@@ -13,7 +13,6 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="no-referrer">
 <title>Mego News</title>
 <style>
   :root {
@@ -248,6 +247,29 @@
   .gsp { margin: 8px 0; } .gspark { width: 100%; height: 44px; display: block; } .gsp small { color: var(--muted); font-size: 12px; }
   .gfoot { margin: 0; }
 
+  .nl small { color: var(--muted); }
+
+  /* Live */
+  .live-wrap { display: grid; gap: 18px 32px; grid-template-columns: minmax(0, 1fr); padding-top: 14px; }
+  @media (min-width: 980px) { .live-wrap { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
+  .pstage { position: relative; background: #05080d; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; border: 1px solid #1a2a3d; display: grid; place-items: center; color: #9fb3c8; text-align: center; padding: 16px; font-size: 14.5px; }
+  .pstage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ptitle { margin: 12px 0 4px; font: 700 19px/1.3 var(--serif); }
+  .pmeta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+  .pmeta a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+  .lrow { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 2px; font-size: 14.5px; }
+  .lrow:hover, .lrow[aria-current="true"] { background: var(--soft); } .lrow b { display: block; font-weight: 600; line-height: 1.3; }
+  .lrow small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 1px; }
+  .livechip { flex: none; font: 700 10.5px var(--sans); letter-spacing: .06em; color: #fff; background: #d4241a; border-radius: 3px; padding: 2px 6px; margin-top: 2px; text-transform: uppercase; }
+  .livechip.soon { background: #e0a100; color: #111; } .livechip.off { background: var(--line); color: var(--muted); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d4241a; margin-left: 6px; vertical-align: 1px; }
+  .tonight { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 14px 16px; margin-bottom: 14px; }
+  .tonight h3 { margin: 0 0 4px; font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+  .tonight p { margin: 4px 0; font-size: 14.5px; } .tonight a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
+  .chips button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 13px; font-size: 13px; }
+  .chips button:hover { border-color: var(--ink); }
+
   /* Rückmeldung beim Aktualisieren */
   .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 60; display: flex; gap: 10px; align-items: center; width: max-content; max-width: min(580px, 94vw); background: var(--ink); color: var(--bg); padding: 11px 12px 11px 14px; border-radius: 10px; box-shadow: 0 8px 30px var(--shadow); transition: opacity .2s, transform .2s; font-size: 14px; line-height: 1.35; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
@@ -298,7 +320,7 @@ let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
 let CURRENT = "heute";
 
 const TABS = [
-  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"],
+  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"], ["live", "Live"],
   ["germany", "Deutschland"], ["wahlen", "Wahlen & Termine"], ["pm", "Wetten"], ["verlauf", "Archiv"],
 ];
 const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland" };
@@ -581,6 +603,10 @@ function glance() {
     : "keine auffälligen Bewegungen"]);
   const strait = ((DATA.geo && DATA.geo.chokepoints) || []).filter(c => c.level > 0);
   if (strait.length) rows.push(["Meerengen", [strait.flatMap((c, i) => [i ? "  ·  " : "", `${c.name.split(" / ")[0]} `, pctSpan(c.pct)]), " Schiffsverkehr, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
+  const lv = (DATA.live && DATA.live.channels) || [];
+  const nowLive = lv.filter(c => c.state === "live").length;
+  const upcoming = lv.filter(c => c.state === "geplant" && c.start * 1000 - Date.now() < 8 * 3600e3).sort((a, b) => a.start - b.start).slice(0, 2);
+  if (nowLive || upcoming.length) rows.push(["Live", [`${nowLive} Sender senden gerade`, upcoming.map(c => [`  ·  ${c.name}: ${c.title.slice(0, 70)} (${new Date(c.start * 1000).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr)`]), "  ", h("a", { href: "#live", onclick: (e) => { e.preventDefault(); show("live"); } }, "zum Live-Reiter")]]);
   const crash = DATA.stories.filter(s => s.alert);
   if (crash.length) rows.push(["Crash-Radar", [h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } }, `${crash.length} Meldung${crash.length > 1 ? "en" : ""}`), " mit Absturz-Stichwörtern"]]);
   const ne = nextElections(3, 21);
@@ -685,6 +711,66 @@ const views = {
     return root;
   },
 
+  live: () => {
+    const L = DATA.live;
+    if (!L || !L.channels.length) return h("div", { class: "empty" }, "Noch keine Senderliste vorhanden.");
+    const chans = L.channels;
+    const stage = h("div", { class: "pstage" }, h("div", {}, h("b", {}, "Sender wählen"), h("br"), "Tippe rechts oder unten auf einen Sender. Der Stream startet erst nach deiner Auswahl."));
+    const meta = h("div");
+    let current = null;
+
+    const ytLink = (c) => c.video ? "https://www.youtube.com/watch?v=" + c.video : c.handle ? `https://www.youtube.com/@${c.handle}/live` : c.url;
+    const play = (c) => {
+      if (c.state === "extern" || (!c.video && !c.channel_id)) { window.open(c.url || ytLink(c), "_blank", "noopener"); return; }
+      current = c; store.set("livech", c.name);
+      const src = c.video && c.embed
+        ? `https://www.youtube-nocookie.com/embed/${c.video}?autoplay=1&rel=0&playsinline=1`
+        : `https://www.youtube-nocookie.com/embed/live_stream?channel=${c.channel_id}&autoplay=1&rel=0&playsinline=1`;
+      stage.replaceChildren(location.protocol === "file:"
+        ? h("div", {}, "Der Player braucht die Webadresse und läuft nicht aus einer lokalen Datei.")
+        : h("iframe", { src, title: c.name, allow: "autoplay; encrypted-media; picture-in-picture; fullscreen", allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin" }));
+      const badge = c.state === "live" ? "Live" : c.state === "geplant" ? "Angekündigt" : "Kein laufender Stream erkannt";
+      meta.replaceChildren(h("div", { class: "ptitle" }, c.name + (c.title ? ": " + c.title : "")),
+        h("div", { class: "pmeta" }, h("span", {}, badge + (c.state === "geplant" && c.start ? ", " + startText(c.start) : "")),
+          h("a", { href: ytLink(c) }, "Auf YouTube öffnen"), c.url && h("a", { href: c.url }, "Offizielle Seite")));
+      document.querySelectorAll(".lrow").forEach(r => r.setAttribute("aria-current", r.dataset.name === c.name));
+      stage.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    };
+
+    const row = (c, chip, sub) => h("button", { class: "lrow", "data-name": c.name, onclick: () => play(c) },
+      chip, h("span", {}, h("b", {}, c.name), sub && h("small", {}, sub)));
+    const liveRows = chans.filter(c => c.state === "live");
+    const soonRows = chans.filter(c => c.state === "geplant").sort((a, b) => a.start - b.start);
+    const quiet = chans.filter(c => c.state === "aus" || c.state === "unbekannt");
+    const external = chans.filter(c => c.state === "extern" || (c.url && c.state !== "extern"));
+    const groups = [...new Set(chans.map(c => c.group))];
+
+    const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
+    const tonight = h("section", { class: "tonight" }, h("h3", {}, "Heute Abend"),
+      h("p", {}, h("b", {}, "tagesschau 20 Uhr: "), tagesschauCountdown()),
+      h("p", {}, h("a", { href: "https://www.tagesschau.de/multimedia/livestreams/index.html" }, "Live bei tagesschau.de"),
+        "  ·  ", h("a", { href: "https://www.ardmediathek.de/live" }, "ARD Mediathek live"),
+        ts && ["  ·  ", h("a", { href: ts.url }, "letzte Sendung mit Themen")]));
+
+    const stamp = L.checked ? ago(L.checked) : "";
+    const side = h("aside", { class: "side" },
+      h("div", { class: "blk" }, sec("Jetzt live", liveRows.length + " Sender"), liveRows.length ? liveRows.map(c => row(c, h("span", { class: "livechip" }, "Live"), c.title || c.group)) : h("div", { class: "empty" }, "Gerade nichts erkannt.")),
+      soonRows.length > 0 && h("div", { class: "blk" }, sec("Angekündigt", "Reden, Pressekonferenzen, Sondersendungen"), soonRows.map(c => row(c, h("span", { class: "livechip soon" }, "bald"), `${startText(c.start)}: ${c.title}`))),
+      h("p", { class: "note" }, `Die Liste wird stündlich auf YouTube geprüft${stamp ? " (zuletzt " + stamp + ")" : ""}${L.stale ? ", Abruf gerade gestört, alter Stand" : ""}. Ob ein Stream wirklich läuft, zeigt dir der Player.`));
+
+    const last = store.get("livech");
+    const pre = chans.find(c => c.name === last) || liveRows[0];
+    if (pre && pre.state !== "extern") setTimeout(() => { if (stage.isConnected) { stage.replaceChildren(h("div", {}, h("b", {}, pre.name), h("br"), "Zum Abspielen tippen")); stage.style.cursor = "pointer"; stage.onclick = () => { stage.style.cursor = ""; stage.onclick = null; play(pre); }; } }, 0);
+
+    return h("div", { class: "live-wrap" },
+      h("div", {}, tonight, stage, meta,
+        sec("Alle Sender", "antippen zum Abspielen"),
+        groups.map(g => [h("div", { class: "note", style: "margin:12px 0 0;font-weight:700" }, g),
+          h("div", { class: "chips" }, chans.filter(c => c.group === g).map(c => h("button", { onclick: () => play(c) }, (c.state === "live" ? "● " : c.state === "geplant" ? "◔ " : "") + c.name)))]),
+        h("p", { class: "note" }, "● läuft gerade, ◔ angekündigt. Die Videos kommen direkt von YouTube und den Sendern. Manche Sender lassen sich nicht einbetten, dann öffnet „Auf YouTube öffnen“ den Kanal. ZDF, ARD und n-tv bieten ihre Livestreams auf den offiziellen Seiten an (Link bei den Sendern).")),
+      side);
+  },
+
   world: () => h("div", { class: "narrow" }, items(DATA.stories.filter(s => s.topic === "world").slice(0, 50), { lead: true, hideTopic: true })),
 
   germany: () => {
@@ -769,6 +855,23 @@ const views = {
   },
 };
 
+function startText(epoch) {
+  const d = new Date(epoch * 1000), min = Math.round((d - Date.now()) / 60000);
+  const when = d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const rel = min < -5 ? "läuft vermutlich schon" : min < 60 ? `in ${Math.max(0, min)} Min.` : min < 1440 ? `in ${Math.round(min / 60)} Std.` : `in ${Math.round(min / 1440)} Tg.`;
+  return `${when} Uhr (${rel})`;
+}
+
+// Zeit bis zur nächsten tagesschau um 20:00 Uhr (Berliner Zeit)
+function tagesschauCountdown() {
+  const berlin = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+  const target = new Date(berlin); target.setHours(20, 0, 0, 0);
+  if (berlin - target > 20 * 60000) target.setDate(target.getDate() + 1);
+  const min = Math.round((target - berlin) / 60000);
+  if (min <= 0) return "läuft jetzt (20:00 bis ca. 20:15 Uhr).";
+  return min >= 60 ? `heute 20:00 Uhr, in ${Math.floor(min / 60)} Std. ${min % 60} Min.` : `gleich, in ${min} Min. (20:00 Uhr).`;
+}
+
 // Globus erst beim Öffnen des Reiters laden (d3 und Weltkarte sind zusammen etwa 450 KB)
 async function loadGlobe() {
   if (!window.MegoGlobe) {
@@ -826,7 +929,8 @@ function renderChrome() {
     h("button", { class: "tk depot", onclick: () => show("depot"), title: "Meine Aktien und ETFs" }, DEPOT ? "Mein Depot ▸" : "Depot ▸"),
     ...depotPositions().map(p => tick(p, p)), ...idxQuotes().map(q => tick(q)));
 
-  $("tabs").replaceChildren(...TABS.map(([id, label]) => h("button", { role: "tab", "data-id": id, "aria-selected": id === CURRENT, onclick: () => show(id) }, label)));
+  const liveNow = ((DATA.live && DATA.live.channels) || []).some(c => c.state === "live");
+  $("tabs").replaceChildren(...TABS.map(([id, label]) => h("button", { role: "tab", "data-id": id, "aria-selected": id === CURRENT, onclick: () => show(id) }, label, id === "live" && liveNow && h("i", { class: "dot", title: "Sender senden gerade" }))));
 
   const failed = DATA.status.feeds.filter(f => f.error);
   $("foot").replaceChildren(
@@ -890,7 +994,11 @@ async function fetchLatest() {
   d.history ||= [];
   return d;
 }
-async function applyData(d) { DATA = d; await autoUnlock(); renderAll(); }
+async function applyData(d) {
+  DATA = d; await autoUnlock();
+  // Läuft gerade ein Stream, soll das Update ihn nicht abbrechen: nur den Rahmen erneuern
+  if (CURRENT === "live" && document.querySelector(".pstage iframe")) renderChrome(); else renderAll();
+}
 
 const gh = (path, token, opts = {}) => fetch(`https://api.github.com/repos/${DATA.repo}${path}`, {
   ...opts, headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28" } });

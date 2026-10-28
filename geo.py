@@ -8,7 +8,9 @@ import html
 import io
 import json
 import math
+import os
 import re
+import sys
 import urllib.parse
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -96,7 +98,7 @@ def gdelt_day(day):
     return cells, countries
 
 
-def conflicts(today, days, max_points, world):
+def conflicts(today, days, max_points, world, reason_countries=20):
     cells, countries, used = {}, collections.Counter(), []
     for back in range(1, days + 3):
         if len(used) >= days:
@@ -120,15 +122,49 @@ def conflicts(today, days, max_points, world):
     for v in sorted(cells.values(), key=lambda v: v["w"], reverse=True)[:max_points]:
         _, lat, lon, full = v["best"]
         parts = [x.strip() for x in full.split(",") if x.strip()]
+        country = "Palestine" if ("Gaza" in full or "West Bank" in full) else (parts[-1] if parts else "")
         points.append({"lat": round(lat, 2), "lon": round(lon, 2), "w": v["w"], "n": v["n"],
-                       "name": ", ".join(dict.fromkeys([parts[0], parts[-1]])) if parts else full})
+                       "name": ", ".join(dict.fromkeys([parts[0], parts[-1]])) if parts else full,
+                       "cid": find_country(country, world)[1]})
     merged = collections.Counter()
     for name, w in countries.items():
         ne, _ = find_country(name, world)
         if ne:
             merged[ne] += w
     top = [{"id": world[n], "name": n, "name_de": de_name(n), "w": w} for n, w in merged.most_common(40)]
+    reasons(top, reason_countries)
     return {"days": used, "points": points, "countries": top}
+
+
+REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
+
+
+def reasons(countries, how_many):
+    """Zu den Ländern mit den meisten Konfliktmeldungen: aktuelle Schlagzeilen als Hinweis auf den Anlass."""
+    def one(c):
+        name = REASON_NAMES.get(c["name"]) or c["name_de"]
+        q = f"({name}) (Krieg OR Angriff OR Kämpfe OR Beschuss OR Militär OR Anschlag OR Luftangriff OR Raketen) when:2d"
+        url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=de&gl=DE&ceid=DE:de"
+        try:
+            items = sorted(rss_items(fetch(url, 20)), key=lambda i: i["time"], reverse=True)
+        except Exception:
+            return []
+        out, seen = [], set()
+        for i in items:
+            m = re.match(r"(.*)\s+-\s+([^-]+)$", i["title"])
+            title, source = (m.group(1), m.group(2).strip()) if m else (i["title"], "")
+            key = re.sub(r"\W+", "", title.lower())[:40]
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({"title": title, "source": source, "url": i["url"], "time": i["time"].isoformat()})
+            if len(out) == 4:
+                break
+        return out
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for c, news in zip(countries[:how_many], ex.map(one, countries[:how_many])):
+            c["news"] = news
 
 
 # ---------------------------------------------------------------- Meerengen (IMF PortWatch)
@@ -286,20 +322,28 @@ def build(cfg, stories, election_list, today):
         cache = {}
     notes, now = {}, dt.datetime.now(dt.timezone.utc).isoformat()
 
+    force = bool(os.environ.get("GEO_FULL")) or "--full" in sys.argv
+
     def part(key, fn):
+        """Langsame Quellen nur nach Ablauf ihrer Frist neu laden (stündliche Läufe bleiben schlank)."""
+        cached = cache.get(key)
+        if cached and not force and cached.get("fetched") and not cached.get("stale"):
+            age_h = (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(cached["fetched"])).total_seconds() / 3600
+            if age_h < g["ttl_hours"].get(key, 6):
+                return cached
         try:
             value = fn()
             value["fetched"] = now
             cache[key] = value
         except Exception as e:
             notes[key] = f"{type(e).__name__}: {str(e)[:90]}"
-            value = cache.get(key)
+            value = cached
             if value:
                 value["stale"] = True
         return value
 
     with ThreadPoolExecutor(max_workers=3) as ex:
-        f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world))
+        f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"]))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
         conflict, cps, carriers = f_conf.result(), f_cp.result(), f_car.result()

@@ -35,9 +35,37 @@
     const names = geo.names || {};
     const nameOf = (f) => names[f.id] || f.properties.name;
     const featById = new Map(world.features.map(f => [f.id, f]));
-    const centroid = new Map(world.features.map(f => [f.id, d3.geoCentroid(f)]));
+    // Beschriftungspunkt: Mittelpunkt des größten Teilgebiets (sonst wandert z. B. Frankreich wegen Französisch-Guayana)
+    const labelInfo = world.features.map(f => {
+      const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
+      let best = null, bestArea = -1;
+      for (const coordinates of polys) {
+        const g = { type: "Polygon", coordinates }, a = d3.geoArea(g);
+        if (a > bestArea) { bestArea = a; best = g; }
+      }
+      return { f, area: d3.geoArea(f), c: d3.geoCentroid(best) };
+    }).sort((a, b) => b.area - a.area);
+    const centroid = new Map(labelInfo.map(li => [li.f.id, li.c]));
 
-    const defaults = { borders: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, minConf: 0, elDays: 90, spin: 2 };
+    // Suchbegriffe, mit denen Meldungen einem Land zugeordnet werden (ISO-Nummer des Landes)
+    const STEMS = {
+      643: ["russland", "russisch", "kreml"], 804: ["ukrain", "kiew"], 376: ["israel"], 275: ["palästin", "gaza", "westjordan"],
+      364: ["iran", "teheran"], 887: ["jemen", "huthi"], 840: ["usa", "u.s.", "trump", "us-", "vereinigte staaten"],
+      156: ["china", "chines", "peking"], 158: ["taiwan"], 760: ["syrien", "syrisch"], 422: ["libanon", "hisbollah"],
+      368: ["irak"], 729: ["sudan"], 180: ["kongo"], 104: ["myanmar"], 408: ["nordkorea"], 410: ["südkorea"],
+      586: ["pakistan"], 4: ["afghanistan"], 792: ["türkei", "türkisch"], 250: ["frankreich", "französisch"],
+      826: ["großbritannien", "britisch", "london"], 276: ["deutschland", "deutsch"], 356: ["indien", "indisch"],
+      392: ["japan"], 682: ["saudi"], 818: ["ägypten"], 434: ["libyen"], 466: ["mali"], 566: ["nigeria"], 862: ["venezuela"],
+    };
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    function storiesFor(f) {
+      const de = (names[f.id] || f.properties.name).toLowerCase(), en = f.properties.name.toLowerCase();
+      const stems = STEMS[f.id] || [de, en];
+      const pats = stems.map(s => s.length < 5 ? new RegExp("(^|[^a-zäöüß])" + esc(s) + "([^a-zäöüß]|$)") : null);
+      return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
+    }
+
+    const defaults = { borders: true, names: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, minConf: 0, elDays: 90, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
@@ -88,7 +116,8 @@
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
       sw("borders", "Ländergrenzen"),
-      sw("labels", "Beschriftungen"),
+      sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
+      sw("labels", "Beschriftung der Punkte"),
       h("h3", {}, "Regler"),
       slider("minConf", "Konflikte: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
       slider("elDays", "Wahlen: Zeitraum voraus", 7, 365, 1, v => v + " Tage", () => renderLists()),
@@ -156,6 +185,26 @@
         g2.font = `600 ${size}px system-ui, sans-serif`; g2.textAlign = align || "left"; g2.lineWidth = 3;
         g2.strokeStyle = "rgba(5,10,18,.85)"; g2.strokeText(txt, x, y); g2.fillStyle = color; g2.fillText(txt, x, y);
       };
+
+      // Ländernamen: große Länder zuerst, kleine erst beim Hineinzoomen; überlappende werden ausgelassen
+      if (S.names) {
+        const taken = [], R2 = R * R;
+        const place = (li, force) => {
+          const dist = d3.geoDistance(li.c, center);
+          if (dist > 1.3) return;
+          const px = li.area * R2, size = clamp(9.5 + Math.sqrt(px) / 46, 10, 17), text = nameOf(li.f);
+          const [x, y] = proj(li.c), w = text.length * size * 0.58;
+          const box = [x - w / 2 - 3, y - size / 2 - 2, x + w / 2 + 3, y + size / 2 + 2];
+          if (!force && taken.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) return;
+          taken.push(box);
+          g2.globalAlpha = clamp((1.3 - dist) / 0.4, 0.15, 1);
+          halo(text, x, y + size * 0.35, force ? "#fff" : "rgba(222,234,247,.92)", size, "center");
+          g2.globalAlpha = 1;
+        };
+        const sel = selected && selected.country ? labelInfo.find(li => li.f.id === selected.country) : null;
+        if (sel) place(sel, true);
+        for (const li of labelInfo) { if (li.area * R2 < 2400) break; if (li !== sel) place(li, false); }
+      }
       const isSel = (type, item) => selected && selected.type === type && selected.item === item;
 
       // Konfliktorte
@@ -295,14 +344,27 @@
       svg.append(pl); return svg;
     }
 
+    // Schlagzeilen zum Land: erst die gezielt zum Konflikt gesuchten, sonst die passenden aus den gesammelten Meldungen
+    function newsBlock(conflictNews, stories, title) {
+      const rows = conflictNews
+        ? conflictNews.map(n => h("p", { class: "nl" }, link(n.title, n.url), n.source && h("small", {}, " · " + n.source)))
+        : stories.map(s => h("p", { class: "nl" }, link(s.title, s.url), h("small", {}, " · " + (s.sources[0] ? s.sources[0].name : ""))));
+      if (!rows.length) return null;
+      return h("div", {}, h("h4", {}, title), rows,
+        conflictNews ? h("p", { class: "note" }, "Hinweis auf den Hintergrund, kein geprüfter Befund. Die Schlagzeilen stammen aus einer Nachrichtensuche zu Krieg, Angriff und Militär.") : null);
+    }
+
     function select(type, item) {
       selected = { type, item, country: type === "country" ? item.id : null };
       let lon, lat, node;
       if (type === "conflict") {
         lon = item.lon; lat = item.lat;
+        const f = item.cid && featById.get(item.cid), cc = item.cid && confCountry.get(item.cid);
+        const cname = f ? nameOf(f) : "";
         node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag bad" }, "Kampfhandlungen laut Nachrichten"),
           h("p", {}, `${item.n} Ereignisse mit ${item.w} Medienmeldungen in den letzten 2 Tagen. Das ist die Zahl der Meldungen, kein Maß für Opfer oder Ausmaß.`),
-          h("p", { class: "note" }, "Maschinell aus Nachrichten gewonnen (GDELT). Orte können falsch zugeordnet sein."));
+          f && newsBlock(cc && cc.news && cc.news.length ? cc.news : null, storiesFor(f), `Anlass: aktuelle Meldungen zu ${cname}`),
+          h("p", { class: "note" }, "Maschinell aus Nachrichten gewonnen (GDELT). Orte können falsch zugeordnet sein. Die Schlagzeilen gehören zum ganzen Land, nicht nur zu diesem Ort."));
       } else if (type === "chokepoint") {
         lon = item.lon; lat = item.lat;
         const [lvl, col] = LEVEL[item.level];
@@ -323,6 +385,7 @@
         const ll = centroid.get(f.id); lon = ll[0]; lat = ll[1];
         node = h("div", {}, h("h3", {}, nameOf(f)),
           c ? h("p", {}, `Konfliktmeldungen: ${c.w} in den letzten 2 Tagen (Rang ${conflict.countries.indexOf(c) + 1} von ${conflict.countries.length}).`) : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen in den Daten."),
+          newsBlock(c && c.news && c.news.length ? c.news : null, storiesFor(f), c ? "Anlass: aktuelle Meldungen zum Konflikt" : "Meldungen zu diesem Land"),
           e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."));
         lon = ll[0]; lat = ll[1];
       }

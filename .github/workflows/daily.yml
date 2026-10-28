@@ -2,9 +2,10 @@ name: Tägliche News
 
 on:
   schedule:
-    # Zeiten in UTC. Berlin = UTC+1 im Winter, UTC+2 im Sommer. GitHub startet oft ein paar Minuten später.
-    - cron: "0 4 * * *"    # Morgens: 05:00 / 06:00 Uhr, mit dem Schlusskurs von Wall Street und Asien
-    - cron: "0 16 * * *"   # Nachmittags: 17:00 / 18:00 Uhr, nach Börsenschluss in Europa
+    # Stündlich, damit Nachrichten und die Live-Übersicht frisch bleiben. GitHub startet oft ein paar Minuten später.
+    # Schwere Quellen (Konflikte, Schiffsverkehr, Träger) laden sich nur alle paar Stunden neu (siehe config.json).
+    # Ins Archiv wird nur um 04 und 16 Uhr UTC geschrieben (morgens und nachmittags), damit es nicht überläuft.
+    - cron: "10 * * * *"
   workflow_dispatch:
 
 permissions:

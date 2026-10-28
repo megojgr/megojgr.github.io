@@ -17,17 +17,30 @@ WMO = {
 
 def weather(lat, lon):
     url = (f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-           "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation"
-           "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,wind_gusts_10m_max"
-           "&timezone=Europe%2FBerlin&forecast_days=5")
+           "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation,relative_humidity_2m,is_day"
+           "&hourly=temperature_2m,precipitation_probability,weather_code,precipitation"
+           "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,wind_gusts_10m_max,"
+           "precipitation_probability_max,sunrise,sunset,uv_index_max"
+           "&timezone=Europe%2FBerlin&forecast_days=7")
     d = json.loads(fetch(url, 20))
-    cur, daily = d["current"], d["daily"]
+    cur, daily, hourly = d["current"], d["daily"], d["hourly"]
     days = [{"date": daily["time"][i], "tmax": round(daily["temperature_2m_max"][i]), "tmin": round(daily["temperature_2m_min"][i]),
              "rain": round(daily["precipitation_sum"][i], 1), "gust": round(daily["wind_gusts_10m_max"][i]),
+             "pop": daily["precipitation_probability_max"][i], "code": daily["weather_code"][i],
+             "sunrise": daily["sunrise"][i][11:16], "sunset": daily["sunset"][i][11:16],
+             "uv": round(daily["uv_index_max"][i] or 0),
              "text": WMO.get(daily["weather_code"][i], "")} for i in range(len(daily["time"]))]
+    # Stundenverlauf ab jetzt, alle zwei Stunden für die nächsten 24 Stunden (Ortszeit, wie von Open-Meteo geliefert)
+    now_h = cur["time"][:13]
+    start = next((i for i, t in enumerate(hourly["time"]) if t[:13] >= now_h), 0)
+    hours = [{"time": hourly["time"][i][11:16], "temp": round(hourly["temperature_2m"][i]),
+              "pop": hourly["precipitation_probability"][i], "rain": round(hourly["precipitation"][i], 1),
+              "code": hourly["weather_code"][i], "text": WMO.get(hourly["weather_code"][i], "")}
+             for i in range(start, min(start + 25, len(hourly["time"])), 2)]
     return {"now": {"temp": round(cur["temperature_2m"]), "feels": round(cur["apparent_temperature"]),
-                    "text": WMO.get(cur["weather_code"], ""), "wind": round(cur["wind_speed_10m"]),
-                    "rain": cur.get("precipitation", 0)}, "days": days}
+                    "text": WMO.get(cur["weather_code"], ""), "code": cur["weather_code"], "wind": round(cur["wind_speed_10m"]),
+                    "rain": cur.get("precipitation", 0), "humidity": cur.get("relative_humidity_2m"), "night": cur.get("is_day") == 0},
+            "hours": hours, "days": days}
 
 
 def warnings(cells):

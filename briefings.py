@@ -34,6 +34,20 @@ def _show_topics(page_html):
     return [t for t in topics if t and t.lower() != "das wetter" and len(t) < 160][:12]
 
 
+def youtube(feed, title_re):
+    """Neuestes Video eines YouTube-Kanals (Atom-Feed, frei) mit passendem Titel, z. B. "tagesschau 20:00 Uhr, 28.10.2026"."""
+    ns = {"a": "http://www.w3.org/2005/Atom"}
+    root = ET.fromstring(fetch(feed, 20))
+    best = None
+    for e in root.findall("a:entry", ns):
+        title = html.unescape(e.findtext("a:title", "", ns))
+        link = e.find("a:link", ns)
+        when = e.findtext("a:published", "", ns)
+        if re.search(title_re, title) and link is not None and when and (best is None or when > best["time"]):
+            best = {"title": title, "url": link.get("href"), "time": when}
+    return best
+
+
 def show(b):
     """Neueste Folge einer TV-Sendung samt Themenliste von ihrer Seite."""
     link_re = re.compile(b["link_re"])
@@ -47,8 +61,14 @@ def show(b):
     except Exception:
         pass  # ohne Themenliste bleibt der Link zur Sendung
     day = latest["time"].astimezone().strftime("%d.%m.%Y")
+    yt = None
+    if b.get("youtube_feed"):
+        try:
+            yt = youtube(b["youtube_feed"], b["youtube_re"])
+        except Exception:
+            pass  # ohne YouTube-Link bleibt der Link zur Sendung
     return {"name": b["name"], "title": f"{b['name']} vom {day}", "url": latest["url"],
-            "time": latest["time"].isoformat(), "topics": topics}
+            "time": latest["time"].isoformat(), "topics": topics, "youtube": yt}
 
 
 def google(b):

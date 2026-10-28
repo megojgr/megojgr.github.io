@@ -12,8 +12,8 @@
     "extra": []
   },
   "briefings": [
-    {"kind": "show", "name": "tagesschau 20 Uhr", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesschau_20_uhr/index~rss2.xml", "link_re": "/tagesschau_20_uhr/ts-\\d+"},
-    {"kind": "show", "name": "tagesthemen", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesthemen/index~rss2.xml", "link_re": "/tagesthemen/tt-\\d+"},
+    {"kind": "show", "name": "tagesschau 20 Uhr", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesschau_20_uhr/index~rss2.xml", "link_re": "/tagesschau_20_uhr/ts-\\d+", "youtube_feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5NOEUbkLheQcaaRldYW5GA", "youtube_re": "^tagesschau 20:00 Uhr"},
+    {"kind": "show", "name": "tagesthemen", "feed": "https://www.tagesschau.de/multimedia/sendung/tagesthemen/index~rss2.xml", "link_re": "/tagesthemen/tt-\\d+", "youtube_feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5NOEUbkLheQcaaRldYW5GA", "youtube_re": "^tagesthemen \\d"},
     {"kind": "google", "name": "Handelsblatt Morning Briefing", "prefix": "Morning Briefing", "url": "https://news.google.com/rss/search?q=%22Morning+Briefing%22+Handelsblatt+when:3d&hl=de&gl=DE&ceid=DE:de"},
     {"kind": "google", "name": "FAZ Frühdenker", "prefix": "Frühdenker", "url": "https://news.google.com/rss/search?q=Fr%C3%BChdenker+faz.net+when:3d&hl=de&gl=DE&ceid=DE:de"}
   ],

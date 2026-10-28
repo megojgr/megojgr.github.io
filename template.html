@@ -274,6 +274,19 @@
   .wnow { margin: 4px 0 8px; } .wnow b { display: block; font: 700 34px/1.1 var(--serif); } .wnow span { color: var(--muted); font-size: 13.5px; }
   .wday { display: grid; grid-template-columns: 70px 1fr auto 52px; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; align-items: baseline; font-variant-numeric: tabular-nums; }
   .wday .wt { color: var(--muted); } .wday .wr { text-align: right; color: var(--muted); font-size: 12.5px; }
+  .wpanel { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 16px 18px 12px; margin-top: 16px; }
+  .wpanel .whead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; }
+  .wpanel .wico { font-size: 56px; line-height: 1; }
+  .wpanel .wnow { margin: 0; } .wpanel .wnow b { font-size: 46px; }
+  .wfacts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px 16px; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
+  .wfacts b { display: block; color: var(--ink); font-size: 15px; font-weight: 600; }
+  .whours { display: flex; gap: 2px; overflow-x: auto; margin: 14px -4px 4px; padding: 0 4px 6px; scrollbar-width: thin; }
+  .whour { flex: 0 0 66px; text-align: center; padding: 8px 2px; border-radius: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .whour:first-child { background: var(--soft); } .whour span { display: block; color: var(--muted); font-size: 12px; } .whour i { display: block; font-style: normal; font-size: 22px; margin: 2px 0; } .whour b { font-weight: 600; }
+  .wdays .wday { grid-template-columns: 26px 78px 1fr auto 44px 52px; } .wdays .wday i { font-style: normal; font-size: 17px; }
+  .wpanel .wtitle { font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  @media (max-width: 560px) { .wpanel { padding: 14px 14px 10px; } .wpanel .wico { font-size: 44px; } .wpanel .wnow b { font-size: 38px; } .wdays .wday { grid-template-columns: 24px 62px 1fr auto 48px; } .wdays .wday .wp { display: none; } }
+  .show .yt { display: inline-block; margin: 0 0 8px; font-size: 13.5px; font-weight: 600; color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
   .wwarn { border-left: 4px solid #e0a100; background: var(--soft); padding: 8px 10px; margin: 6px 0; font-size: 13.5px; }
   .wwarn.l3, .wwarn.l4 { border-color: #b3261e; } .wwarn small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.35; }
   .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
@@ -723,7 +736,7 @@ function glance() {
   const soon = DATA.termine.filter(t => (new Date(t.end + "T23:59:59") - Date.now()) < 2 * dayMs).slice(0, 3);
   if (soon.length) rows.push(["Heute & morgen", soon.map((t, i) => (i ? "  ·  " : "") + t.title)]);
   const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
-  if (ts && ts.topics.length) rows.push(["tagesschau 20 Uhr", [ts.topics.slice(0, 3).join("  ·  "), " ", h("a", { href: "#germany", onclick: (e) => { e.preventDefault(); show("germany"); } }, "alle Themen")]]);
+  if (ts && ts.topics.length) rows.push(["tagesschau 20 Uhr", [ts.topics.slice(0, 3).join("  ·  "), " ", h("a", { href: "#germany", onclick: (e) => { e.preventDefault(); show("germany"); } }, "alle Themen"), ts.youtube && [" · ", h("a", { href: ts.youtube.url, target: "_blank", rel: "noopener" }, "▶ YouTube")]]]);
   const mb = DATA.briefings.find(b => b.name.includes("Morning Briefing"));
   if (mb) rows.push(["Morning Briefing", h("a", { href: mb.url }, mb.title.replace(/^Morning Briefing:\s*/, ""))]);
   let move = null;
@@ -748,7 +761,55 @@ function briefingsBlock() {
   return [sec("Sendungen & Briefings"), shows.map(b => h("section", { class: "show" },
     h("h3", {}, h("a", { href: b.url }, b.title)),
     h("div", { class: "when" }, ago(b.time)),
+    b.youtube && h("a", { class: "yt", href: b.youtube.url, target: "_blank", rel: "noopener" }, "▶ Neueste Sendung auf YouTube: " + b.youtube.title),
     b.topics.length > 0 && h("ol", {}, b.topics.map(t => h("li", {}, t)))))];
+}
+
+// Symbol zum Wettercode (WMO), nachts mit Mond
+function wico(code, night) {
+  if (code === 0 || code === 1) return night ? "🌙" : "☀️";
+  if (code === 2) return night ? "☁️" : "⛅";
+  if (code === 3) return "☁️";
+  if (code === 45 || code === 48) return "🌫️";
+  if (code >= 51 && code <= 57) return "🌦️";
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️";
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "❄️";
+  if (code >= 95) return "⛈️";
+  return "·";
+}
+
+// Große Wetter-Übersicht für den Wuppertal-Reiter: jetzt, Warnungen, die nächsten 24 Stunden, 7 Tage
+function weatherPanel(L) {
+  if (!L || !L.weather) return h("div", { class: "wpanel" }, sec("Wetter"), h("p", { class: "note" }, "Wetterdaten gerade nicht verfügbar."));
+  const w = L.weather, now = w.now, today = w.days[0];
+  const fmtEnd = (x) => x.end ? new Date(x.end * 1000).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" }) + " Uhr" : "unbekannt";
+  const warn = (L.warnings || []).map(x => h("div", { class: "wwarn l" + x.level },
+    h("b", {}, x.headline || x.event), h("div", {}, `Stufe ${x.level}, bis ${fmtEnd(x)}`), x.text && h("small", {}, x.text)));
+  const fact = (k, v) => h("div", {}, k, h("b", {}, v));
+  return h("section", { class: "wpanel" },
+    sec(`Wetter in ${L.name}`, "Open-Meteo, Deutscher Wetterdienst"),
+    h("div", { class: "whead" },
+      h("div", { class: "wico" }, wico(now.code, now.night)),
+      h("div", { class: "wnow" }, h("b", {}, now.temp + " °C"), h("span", {}, `${now.text}, gefühlt ${now.feels} °C`))),
+    h("div", { class: "wfacts" },
+      fact("Heute", `${today.tmin}° bis ${today.tmax}°`),
+      fact("Regen", today.pop != null ? `${today.pop} % (${today.rain >= 0.1 ? today.rain + " mm" : "trocken"})` : (today.rain >= 0.1 ? today.rain + " mm" : "trocken")),
+      fact("Wind", `${now.wind} km/h, Böen bis ${today.gust}`),
+      now.humidity != null && fact("Luftfeuchte", now.humidity + " %"),
+      fact("Sonne", `${today.sunrise} bis ${today.sunset}`),
+      fact("UV-Index", String(today.uv))),
+    warn.length ? warn : h("p", { class: "note", style: "margin:10px 0 0" }, "Keine amtlichen Wetterwarnungen (Deutscher Wetterdienst)."),
+    w.hours && w.hours.length > 0 && [h("div", { class: "wtitle" }, "Die nächsten 24 Stunden"),
+      h("div", { class: "whours" }, w.hours.map(x => h("div", { class: "whour", title: x.text },
+        h("span", {}, x.time), h("i", {}, wico(x.code, Number(x.time.slice(0, 2)) < 7 || Number(x.time.slice(0, 2)) >= 20)), h("b", {}, x.temp + "°"),
+        h("span", {}, x.pop != null && x.pop >= 10 ? x.pop + " %" : "–"))))],
+    h("div", { class: "wtitle" }, "Die nächsten 7 Tage"),
+    h("div", { class: "wdays" }, w.days.map((d, i) => h("div", { class: "wday" },
+      h("i", {}, wico(d.code, false)),
+      h("span", {}, i === 0 ? "Heute" : new Date(d.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })),
+      h("span", { class: "wt" }, d.text), h("span", { class: "wn" }, `${d.tmin}° / ${d.tmax}°`),
+      h("span", { class: "wp wr" }, d.pop != null ? d.pop + " %" : ""), h("span", { class: "wr" }, d.rain >= 0.1 ? d.rain + " mm" : "trocken")))),
+    h("p", { class: "note", style: "margin:10px 0 0" }, `Prognose von Open-Meteo, Warnungen vom Deutschen Wetterdienst. Stand ${ago(L.checked)}`));
 }
 
 // Wetter und amtliche Warnungen für Wuppertal (Open-Meteo, Deutscher Wetterdienst)
@@ -761,7 +822,7 @@ function weatherBlock(L, compact) {
   return h("div", { class: "blk" }, sec(`Wetter in ${L.name}`),
     h("div", { class: "wnow" }, h("b", {}, now.temp + " °C"), h("span", {}, `${now.text}, gefühlt ${now.feels} °C, Wind ${now.wind} km/h`)),
     warn.length ? warn : h("p", { class: "note", style: "margin:6px 0" }, "Keine amtlichen Wetterwarnungen (Deutscher Wetterdienst)."),
-    w.days.slice(0, compact ? 3 : 5).map((d, i) => h("div", { class: "wday" },
+    w.days.slice(0, compact ? 3 : 7).map((d, i) => h("div", { class: "wday" },
       h("span", {}, i === 0 ? "Heute" : new Date(d.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })),
       h("span", { class: "wt" }, d.text), h("span", { class: "wn" }, `${d.tmin}° / ${d.tmax}°`), h("span", { class: "wr" }, d.rain >= 0.1 ? d.rain + " mm" : "trocken"))));
 }
@@ -866,8 +927,11 @@ const views = {
     const state = { f: store.get("regionf") || "Alles" };
     const box = h("div", { class: "narrow" });
     const bar = h("div", { class: "seg", style: "margin-top:14px" });
+    const wside = h("div");
     const render = () => {
+      wside.replaceChildren(...[state.f === "Alles" ? null : weatherBlock(L, false)].filter(Boolean));
       const kids = [];
+      if (state.f === "Alles") kids.push(weatherPanel(L));
       const want = { Wuppertal: "wuppertal", NRW: "nrw", Deutschland: "de" }[state.f];
       for (const [title, key, list, sub] of sections) {
         const pick = state.f === "Alles" ? list.slice(0, key === "de" ? 6 : 8) : want === key ? list.slice(0, 40) : null;
@@ -883,7 +947,7 @@ const views = {
     };
     for (const f of ["Alles", "Wuppertal", "NRW", "Deutschland"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
     render();
-    return h("div", { class: "layout" }, h("div", {}, bar, box), h("aside", { class: "side" }, weatherBlock(L, false), linkBlock(L)));
+    return h("div", { class: "layout" }, h("div", {}, bar, box), h("aside", { class: "side" }, wside, linkBlock(L)));
   },
 
   globe: () => {
@@ -959,7 +1023,8 @@ const views = {
       h("b", {}, "tagesschau 20 Uhr: "), tagesschauCountdown(), h("br"),
       h("a", { href: "https://www.tagesschau.de/multimedia/livestreams/index.html" }, "Live bei tagesschau.de"),
       " · ", h("a", { href: "https://www.ardmediathek.de/live" }, "ARD Mediathek"),
-      ts && [" · ", h("a", { href: ts.url }, "letzte Sendung")]);
+      ts && ts.youtube && [" · ", h("a", { href: ts.youtube.url, target: "_blank", rel: "noopener" }, "▶ Letzte 20-Uhr-Sendung auf YouTube")],
+      ts && [" · ", h("a", { href: ts.url }, "Themen der Sendung")]);
 
     const stamp = L.checked ? ago(L.checked) : "";
     return h("div", { class: "live-wrap" },
@@ -1054,7 +1119,7 @@ function tagesschauCountdown() {
   if (berlin - target > 20 * 60000) target.setDate(target.getDate() + 1);
   const min = Math.round((target - berlin) / 60000);
   if (min <= 0) return "läuft jetzt (20:00 bis ca. 20:15 Uhr).";
-  return min >= 60 ? `heute 20:00 Uhr, in ${Math.floor(min / 60)} Std. ${min % 60} Min.` : `gleich, in ${min} Min. (20:00 Uhr).`;
+  return min >= 60 ? `${target.getDate() === berlin.getDate() ? "heute" : "morgen"} 20:00 Uhr, in ${Math.floor(min / 60)} Std. ${min % 60} Min.` : `gleich, in ${min} Min. (20:00 Uhr).`;
 }
 
 // Globus erst beim Öffnen des Reiters laden (d3 und Weltkarte sind zusammen etwa 450 KB)

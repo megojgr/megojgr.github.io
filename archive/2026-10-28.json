@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T15:55:55.193331+00:00",
+ "generated": "2026-10-28T16:10:38.005579+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25690.27,
-   "pct": 0.389,
+   "price": 25677.04,
+   "pct": 0.337,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7736.67,
-   "pct": 0.182,
+   "price": 7739.35,
+   "pct": 0.217,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26458.24,
-   "pct": -0.074,
+   "price": 26465.812,
+   "pct": -0.045,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52520.7,
-   "pct": 0.273,
+   "price": 52533.09,
+   "pct": 0.297,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6167.21,
-   "pct": 0.041,
+   "price": 6165.69,
+   "pct": 0.016,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 17.2,
-   "pct": -1.826,
+   "price": 17.32,
+   "pct": -1.141,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.114,
-   "pct": 0.078,
+   "price": 1.1145,
+   "pct": 0.1226,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4057.5,
-   "pct": -0.42,
+   "price": 4054.0,
+   "pct": -0.506,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 112.06,
-   "pct": 2.422,
+   "price": 112.5,
+   "pct": 2.825,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72233.72,
-   "pct": 0.057,
+   "price": 72210.45,
+   "pct": -0.14,
    "alert": null
   }
  ],
@@ -96,17 +96,38 @@
    "alert": false
   },
   {
+   "title": "Anthropic-Börsengang und Microsoft-Jobabbau befeuern Angst vor KI-Blase",
+   "url": "https://www.spiegel.de/wirtschaft/kuenstliche-intelligenz-anthropic-boersengang-und-microsoft-jobabbau-befeuern-angst-vor-ki-blase-a-90381ba4-3455-4f6b-bcf5-6da859cd3425#ref=rss",
+   "topic": "markets",
+   "n": 11,
+   "alert": false
+  },
+  {
    "title": "USA - Brasilianischer Wahlverlierer Flávio Bolsonaro in Miami gelandet",
    "url": "https://www.deutschlandfunk.de/brasilianischer-wahlverlierer-fl-vio-bolsonaro-in-miami-gelandet-100.html",
    "topic": "world",
-   "n": 10,
+   "n": 9,
    "alert": false
   },
   {
    "title": "Region Toledo - Mindestens 68 Tote nach Kollision von zwei Zügen in Spanien",
    "url": "https://www.deutschlandfunk.de/mindestens-68-tote-nach-kollision-von-zwei-zuegen-in-spanien-100.html",
    "topic": "markets",
-   "n": 10,
+   "n": 9,
+   "alert": false
+  },
+  {
+   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
+   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
+   "topic": "markets",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Israel election results live: Netanyahu bloc and main opposition set to fall short of majority as 92% of ballots counted",
+   "url": "https://www.theguardian.com/world/live/2026/oct/28/israel-election-results-live-updates-exit-polls-netanyahu-likud-eisenkot-latest-news",
+   "topic": "world",
+   "n": 5,
    "alert": false
   },
   {
@@ -117,8 +138,8 @@
    "alert": false
   },
   {
-   "title": "„Sehr bald“: Trump kündigt Treffen mit Putin und Selenskyj an",
-   "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNajJ6VjZBb2dpc0o5MTRqZWVYdXBWSWVWa0NmbVhiM3ktVENOYWxzanJsbEprYzJaR0xBcklLVnVxMFhLUUtlTlgxdEVseFRJOXp0M29YUW94SW9meE14TVFIdGJBMjh2bm90OFF1MlNJaE41YXgxS0tHd3pFeFFtWEVhaGpadWhfVWJLeFhyaVo1SXFhY09jVU5lNE4yZw?oc=5",
+   "title": "Ukraine-Krieg: Trump kündigt baldiges Treffen mit Putin und Selenskyj an",
+   "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxPUU9NUnI2UGdDUGl0cGdQZjl0NnRrZGExV1dJYnI5ZzAxeEl5UVJrTXNmSVVHS0lVUURxemlEenhiV3ZZR3RwMjRGMkpDUFhnclRXbEI3YWhTenVPUTNpcEowSmxuUUdIbFY1S3ExUXE3YkF6OVNJSm5Ya0R5YmtOUHVwbzk5Uk1sTzBYbkRmTFk4VVlhY3BvbmdETVpuRUxMN3I3dmxLZi1BV1BMcHFZaklOclhJdFZKRU9JblctUVFJdw?oc=5",
    "topic": "world",
    "n": 5,
    "alert": false
@@ -131,31 +152,10 @@
    "alert": false
   },
   {
-   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
-   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
-   "topic": "markets",
-   "n": 4,
-   "alert": false
-  },
-  {
    "title": "Regierungspläne - Elterngeld soll erstmals seit Einführung erhöht werden",
    "url": "https://www.deutschlandfunk.de/elterngeld-soll-erstmals-seit-einfuehrung-erhoeht-werden-102.html",
    "topic": "germany",
    "n": 5,
-   "alert": false
-  },
-  {
-   "title": "For Israel’s Neighbors in Middle East, the Election Offers Little Hope of a Reset",
-   "url": "https://www.nytimes.com/2026/10/28/world/middleeast/israel-election-middle-east-relations.html",
-   "topic": "world",
-   "n": 4,
-   "alert": false
-  },
-  {
-   "title": "Flávio Bolsonaro Lands in Miami After Fleeing Brazil",
-   "url": "https://www.nytimes.com/2026/10/28/world/americas/flavio-bolsonaro-us-miami-brazil-trump.html",
-   "topic": "world",
-   "n": 4,
    "alert": false
   }
  ],
@@ -165,16 +165,16 @@
    "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
    "source": "Polymarket",
    "lead": "No change",
-   "p": 0.9535,
-   "d1": 0.009
+   "p": 0.9505,
+   "d1": 0.015
   },
   {
    "title": "Prime Minister of Israel after the next election?",
    "url": "https://polymarket.com/event/who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "source": "Polymarket",
    "lead": "Benjamin Netanyahu",
-   "p": 0.435,
-   "d1": 0.25
+   "p": 0.44,
+   "d1": 0.205
   },
   {
    "title": "Israeli Legislative Election Winner",
@@ -182,15 +182,15 @@
    "source": "Polymarket",
    "lead": "Likud",
    "p": 0.993,
-   "d1": 0.758
+   "d1": 0.728
   },
   {
    "title": "Israel Election: Likud # of seats?",
    "url": "https://polymarket.com/event/israel-election-likud-of-seats",
    "source": "Polymarket",
    "lead": "25-29",
-   "p": 0.9805,
-   "d1": 0.8355
+   "p": 0.9785,
+   "d1": 0.8385
   },
   {
    "title": "Balance of Power: 2026 Midterms",
@@ -205,8 +205,8 @@
    "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
    "source": "Polymarket",
    "lead": "↓ 80,000",
-   "p": 0.825,
-   "d1": null
+   "p": 0.805,
+   "d1": -0.03
   }
  ]
 }

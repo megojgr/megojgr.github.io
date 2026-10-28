@@ -1247,7 +1247,7 @@ async function refresh() {
       toast("busy", "Suche nach einem neueren Stand …");
       const d = await fetchLatest();
       if (d.generated === before.generated) {
-        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Die Seite aktualisiert sich zweimal täglich. Für sofortige Abrufe richte unter ⚙ das Token ein.`, { ms: 11000 });
+        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Die Seite wird stündlich aktualisiert. Für einen sofortigen Abruf richte unter ⚙ das Token ein.`, { ms: 11000 });
         return;
       }
       fresh = d;

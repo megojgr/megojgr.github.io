@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T16:21:19.521301+00:00",
+ "generated": "2026-10-28T16:23:25.475015+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25696.38,
-   "pct": 0.413,
+   "price": 25682.24,
+   "pct": 0.357,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7736.75,
-   "pct": 0.183,
+   "price": 7735.35,
+   "pct": 0.165,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26458.91,
-   "pct": -0.071,
+   "price": 26457.826,
+   "pct": -0.075,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52511.27,
-   "pct": 0.255,
+   "price": 52495.17,
+   "pct": 0.225,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6168.43,
-   "pct": 0.061,
+   "price": 6166.35,
+   "pct": 0.027,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 17.31,
-   "pct": -1.2,
+   "price": 17.33,
+   "pct": -1.085,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1148,
-   "pct": 0.1561,
+   "price": 1.1147,
+   "pct": 0.1449,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4052.9,
-   "pct": -0.533,
+   "price": 4051.4,
+   "pct": -0.569,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 112.52,
-   "pct": 2.843,
+   "price": 112.49,
+   "pct": 2.815,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72143.48,
-   "pct": -0.233,
+   "price": 72139.98,
+   "pct": -0.238,
    "alert": null
   }
  ],
@@ -99,7 +99,7 @@
    "title": "Anthropic-Börsengang und Microsoft-Jobabbau befeuern Angst vor KI-Blase",
    "url": "https://www.spiegel.de/wirtschaft/kuenstliche-intelligenz-anthropic-boersengang-und-microsoft-jobabbau-befeuern-angst-vor-ki-blase-a-90381ba4-3455-4f6b-bcf5-6da859cd3425#ref=rss",
    "topic": "markets",
-   "n": 11,
+   "n": 10,
    "alert": false
   },
   {
@@ -117,20 +117,6 @@
    "alert": false
   },
   {
-   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
-   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
-   "topic": "markets",
-   "n": 5,
-   "alert": false
-  },
-  {
-   "title": "Israel election results live: Netanyahu bloc and main opposition set to fall short of majority as 92% of ballots counted",
-   "url": "https://www.theguardian.com/world/live/2026/oct/28/israel-election-results-live-updates-exit-polls-netanyahu-likud-eisenkot-latest-news",
-   "topic": "world",
-   "n": 5,
-   "alert": false
-  },
-  {
    "title": "At least 68 people dead in high-speed Spain train crash",
    "url": "https://www.cnbc.com/2026/10/28/spain-high-speed-train-crash.html",
    "topic": "world",
@@ -145,16 +131,30 @@
    "alert": false
   },
   {
-   "title": "Deutsche Börse startet 24/7-Handel für 40 Dax-Aktien über 360X",
-   "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOWlJPTkNDc1hfYkc3MklZQTNLR3ZjSnk2VV85RUVLLVFBZDNkMEQwZzlZZDZaSGJSZE0ybVhJTWFtTjBUVVIzZklhYUxJbFRjYUotVGsxUUtDWkpHbjJWOEhwWmhfdzhpX0dWUllnc084YmM4TVFyVWZNSFJ2VURUdGJHMmNld2tzVlhtdThn?oc=5",
-   "topic": "markets",
-   "n": 5,
-   "alert": false
-  },
-  {
    "title": "40 DAX-Aktien jetzt rund um die Uhr handelbar",
    "url": "https://www.tagesschau.de/wirtschaft/finanzen/dax-aktien-handel-100.html",
    "topic": "markets",
+   "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
+   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
+   "topic": "markets",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Flávio Bolsonaro Lands in Miami After Fleeing Brazil",
+   "url": "https://www.nytimes.com/2026/10/28/world/americas/flavio-bolsonaro-us-miami-brazil-trump.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Merz wirbt für neue Wirtschaftsallianz mit Japan",
+   "url": "https://www.dw.com/de/merz-wirbt-für-neue-wirtschaftsallianz-mit-japan/a-79789621?maca=de-rss-de-all-1119-rdf",
+   "topic": "germany",
    "n": 3,
    "alert": false
   }
@@ -165,8 +165,8 @@
    "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
    "source": "Polymarket",
    "lead": "No change",
-   "p": 0.9525,
-   "d1": 0.017
+   "p": 0.9515,
+   "d1": 0.016
   },
   {
    "title": "Prime Minister of Israel after the next election?",
@@ -181,8 +181,8 @@
    "url": "https://polymarket.com/event/israeli-legislative-election-winner",
    "source": "Polymarket",
    "lead": "Likud",
-   "p": 0.9915,
-   "d1": 0.7265
+   "p": 0.991,
+   "d1": 0.726
   },
   {
    "title": "Israel Election: Likud # of seats?",
@@ -205,8 +205,8 @@
    "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
    "source": "Polymarket",
    "lead": "↓ 80,000",
-   "p": 0.805,
-   "d1": -0.03
+   "p": 0.815,
+   "d1": -0.02
   }
  ]
 }

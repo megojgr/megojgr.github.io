@@ -213,6 +213,51 @@
   .dlg .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .dlg h3.sec2 { font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; margin: 22px 0 4px; padding-top: 6px; border-top: 2px solid var(--ink); }
 
+  /* Globus */
+  .globe-wrap { display: grid; gap: 18px 28px; grid-template-columns: minmax(0, 1fr); padding-top: 14px; }
+  @media (min-width: 980px) { .globe-wrap { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } .gfoot { grid-column: 1 / -1; } }
+  .gstage { position: relative; background: radial-gradient(ellipse at 50% 40%, #0e1c2e, #050a12); border-radius: 12px; overflow: hidden; border: 1px solid #1a2a3d; }
+  .gcanvas { display: block; width: 100%; touch-action: none; cursor: grab; }
+  .gbtns { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .gbtns button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(160,200,255,.3); background: rgba(10,20,34,.8); color: #e8eef6; font-size: 20px; line-height: 1; }
+  .gtip { position: absolute; pointer-events: none; background: rgba(5,10,18,.92); color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 6px; opacity: 0; transition: opacity .1s; max-width: 240px; }
+  .gtip.on { opacity: 1; }
+  .gside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .ginfo, .gctl, .glists > div { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 14px 16px; }
+  .glists { display: flex; flex-direction: column; gap: 16px; }
+  .ginfo h3, .gctl h3, .glists h3 { margin: 0 0 8px; font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+  .ginfo h3:first-child { font: 700 20px/1.25 var(--serif); letter-spacing: 0; text-transform: none; }
+  .gctl h3:not(:first-child) { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .ginfo p { margin: 6px 0; font-size: 14.5px; } .ginfo a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+  .ginfo h4, .glists h4 { margin: 12px 0 2px; font: 700 11px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .gtag { display: inline-block; font: 700 11px var(--sans); letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; background: var(--ink); color: var(--bg); margin-bottom: 6px; }
+  .gtag.bad { background: #b3261e; color: #fff; }
+  .sw { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; cursor: pointer; position: relative; }
+  .sw input { position: absolute; opacity: 0; width: 38px; height: 22px; margin: 0; }
+  .sw .tr { flex: none; width: 38px; height: 22px; border-radius: 999px; background: var(--line); position: relative; transition: .15s; margin-top: 1px; }
+  .sw .tr::after { content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .sw input:checked + .tr { background: var(--up); } .sw input:checked + .tr::after { transform: translateX(16px); }
+  .sw input:focus-visible + .tr { outline: 2px solid var(--link); outline-offset: 2px; }
+  .sw .tx { font-size: 14.5px; line-height: 1.3; } .sw .tx small { display: block; font-size: 12px; color: var(--muted); }
+  .rg { padding: 8px 0; } .rg > div { display: flex; justify-content: space-between; font-size: 13.5px; }
+  .rg output { color: var(--muted); font-variant-numeric: tabular-nums; } .rg input { width: 100%; accent-color: var(--ink); margin: 8px 0 0; }
+  .grow { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 9px 2px; font-size: 14px; }
+  .grow:hover { background: var(--soft); } .grow i { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+  .grow span small { display: block; font-size: 12px; color: var(--muted); }
+  .nl { margin: 6px 0; font-size: 14px; } .nl a:hover { text-decoration: underline; color: var(--link); }
+  .gsp { margin: 8px 0; } .gspark { width: 100%; height: 44px; display: block; } .gsp small { color: var(--muted); font-size: 12px; }
+  .gfoot { margin: 0; }
+
+  /* Rückmeldung beim Aktualisieren */
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 60; display: flex; gap: 10px; align-items: center; width: max-content; max-width: min(580px, 94vw); background: var(--ink); color: var(--bg); padding: 11px 12px 11px 14px; border-radius: 10px; box-shadow: 0 8px 30px var(--shadow); transition: opacity .2s, transform .2s; font-size: 14px; line-height: 1.35; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast .ico { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: rgba(128,128,128,.35); }
+  .toast.ok .ico { background: #2fb36b; color: #fff; } .toast.warn .ico { background: #e0a100; color: #111; }
+  .toast.err { background: #b3261e; color: #fff; } .toast.err .ico { background: rgba(255,255,255,.28); }
+  .toast.busy .ico { animation: spin 1s linear infinite; }
+  .toast a { text-decoration: underline; white-space: nowrap; }
+  .toast .x { background: none; border: 0; color: inherit; font-size: 22px; line-height: 1; padding: 0 4px; opacity: .8; }
+
   footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; padding: 18px 0 calc(44px + env(safe-area-inset-bottom)); }
 
   /* Handy: Detailansicht als Vollbild, Kopf bleibt oben stehen */
@@ -245,6 +290,7 @@
 <footer><div class="wrap" id="foot"></div></footer>
 <dialog id="detail"></dialog>
 <dialog id="settings"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 let DATA = __DATA__;
@@ -252,7 +298,7 @@ let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
 let CURRENT = "heute";
 
 const TABS = [
-  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"],
+  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"],
   ["germany", "Deutschland"], ["wahlen", "Wahlen & Termine"], ["pm", "Wetten"], ["verlauf", "Archiv"],
 ];
 const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland" };
@@ -533,6 +579,8 @@ function glance() {
   rows.push(["Kursalarm", alerts.length
     ? alerts.flatMap((q, i) => [i ? "  ·  " : "", `${q.short || q.name} `, pctSpan(q.pct), q.alert === "week" ? ` (5 Tage ${pct(q.week)})` : ""])
     : "keine auffälligen Bewegungen"]);
+  const strait = ((DATA.geo && DATA.geo.chokepoints) || []).filter(c => c.level > 0);
+  if (strait.length) rows.push(["Meerengen", [strait.flatMap((c, i) => [i ? "  ·  " : "", `${c.name.split(" / ")[0]} `, pctSpan(c.pct)]), " Schiffsverkehr, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
   const crash = DATA.stories.filter(s => s.alert);
   if (crash.length) rows.push(["Crash-Radar", [h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } }, `${crash.length} Meldung${crash.length > 1 ? "en" : ""}`), " mit Absturz-Stichwörtern"]]);
   const ne = nextElections(3, 21);
@@ -628,6 +676,15 @@ const views = {
       h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Heute"), quoteRows(ps.filter(p => p.price != null), (q) => q))));
   },
 
+  globe: () => {
+    if (!DATA.geo) return h("div", { class: "empty" }, "Noch keine Lagedaten vorhanden.");
+    if (location.protocol === "file:") return h("div", { class: "empty" }, "Der Globus lädt Kartendaten nach und läuft nur über die Webadresse, nicht als lokale Datei.");
+    const root = h("div", {}, h("p", { class: "note" }, "Lade Weltkarte …"));
+    loadGlobe().then(() => { if (root.isConnected) window.MegoGlobe.mount(root, { h, store, DATA }); })
+      .catch(err => root.replaceChildren(h("div", { class: "empty" }, "Der Globus konnte nicht geladen werden: " + err.message)));
+    return root;
+  },
+
   world: () => h("div", { class: "narrow" }, items(DATA.stories.filter(s => s.topic === "world").slice(0, 50), { lead: true, hideTopic: true })),
 
   germany: () => {
@@ -712,6 +769,18 @@ const views = {
   },
 };
 
+// Globus erst beim Öffnen des Reiters laden (d3 und Weltkarte sind zusammen etwa 450 KB)
+async function loadGlobe() {
+  if (!window.MegoGlobe) {
+    await new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "globe.js?v=" + encodeURIComponent(DATA.generated); s.onload = res;  // nach jedem Lauf frisch laden s.onerror = () => rej(new Error("globe.js fehlt"));
+      document.head.append(s);
+    });
+  }
+  await window.MegoGlobe.loadAssets();
+}
+
 function bet(e) {
   return h("article", { class: "bet" },
     h("h3", { class: "hl" }, h("a", { href: e.url }, e.title)),
@@ -744,8 +813,7 @@ function renderChrome() {
   $("today").textContent = new Date().toLocaleDateString("de-DE", innerWidth < 600
     ? { weekday: "short", day: "numeric", month: "short" } : { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const stamp = "Stand " + g.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
-  if (!$("status").dataset.busy) $("status").textContent = stamp;
-  $("status").dataset.stamp = stamp;
+  $("status").textContent = stamp;
 
   $("alertbar").replaceChildren();
   const alerts = DATA.quotes.concat(depotPositions()).filter(q => q.alert && q.price != null);
@@ -798,62 +866,105 @@ async function autoUnlock() {
 
 // ------------------------------------------------------------------ Aktualisieren
 
-const setStatus = (t, busy) => { const s = $("status"); s.textContent = t; if (busy) s.dataset.busy = "1"; else delete s.dataset.busy; };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Meldung am unteren Rand: sagt klar, ob das Aktualisieren geklappt hat oder woran es scheiterte
+let toastTimer = null;
+function toast(kind, msg, o = {}) {
+  const t = $("toast"), icon = { ok: "✓", err: "✕", warn: "!", info: "i", busy: "↻" }[kind];
+  t.className = "toast show " + kind;
+  t.replaceChildren(...[h("span", { class: "ico" }, icon), h("span", {}, msg),
+    o.link && h("a", { href: o.link.url }, o.link.text),
+    h("button", { class: "x", "aria-label": "Schließen", onclick: () => t.classList.remove("show") }, "×")].filter(Boolean));
+  clearTimeout(toastTimer);
+  if (kind !== "busy") toastTimer = setTimeout(() => t.classList.remove("show"), o.ms || (kind === "err" || kind === "warn" ? 14000 : 8000));
+}
+const fmtTime = (iso) => new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
 async function fetchLatest() {
   const url = new URL("data.json", location.href);
   url.searchParams.set("t", Date.now());
   const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error("HTTP " + r.status);
+  if (!r.ok) throw new Error(`Der neue Stand konnte nicht geladen werden (Fehler ${r.status}).`);
   const d = await r.json();
   d.history ||= [];
   return d;
 }
 async function applyData(d) { DATA = d; await autoUnlock(); renderAll(); }
 
+const gh = (path, token, opts = {}) => fetch(`https://api.github.com/repos/${DATA.repo}${path}`, {
+  ...opts, headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28" } });
+
 async function dispatchRun(token) {
-  const r = await fetch(`https://api.github.com/repos/${DATA.repo}/actions/workflows/daily.yml/dispatches`, {
-    method: "POST",
-    headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28" },
-    body: JSON.stringify({ ref: "main" }),
-  });
-  if ([401, 403, 404].includes(r.status)) throw new Error("Token ungültig oder ohne Recht „Actions: Read and write“");
-  if (r.status !== 204) throw new Error("GitHub antwortet mit " + r.status);
+  const r = await gh("/actions/workflows/daily.yml/dispatches", token, { method: "POST", body: JSON.stringify({ ref: "main" }) });
+  if ([401, 403, 404].includes(r.status)) throw new Error("Das Token ist ungültig oder hat nicht das Recht „Actions: Read and write“. Bitte unter ⚙ prüfen.");
+  if (r.status !== 204) throw new Error("GitHub antwortet mit Fehler " + r.status);
 }
+async function findRun(token, since) {
+  const r = await gh("/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=5", token);
+  if (!r.ok) return null;
+  return ((await r.json()).workflow_runs || []).find(x => new Date(x.created_at) >= since) || null;
+}
+async function runState(token, id) {
+  const r = await gh("/actions/runs/" + id, token);
+  return r.ok ? r.json() : null;
+}
+const friendly = (e) => /Failed to fetch|NetworkError|Load failed/i.test(e.message) ? "Keine Verbindung zum Server. Bist du online?" : e.message;
 
 let refreshing = false;
 async function refresh() {
   if (refreshing) return;
   if (location.protocol === "file:") { location.reload(); return; }
   refreshing = true;
-  const btn = $("btn-refresh");
+  const btn = $("btn-refresh"), before = DATA;
   btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }, "↻"), " Lädt …");
+  let ok = false;
   try {
-    const token = store.get("ghtoken"), before = DATA.generated;
+    if (navigator.onLine === false) throw new Error("Keine Internetverbindung.");
+    const token = store.get("ghtoken");
+    let fresh = null;
     if (token) {
-      setStatus("Neuer Abruf wird gestartet …", true);
+      toast("busy", "Neuer Abruf wird bei GitHub gestartet …");
       await dispatchRun(token);
-      const t0 = Date.now();
-      while (Date.now() - t0 < 8 * 60000) {
-        setStatus(`Neuer Abruf läuft … ${Math.round((Date.now() - t0) / 1000)} s`, true);
-        await sleep(12000);
+      const t1 = Date.now();
+      let run = null, failed = null;
+      while (Date.now() - t1 < 8 * 60000) {
+        await sleep(10000);
+        const secs = Math.round((Date.now() - t1) / 1000);
+        try { run = run ? (await runState(token, run.id)) || run : await findRun(token, new Date(t1 - 90000)); } catch {}
+        if (run && run.status === "completed" && run.conclusion !== "success") { failed = run; break; }
         let d = null;
         try { d = await fetchLatest(); } catch {}
-        if (d && d.generated !== before) { await applyData(d); setStatus("Neue Meldungen geladen", false); setTimeout(() => setStatus($("status").dataset.stamp), 4000); return; }
+        if (d && d.generated !== before.generated) { fresh = d; break; }
+        toast("busy", !run ? `Neuer Abruf läuft … ${secs} s`
+          : run.status === "completed" ? `Seite wird veröffentlicht … ${secs} s`
+          : run.status === "queued" ? `Wartet bei GitHub … ${secs} s` : `GitHub sammelt Nachrichten … ${secs} s`);
       }
-      setStatus("Der Abruf dauert länger als gewöhnlich. Später erneut versuchen.", false);
+      if (failed) {
+        toast("err", `Der Abruf bei GitHub ist fehlgeschlagen (${failed.conclusion}). Du siehst weiter den alten Stand von ${fmtTime(before.generated)} Uhr.`, { link: { url: failed.html_url, text: "Protokoll" } });
+        return;
+      }
+      if (!fresh) { toast("warn", `Der Abruf dauert ungewöhnlich lange. Du siehst weiter den Stand von ${fmtTime(before.generated)} Uhr. Bitte später erneut versuchen.`); return; }
     } else {
-      setStatus("Suche neuen Stand …", true);
+      toast("busy", "Suche nach einem neueren Stand …");
       const d = await fetchLatest();
-      if (d.generated !== before) { await applyData(d); setStatus("Neuer Stand geladen", false); }
-      else setStatus("Das ist schon der neueste Stand. Für sofortigen Neuabruf: Zahnrad → Sofort-Update.", false);
-      setTimeout(() => setStatus($("status").dataset.stamp), 6000);
+      if (d.generated === before.generated) {
+        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Die Seite aktualisiert sich zweimal täglich. Für sofortige Abrufe richte unter ⚙ das Token ein.`, { ms: 11000 });
+        return;
+      }
+      fresh = d;
     }
+    const seen = new Set(before.stories.map(s => s.url));
+    const added = fresh.stories.filter(s => !seen.has(s.url)).length;
+    await applyData(fresh);
+    ok = true;
+    toast("ok", `Aktualisiert: Stand ${fmtTime(fresh.generated)} Uhr, ${added} neue Meldung${added === 1 ? "" : "en"}.`);
   } catch (e) {
-    setStatus("Fehler: " + e.message, false);
+    toast("err", "Aktualisieren hat nicht geklappt: " + friendly(e));
   } finally {
-    refreshing = false; btn.disabled = false; btn.textContent = "Aktualisieren";
+    refreshing = false; btn.disabled = false;
+    btn.textContent = ok ? "✓ Aktualisiert" : "Aktualisieren";
+    if (ok) setTimeout(() => { if (!refreshing) btn.textContent = "Aktualisieren"; }, 3500);
   }
 }
 $("btn-refresh").addEventListener("click", refresh);
@@ -861,7 +972,10 @@ $("btn-refresh").addEventListener("click", refresh);
 // Beim Zurückkehren zur Seite still prüfen, ob es einen neueren Stand gibt
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible" || refreshing || location.protocol === "file:") return;
-  try { const d = await fetchLatest(); if (d.generated !== DATA.generated) { await applyData(d); setStatus("Neuer Stand geladen", false); setTimeout(() => setStatus($("status").dataset.stamp), 4000); } } catch {}
+  try {
+    const d = await fetchLatest();
+    if (d.generated !== DATA.generated) { await applyData(d); toast("ok", `Neuer Stand geladen: ${fmtTime(d.generated)} Uhr.`, { ms: 5000 }); }
+  } catch {}
 });
 
 // ------------------------------------------------------------------ Einstellungen

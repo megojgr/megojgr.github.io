@@ -18,6 +18,7 @@ import archive
 import briefings
 import depot
 import elections
+import geo
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
 from textutil import compile_keywords, count_hits
@@ -296,6 +297,7 @@ def main():
     briefing, ai_status = summarize(stories, heute, cfg)
     for s in stories + [s for s, _ in private]:
         s.pop("titles", None)
+    geo_data = geo.build(cfg, stories, election_list, NOW.date())
 
     depot_data = {"state": depot_state}
     if positions:
@@ -312,6 +314,7 @@ def main():
         "heute": heute,
         "briefings": brief_list,
         "elections": election_list,
+        "geo": geo_data,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -344,6 +347,11 @@ def main():
           + (f" ({election_note})" if election_note else ""))
     print("Sendungen/Briefings: " + (", ".join(b["name"] for b in brief_list) or "keine")
           + (f"; Fehler: {brief_errors}" if brief_errors else ""))
+    c, cps, car = geo_data["conflict"], geo_data["chokepoints"], geo_data["carriers"]
+    print(f"Globus: {len(c['points']) if c else 0} Konfliktorte ({', '.join(c['days']) if c else 'keine Daten'}), "
+          f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
+          f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
+          f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
     print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")
           + f" | Verlauf: {len(data['history'])} Tage")
     for name, err in data["status"]["prediction_errors"].items():

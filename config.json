@@ -19,6 +19,29 @@
   ],
   "ai": {"enabled": false, "model": "claude-sonnet-5-5", "top_per_topic": 12},
   "history_days": 14,
+  "geo": {
+    "conflict_days": 2,
+    "conflict_max_points": 150,
+    "election_days": 365,
+    "closure_words": ["gesperrt", "sperrung", "blockade", "blockiert", "angriff", "attack", "closure", "closed", "disrupt",
+                      "suspend", "umleit", "reroute", "minen", "beschossen", "gestoppt", "eskalation"],
+    "chokepoints": [
+      {"id": "chokepoint6", "name": "Straße von Hormus", "keywords": ["hormus", "hormuz"]},
+      {"id": "chokepoint4", "name": "Bab el-Mandeb / Rotes Meer", "keywords": ["bab el-mandeb", "rotes meer", "red sea", "huthi", "houthi"]},
+      {"id": "chokepoint1", "name": "Suezkanal", "keywords": ["suez"]},
+      {"id": "chokepoint5", "name": "Straße von Malakka", "keywords": ["malakka", "malacca"]},
+      {"id": "chokepoint11", "name": "Taiwanstraße", "keywords": ["taiwanstraße", "taiwanstrasse", "taiwan strait"]},
+      {"id": "chokepoint3", "name": "Bosporus", "keywords": ["bosporus", "bosphorus"]},
+      {"id": "chokepoint28", "name": "Straße von Kertsch", "keywords": ["kertsch", "kerch"]},
+      {"id": "chokepoint8", "name": "Straße von Gibraltar", "keywords": ["gibraltar"]},
+      {"id": "chokepoint2", "name": "Panamakanal", "keywords": ["panamakanal", "panama canal"]},
+      {"id": "chokepoint7", "name": "Kap der Guten Hoffnung", "keywords": ["kap der guten hoffnung", "cape of good hope"]},
+      {"id": "chokepoint9", "name": "Straße von Dover", "keywords": ["ärmelkanal", "english channel", "dover"]},
+      {"id": "chokepoint10", "name": "Öresund", "keywords": ["öresund", "oresund"]},
+      {"id": "chokepoint12", "name": "Koreastraße", "keywords": ["korea strait", "koreastraße"]},
+      {"id": "chokepoint14", "name": "Luzonstraße", "keywords": ["luzon strait"]}
+    ]
+  },
   "alerts": {"index_day_pct": 2.0, "stock_day_pct": 5.0, "week_pct": 5.0},
   "feeds": [
     {"name": "Tagesschau", "url": "https://www.tagesschau.de/index~rss2.xml", "hint": "general", "lang": "de"},

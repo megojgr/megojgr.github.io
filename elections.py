@@ -109,7 +109,7 @@ def translate(item, important):
     what = item["what_en"]
     for pat, rep in TYPE_DE:
         what = re.sub(pat, rep, what)
-    return {"date": item["date"], "end": item["end"], "approx": item["approx"],
+    return {"date": item["date"], "end": item["end"], "approx": item["approx"], "country_en": item["country_en"],
             "country": COUNTRY_DE.get(item["country_en"], item["country_en"]), "what": what, "url": item["url"],
             "important": item["country_en"] in important}
 

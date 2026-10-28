@@ -1,0 +1,384 @@
+/* Lagebild-Globus: dreh- und zoombare Erdkugel mit Ebenen für Konflikte, Meerengen, Wahlen und Flugzeugträger.
+   Wird erst beim Öffnen des Reiters geladen. Braucht d3.min.js und world.json (liegen daneben). */
+(function () {
+  "use strict";
+
+  const COL = {
+    ocean1: "#17375a", ocean2: "#08131f", land: "#24384d", border: "rgba(130,170,215,.55)", grid: "rgba(130,170,220,.10)",
+    conflict: "255,77,61", elect: "77,163,255", ok: "#3ddc97", warn: "#ffb020", bad: "#ff4d3d", ink: "#e8eef6",
+  };
+  const LEVEL = [["normal", COL.ok], ["gestört", COL.warn], ["stark eingeschränkt", COL.bad]];
+
+  async function loadAssets() {
+    if (!window.d3) {
+      await new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = "d3.min.js";
+        s.onload = res;
+        s.onerror = () => rej(new Error("d3.min.js konnte nicht geladen werden"));
+        document.head.append(s);
+      });
+    }
+    if (!window.__world) {
+      const r = await fetch("world.json");
+      if (!r.ok) throw new Error("world.json: HTTP " + r.status);
+      window.__world = await r.json();
+    }
+    return window.__world;
+  }
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  function mount(root, X) {
+    const { h, store } = X;
+    const DATA = X.DATA, geo = DATA.geo || {}, world = window.__world;
+    const names = geo.names || {};
+    const nameOf = (f) => names[f.id] || f.properties.name;
+    const featById = new Map(world.features.map(f => [f.id, f]));
+    const centroid = new Map(world.features.map(f => [f.id, d3.geoCentroid(f)]));
+
+    const defaults = { borders: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, minConf: 0, elDays: 90, spin: 2 };
+    let S = { ...defaults };
+    try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
+    const save = () => store.set("globe", JSON.stringify(S));
+
+    // ---------- Daten aufbereiten
+    const conflict = geo.conflict || { points: [], countries: [], days: [] };
+    const maxW = Math.max(1, ...conflict.points.map(p => p.w));
+    const confCountry = new Map(conflict.countries.map(c => [c.id, c]));
+    const maxCW = Math.max(1, ...conflict.countries.map(c => c.w));
+    const cps = geo.chokepoints || [];
+    const carriers = (geo.carriers && geo.carriers.ships || []).filter(s => s.lat != null);
+    const elections = (geo.elections || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    const confShown = () => conflict.points.filter(p => p.w >= maxW * (S.minConf / 100) ** 2);
+    const elShown = () => elections.filter(e => e.days <= S.elDays);
+    const elByCountry = () => { const m = new Map(); for (const e of elShown()) if (!m.has(e.id)) m.set(e.id, e); return m; };
+
+    // ---------- Aufbau der Oberfläche
+    const canvas = h("canvas", { class: "gcanvas", "aria-label": "Globus" });
+    const g2 = canvas.getContext("2d");
+    const tip = h("div", { class: "gtip" });
+    const stage = h("div", { class: "gstage" }, canvas, tip,
+      h("div", { class: "gbtns" },
+        h("button", { onclick: () => { zoomTo(zoom * 1.4); }, "aria-label": "Vergrößern" }, "+"),
+        h("button", { onclick: () => { zoomTo(zoom / 1.4); }, "aria-label": "Verkleinern" }, "−"),
+        h("button", { onclick: () => { selected = null; info.replaceChildren(introNode()); flyTo(35, 25, 1); }, "aria-label": "Zurücksetzen", title: "Zurücksetzen" }, "⌂")));
+    const info = h("div", { class: "ginfo" });
+    const lists = h("div", { class: "glists" });
+
+    const sw = (key, label, sub) => {
+      const input = h("input", { type: "checkbox", checked: S[key] || null, onchange: (e) => { S[key] = e.target.checked; save(); renderLists(); } });
+      return h("label", { class: "sw" }, input, h("span", { class: "tr" }), h("span", { class: "tx" }, label, sub && h("small", {}, sub)));
+    };
+    const slider = (key, label, min, max, step, fmt, onchange) => {
+      const out = h("output", {}, fmt(S[key]));
+      const input = h("input", { type: "range", min, max, step, value: S[key], oninput: (e) => {
+        S[key] = Number(e.target.value); out.textContent = fmt(S[key]); save(); dirty = true; if (onchange) onchange();
+      } });
+      return h("div", { class: "rg" }, h("div", {}, h("span", {}, label), out), input);
+    };
+    const when = (iso) => iso ? new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "short" }) : "";
+    const cDays = (conflict.days || []).slice().reverse().map(d => when(d + "T12:00:00")).join(" und ");
+    const cpDate = cps.length ? when(cps[0].date + "T12:00:00") : "";
+    const stale = (x) => x && x.stale ? " (alter Stand)" : "";
+    const controls = h("div", { class: "gctl" },
+      h("h3", {}, "Ebenen"),
+      sw("conflict", "Konflikte & Kämpfe", `${conflict.points.length} Orte, ${cDays || "keine Daten"}${stale(conflict)}`),
+      sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
+      sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
+      sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
+      sw("borders", "Ländergrenzen"),
+      sw("labels", "Beschriftungen"),
+      h("h3", {}, "Regler"),
+      slider("minConf", "Konflikte: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
+      slider("elDays", "Wahlen: Zeitraum voraus", 7, 365, 1, v => v + " Tage", () => renderLists()),
+      slider("spin", "Drehung", 0, 10, 0.5, v => v === 0 ? "aus" : v + " °/s"));
+
+    // ---------- Projektion und Zeichnen
+    const proj = d3.geoOrthographic().clipAngle(90).precision(0.6);
+    const path = d3.geoPath(proj, g2);
+    const graticule = d3.geoGraticule10();
+    const sphere = { type: "Sphere" };
+    const allLand = { type: "FeatureCollection", features: world.features };
+    let W = 0, H = 0, dpr = 1, rot = [-35, -25], zoom = 1, dirty = true, selected = null, hits = [];
+    let alive = true, lastInteract = 0, flying = false;
+
+    function resize() {
+      const w = Math.round(stage.getBoundingClientRect().width);
+      if (!w) return;
+      W = w; H = Math.round(Math.min(w, Math.max(320, innerHeight * 0.8)));
+      dpr = Math.min(2.5, window.devicePixelRatio || 1);
+      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + "px"; dirty = true;
+    }
+
+    function draw() {
+      if (!W) return;
+      g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g2.clearRect(0, 0, W, H);
+      proj.translate([W / 2, H / 2]).scale(Math.min(W, H) / 2 * 0.92 * zoom).rotate(rot);
+      const R = proj.scale(), cx = W / 2, cy = H / 2, center = [-rot[0], -rot[1]];
+      const vis = (lon, lat) => d3.geoDistance([lon, lat], center) < 1.45;
+      hits = [];
+
+      // Atmosphäre und Ozean
+      const glow = g2.createRadialGradient(cx, cy, R * 0.98, cx, cy, R * 1.1);
+      glow.addColorStop(0, "rgba(110,170,255,.28)"); glow.addColorStop(1, "rgba(110,170,255,0)");
+      g2.fillStyle = glow; g2.beginPath(); g2.arc(cx, cy, R * 1.1, 0, 2 * Math.PI); g2.fill();
+      const ocean = g2.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R);
+      ocean.addColorStop(0, COL.ocean1); ocean.addColorStop(1, COL.ocean2);
+      g2.beginPath(); path(sphere); g2.fillStyle = ocean; g2.fill();
+      g2.beginPath(); path(graticule); g2.strokeStyle = COL.grid; g2.lineWidth = 0.6; g2.stroke();
+
+      // Land, Konflikt- und Wahlländer
+      g2.beginPath(); path(allLand); g2.fillStyle = COL.land; g2.fill();
+      if (S.conflict) {
+        for (const c of conflict.countries) {
+          const f = featById.get(c.id); if (!f) continue;
+          g2.beginPath(); path(f); g2.fillStyle = `rgba(${COL.conflict},${(0.10 + 0.42 * Math.sqrt(c.w / maxCW)).toFixed(3)})`; g2.fill();
+        }
+      }
+      const elMap = elByCountry();
+      if (S.elections) {
+        for (const [id, e] of elMap) {
+          const f = featById.get(id); if (!f) continue;
+          const near = 1 - Math.min(1, e.days / Math.max(S.elDays, 30));
+          g2.beginPath(); path(f); g2.fillStyle = `rgba(${COL.elect},${(0.22 + 0.4 * near).toFixed(3)})`; g2.fill();
+        }
+      }
+      if (S.borders) { g2.beginPath(); path(allLand); g2.strokeStyle = COL.border; g2.lineWidth = 0.55; g2.stroke(); }
+      if (selected && selected.country) {
+        const f = featById.get(selected.country);
+        if (f) { g2.beginPath(); path(f); g2.strokeStyle = "#fff"; g2.lineWidth = 1.6; g2.stroke(); }
+      }
+      g2.beginPath(); path(sphere); g2.strokeStyle = "rgba(160,200,255,.4)"; g2.lineWidth = 1; g2.stroke();
+
+      const halo = (txt, x, y, color, size, align) => {
+        g2.font = `600 ${size}px system-ui, sans-serif`; g2.textAlign = align || "left"; g2.lineWidth = 3;
+        g2.strokeStyle = "rgba(5,10,18,.85)"; g2.strokeText(txt, x, y); g2.fillStyle = color; g2.fillText(txt, x, y);
+      };
+      const isSel = (type, item) => selected && selected.type === type && selected.item === item;
+
+      // Konfliktorte
+      if (S.conflict) {
+        for (const p of confShown()) {
+          if (!vis(p.lon, p.lat)) continue;
+          const [x, y] = proj([p.lon, p.lat]);
+          const r = (4 + 18 * Math.sqrt(p.w / maxW)) * Math.min(1.7, Math.max(0.8, zoom * 0.9));
+          const rg = g2.createRadialGradient(x, y, 0, x, y, r);
+          rg.addColorStop(0, `rgba(${COL.conflict},.85)`); rg.addColorStop(0.45, `rgba(${COL.conflict},.35)`); rg.addColorStop(1, `rgba(${COL.conflict},0)`);
+          g2.fillStyle = rg; g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI); g2.fill();
+          g2.fillStyle = "#ffd9d4"; g2.beginPath(); g2.arc(x, y, 1.8, 0, 2 * Math.PI); g2.fill();
+          if (isSel("conflict", p)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r * 0.7 + 3, 0, 2 * Math.PI); g2.stroke(); }
+          hits.push({ x, y, r: Math.max(12, r * 0.6), type: "conflict", item: p });
+        }
+      }
+      // Wahlen: Beschriftung am Landesmittelpunkt
+      if (S.elections && S.labels && zoom > 1.15) {
+        for (const [id, e] of elMap) {
+          const c = centroid.get(id); if (!c || !vis(c[0], c[1])) continue;
+          const [x, y] = proj(c);
+          halo("Wahl " + new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" }) + ".", x, y, "#9ccbff", 11, "center");
+        }
+      }
+      // Meerengen
+      if (S.chokes) {
+        for (const c of cps) {
+          if (!vis(c.lon, c.lat)) continue;
+          const [x, y] = proj([c.lon, c.lat]);
+          const col = LEVEL[c.level][1], s = c.level ? 7 : 5;
+          g2.beginPath(); g2.moveTo(x, y - s); g2.lineTo(x + s, y); g2.lineTo(x, y + s); g2.lineTo(x - s, y); g2.closePath();
+          g2.fillStyle = col; g2.fill(); g2.strokeStyle = "#0a1420"; g2.lineWidth = 1.5; g2.stroke();
+          if (isSel("chokepoint", c)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, s + 5, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && (zoom > 1.25 || c.level)) halo(c.name.split(" / ")[0], x + s + 4, y + 4, c.level ? "#fff" : "#bcd0e6", 11);
+          hits.push({ x, y, r: 16, type: "chokepoint", item: c });
+        }
+      }
+      // Flugzeugträger
+      if (S.carriers) {
+        for (const s of carriers) {
+          if (!vis(s.lon, s.lat)) continue;
+          const [x, y] = proj([s.lon, s.lat]);
+          g2.beginPath(); g2.moveTo(x, y - 8); g2.lineTo(x + 6, y + 6); g2.lineTo(x - 6, y + 6); g2.closePath();
+          g2.fillStyle = "#fff"; g2.fill(); g2.strokeStyle = "#0a1420"; g2.lineWidth = 1.5; g2.stroke();
+          if (isSel("carrier", s)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, 13, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && zoom > 0.9) halo(s.hull, x + 10, y + 4, "#fff", 11);
+          hits.push({ x, y, r: 16, type: "carrier", item: s });
+        }
+      }
+    }
+
+    // ---------- Bedienung
+    const pointers = new Map();
+    let pinch = null, down = null;
+    const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const local = (e) => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+
+    canvas.addEventListener("pointerdown", (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      lastInteract = performance.now(); flying = false;
+      if (pointers.size === 1) down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
+      if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: dist(a, b), z: zoom }; down = null; }
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      const p = pointers.get(e.pointerId);
+      if (!p) { hover(e); return; }
+      const dx = e.clientX - p.x, dy = e.clientY - p.y;
+      p.x = e.clientX; p.y = e.clientY; lastInteract = performance.now();
+      if (pointers.size === 1) {
+        if (down) down.moved += Math.abs(dx) + Math.abs(dy);
+        const k = 0.28 / zoom;
+        rot = [rot[0] + dx * k, clamp(rot[1] - dy * k, -88, 88)];
+      } else if (pinch && pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        zoom = clamp(pinch.z * dist(a, b) / pinch.d, 0.8, 9);
+      }
+      dirty = true;
+    });
+    const up = (e) => {
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (down && e.type === "pointerup" && down.moved < 8 && performance.now() - down.t < 600) tap(...local(e));
+      if (!pointers.size) down = null;
+    };
+    canvas.addEventListener("pointerup", up);
+    canvas.addEventListener("pointercancel", up);
+    canvas.addEventListener("wheel", (e) => { e.preventDefault(); zoomTo(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); lastInteract = performance.now(); }, { passive: false });
+
+    function zoomTo(z) { zoom = clamp(z, 0.8, 9); dirty = true; }
+    function nearest(x, y) {
+      let best = null, bd = 1e9;
+      for (const hit of hits) { const d = Math.hypot(hit.x - x, hit.y - y); if (d <= hit.r + 6 && d < bd) { best = hit; bd = d; } }
+      return best;
+    }
+    function hover(e) {
+      if (e.pointerType === "touch") return;
+      const [x, y] = local(e), hit = nearest(x, y);
+      canvas.style.cursor = hit ? "pointer" : "grab";
+      if (hit) {
+        tip.textContent = hit.type === "conflict" ? hit.item.name : hit.type === "chokepoint" ? hit.item.name : hit.item.name + " (" + hit.item.hull + ")";
+        tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
+      } else tip.classList.remove("on");
+    }
+    function tap(x, y) {
+      const hit = nearest(x, y);
+      if (hit) { select(hit.type, hit.item); return; }
+      const ll = proj.invert([x, y]);
+      if (!ll) return;
+      const f = world.features.find(f => d3.geoContains(f, ll));
+      if (f) select("country", f);
+    }
+
+    function flyTo(lon, lat, z) {
+      const r0 = rot.slice(), z0 = zoom, z1 = z || Math.max(zoom, 1.7);
+      const dl = ((-lon - r0[0] + 540) % 360) - 180, dp = clamp(-lat, -85, 85) - r0[1];
+      const t0 = performance.now(); flying = true;
+      (function step(now) {
+        if (!flying) return;
+        const t = Math.min(1, (now - t0) / 900), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        rot = [r0[0] + dl * e, r0[1] + dp * e]; zoom = z0 + (z1 - z0) * e; dirty = true;
+        if (t < 1) requestAnimationFrame(step); else flying = false;
+      })(t0);
+    }
+
+    // ---------- Infofeld und Listen
+    const num = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
+    const pct = (v) => v == null ? "–" : (v > 0 ? "+" : "") + num.format(v) + " %";
+    const link = (t, u) => h("a", { href: u }, t);
+    const introNode = () => h("div", {}, h("h3", {}, "Lagebild"), h("p", { class: "note" }, "Tippe auf einen Punkt, ein Land oder einen Eintrag in den Listen. Ziehen dreht die Erde, zwei Finger oder das Mausrad zoomen."));
+    function spark(series) {
+      const NS = "http://www.w3.org/2000/svg", w = 220, ht = 44, svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("viewBox", `0 0 ${w} ${ht}`); svg.setAttribute("class", "gspark");
+      const max = Math.max(...series, 1), pl = document.createElementNS(NS, "polyline");
+      pl.setAttribute("points", series.map((v, i) => `${(i / (series.length - 1) * w).toFixed(1)},${(ht - 2 - (v / max) * (ht - 4)).toFixed(1)}`).join(" "));
+      pl.setAttribute("fill", "none"); pl.setAttribute("stroke", "currentColor"); pl.setAttribute("stroke-width", "1.6");
+      svg.append(pl); return svg;
+    }
+
+    function select(type, item) {
+      selected = { type, item, country: type === "country" ? item.id : null };
+      let lon, lat, node;
+      if (type === "conflict") {
+        lon = item.lon; lat = item.lat;
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag bad" }, "Kampfhandlungen laut Nachrichten"),
+          h("p", {}, `${item.n} Ereignisse mit ${item.w} Medienmeldungen in den letzten 2 Tagen. Das ist die Zahl der Meldungen, kein Maß für Opfer oder Ausmaß.`),
+          h("p", { class: "note" }, "Maschinell aus Nachrichten gewonnen (GDELT). Orte können falsch zugeordnet sein."));
+      } else if (type === "chokepoint") {
+        lon = item.lon; lat = item.lat;
+        const [lvl, col] = LEVEL[item.level];
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag", style: `background:${col};color:#06121e` }, lvl),
+          h("p", {}, `Schiffe pro Tag (Schnitt der letzten 7 Tage): ${num.format(item.last7)}`, h("br"),
+            item.base != null ? `${item.base_label}: ${num.format(item.base)} (${pct(item.pct)})` : "Kein Vergleichswert"),
+          h("div", { class: "gsp", style: `color:${col}` }, spark(item.history), h("small", {}, "letzte 60 Tage, Stand " + new Date(item.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" }))),
+          item.news.length ? h("div", {}, h("h4", {}, "Meldungen"), item.news.map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : h("p", { class: "note" }, "Keine aktuelle Meldung in den gesammelten Nachrichten."),
+          h("p", { class: "note" }, "Zahlen: IMF PortWatch (Satelliten-Schiffsortung), Verzögerung etwa 3 Tage. Die Einstufung ist eine Schätzung aus dem Verkehr und den Nachrichten, keine amtliche Sperrung."));
+      } else if (type === "carrier") {
+        lon = item.lon; lat = item.lat;
+        const c = geo.carriers;
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag" }, item.hull),
+          h("p", {}, "Region: " + item.where), h("p", { class: "note" }, `Position nur grob (Region), Stand des Trackers: ${c.as_of}. Die Marine veröffentlicht keine genauen Positionen.`),
+          h("p", {}, link("USNI Fleet Tracker öffnen", c.url)));
+      } else {
+        const f = item, c = confCountry.get(f.id), e = elByCountry().get(f.id) || elections.find(x => x.id === f.id);
+        const ll = centroid.get(f.id); lon = ll[0]; lat = ll[1];
+        node = h("div", {}, h("h3", {}, nameOf(f)),
+          c ? h("p", {}, `Konfliktmeldungen: ${c.w} in den letzten 2 Tagen (Rang ${conflict.countries.indexOf(c) + 1} von ${conflict.countries.length}).`) : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen in den Daten."),
+          e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."));
+        lon = ll[0]; lat = ll[1];
+      }
+      info.replaceChildren(node);
+      flyTo(lon, lat, type === "country" ? Math.max(zoom, 1.5) : Math.max(zoom, 2));
+      info.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      dirty = true;
+    }
+
+    function renderLists() {
+      const row = (label, sub, color, onclick) => h("button", { class: "grow", onclick },
+        color && h("i", { style: `background:${color}` }), h("span", {}, label, sub && h("small", {}, sub)));
+      const conf = confShown().slice(0, 8);
+      const sorted = cps.slice().sort((a, b) => b.level - a.level || (a.pct ?? 0) - (b.pct ?? 0));
+      const els = elShown().slice(0, 10);
+      lists.replaceChildren(
+        S.conflict && h("div", {}, h("h3", {}, "Brennpunkte"),
+          conf.length ? conf.map(p => row(p.name, `${p.w} Meldungen`, `rgb(${COL.conflict})`, () => select("conflict", p))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
+        S.chokes && h("div", {}, h("h3", {}, "Meerengen"),
+          sorted.map(c => row(c.name, c.pct == null ? "" : `Verkehr ${pct(c.pct)} ggü. ${c.base_label}`, LEVEL[c.level][1], () => select("chokepoint", c)))),
+        S.elections && h("div", {}, h("h3", {}, "Wahlen"),
+          els.length ? els.map(e => row(e.name_de, `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" })}, ${e.what}`, `rgb(${COL.elect})`, () => select("country", featById.get(e.id)))) : h("p", { class: "note" }, "Keine Wahl im gewählten Zeitraum.")),
+        S.carriers && geo.carriers && h("div", {}, h("h3", {}, "Flugzeugträger"),
+          carriers.map(s => row(`${s.name} (${s.hull})`, s.where, "#fff", () => select("carrier", s))),
+          (geo.carriers.headlines || []).length ? h("div", {}, h("h4", {}, "Aktuelle Meldungen"), geo.carriers.headlines.slice(0, 4).map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : null));
+      dirty = true;
+    }
+
+    const notes = Object.entries(geo.notes || {}).map(([k, v]) => `${k}: ${v}`).join("; ");
+    const foot = h("p", { class: "note gfoot" },
+      "Quellen: GDELT (Konflikte, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
+      + (notes ? " Hinweis: " + notes : ""));
+
+    root.replaceChildren(h("div", { class: "globe-wrap" },
+      stage, h("div", { class: "gside" }, info, controls, lists), foot));
+    info.replaceChildren(introNode());
+    renderLists();
+
+    // ---------- Schleife
+    let last = performance.now();
+    function frame(now) {
+      if (!alive || !root.isConnected) { alive = false; return; }
+      const dt = Math.min(0.1, (now - last) / 1000); last = now;
+      if (!document.hidden) {
+        if (S.spin > 0 && !flying && !selected && !pointers.size && now - lastInteract > 3500) { rot = [rot[0] + S.spin * dt, rot[1]]; dirty = true; }
+        if (dirty) { dirty = false; draw(); }
+      }
+      requestAnimationFrame(frame);
+    }
+    const ro = new ResizeObserver(resize); ro.observe(stage);
+    resize();
+    requestAnimationFrame(frame);
+    const api = { destroy() { alive = false; ro.disconnect(); }, state: () => ({ zoom, rot, W, H, selected: !!selected }) };
+    window.MegoGlobe.current = api;
+    return api;
+  }
+
+  window.MegoGlobe = { loadAssets, mount };
+})();

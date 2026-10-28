@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T13:38:57.868240+00:00",
+ "generated": "2026-10-28T13:39:36.400429+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25701.27,
-   "pct": 0.432,
+   "price": 25700.5,
+   "pct": 0.429,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7733.71,
-   "pct": 0.144,
+   "price": 7731.8,
+   "pct": 0.119,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26541.348,
-   "pct": 0.24,
+   "price": 26546.285,
+   "pct": 0.259,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52400.94,
-   "pct": 0.045,
+   "price": 52359.52,
+   "pct": -0.034,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6174.57,
-   "pct": 0.16,
+   "price": 6174.2,
+   "pct": 0.154,
    "alert": null
   },
   {
@@ -68,22 +68,22 @@
   {
    "name": "Gold",
    "group": "index",
-   "price": 4065.2,
-   "pct": -0.231,
+   "price": 4064.7,
+   "pct": -0.243,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 111.34,
-   "pct": 1.764,
+   "price": 111.3,
+   "pct": 1.727,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72454.35,
-   "pct": 1.055,
+   "price": 72450.86,
+   "pct": 1.05,
    "alert": null
   }
  ],
@@ -96,17 +96,17 @@
    "alert": false
   },
   {
+   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
+   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
    "title": "Bahnkatastrophe: «Überall Blut» - Mehr als 60 Tote bei Zugunglück in Spanien",
    "url": "https://www.zeit.de/news/2026-10/28/mehrere-verletzte-bei-zugkollision-in-spanien",
    "topic": "world",
    "n": 8,
-   "alert": false
-  },
-  {
-   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
-   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
-   "topic": "world",
-   "n": 6,
    "alert": false
   },
   {
@@ -173,8 +173,8 @@
    "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
    "source": "Polymarket",
    "lead": "No change",
-   "p": 0.948,
-   "d1": 0.008
+   "p": 0.9485,
+   "d1": 0.0085
   },
   {
    "title": "Israeli Legislative Election Winner",
@@ -205,7 +205,7 @@
    "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
    "source": "Polymarket",
    "lead": "↓ 80,000",
-   "p": 0.76,
+   "p": 0.725,
    "d1": null
   }
  ]

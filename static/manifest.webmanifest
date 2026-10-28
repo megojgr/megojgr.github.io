@@ -1,0 +1,16 @@
+{
+  "name": "Mego News",
+  "short_name": "Mego News",
+  "description": "Persönliche Nachrichten zu Börse, Welt und Deutschland, täglich aktualisiert",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17160f",
+  "theme_color": "#17160f",
+  "lang": "de",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

@@ -2,8 +2,16 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#17160f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mego News">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Mego News</title>
@@ -32,11 +40,12 @@
   .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 
   /* Kopf */
-  .mast { border-top: 5px solid var(--ink); background: var(--bg); }
-  .mast-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 12.5px; color: var(--muted); }
+  .mast { border-top: calc(5px + env(safe-area-inset-top)) solid var(--ink); background: var(--bg); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .mast-bar { display: flex; align-items: center; gap: 8px; padding: 8px 0 4px; font-size: 12.5px; color: var(--muted); }
   .mast-bar .grow { flex: 1; }
-  .mast h1 { margin: 0; padding: 2px 0 12px; text-align: center; font: 700 clamp(30px, 6vw, 46px)/1.05 var(--serif); letter-spacing: -.015em; }
-  .btn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 5px 14px; font-size: 13px; }
+  .mast h1 { margin: 0; padding: 2px 0 4px; text-align: center; font: 700 clamp(30px, 6vw, 46px)/1.05 var(--serif); letter-spacing: -.015em; }
+  .statusline { text-align: center; font-size: 12.5px; color: var(--muted); padding: 0 0 12px; min-height: 30px; }
+  .btn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 7px 15px; font-size: 13px; min-height: 36px; }
   .btn:hover { border-color: var(--ink); }
   .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
   .btn[disabled] { opacity: .55; cursor: progress; }
@@ -142,7 +151,7 @@
 
   /* Filter */
   .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 12px; }
-  .filters button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 4px 13px; font-size: 13px; }
+  .filters button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 7px 14px; font-size: 13px; }
   .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
   /* Wetten */
@@ -189,11 +198,11 @@
   .dlg .big { font: 700 30px/1.2 var(--sans); font-variant-numeric: tabular-nums; margin: 10px 0 0; }
   .dlg .big small { font-size: 15px; font-weight: 600; margin-left: 10px; }
   .ranges { display: flex; gap: 6px; margin: 14px 0 6px; flex-wrap: wrap; }
-  .ranges button { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+  .ranges button { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 6px 13px; font-size: 13px; }
   .ranges button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .info { font-size: 13px; color: var(--muted); min-height: 20px; font-variant-numeric: tabular-nums; }
   .chart { width: 100%; height: auto; display: block; touch-action: pan-y; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px 14px; margin: 14px 0 4px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px 14px; margin: 14px 0 4px; }
   .stats div { border-top: 1px solid var(--line); padding-top: 5px; font-size: 12px; color: var(--muted); }
   .stats b { display: block; font: 600 15.5px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
   .links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 13.5px; }
@@ -204,18 +213,29 @@
   .dlg .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .dlg h3.sec2 { font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; margin: 22px 0 4px; padding-top: 6px; border-top: 2px solid var(--ink); }
 
-  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; padding: 18px 0 44px; }
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; padding: 18px 0 calc(44px + env(safe-area-inset-bottom)); }
+
+  /* Handy: Detailansicht als Vollbild, Kopf bleibt oben stehen */
+  @media (max-width: 640px) {
+    dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; margin: 0; }
+    .dlg { padding: 0 16px calc(28px + env(safe-area-inset-bottom)); }
+    .dlg .top { position: sticky; top: 0; z-index: 3; background: var(--paper); padding: calc(12px + env(safe-area-inset-top)) 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+    .dlg h2 { font-size: 22px; }
+    .dlg .big { font-size: 28px; }
+    .wrap { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  }
 </style>
 </head>
 <body>
 <header class="mast">
   <div class="wrap">
     <div class="mast-bar">
-      <span id="today"></span><span class="grow"></span><span id="status" role="status"></span>
+      <span id="today"></span><span class="grow"></span>
       <button class="btn primary" id="btn-refresh">Aktualisieren</button>
       <button class="btn icon" id="btn-settings" aria-label="Einstellungen" title="Einstellungen">&#9881;</button>
     </div>
     <h1>Mego News</h1>
+    <div class="statusline" id="status" role="status"></div>
   </div>
 </header>
 <div class="alertbar" id="alertbar"></div>
@@ -335,9 +355,11 @@ function rangeOf(q, key) {
   return [0, n];
 }
 
-function chart(q, key, info) {
+function chart(q, key, info, width) {
   const [a, b] = rangeOf(q, key), ys = q.c.slice(a, b), ts = q.t.slice(a, b), n = ys.length;
-  const W = 640, H = 250, L = 8, R = 62, T = 12, B = 22;
+  // Breite der echten Anzeige verwenden, damit Beschriftungen auf dem Handy lesbar bleiben
+  const W = Math.max(280, Math.round(width || 640)), H = Math.round(Math.min(300, Math.max(210, W * 0.45)));
+  const L = 8, R = 62, T = 12, B = 22;
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart" });
   if (n < 2) { svg.append(svgEl("text", { x: 10, y: 30, fill: "currentColor" })); svg.lastChild.textContent = "Zu wenig Kursdaten."; return svg; }
   const lo = Math.min(...ys), hi = Math.max(...ys), pad = (hi - lo) * .06 || 1;
@@ -401,7 +423,7 @@ function openDetail(q, extra) {
   const chartBox = h("div");
   const rangeBar = h("div", { class: "ranges" });
   const draw = () => {
-    chartBox.replaceChildren(chart(q, range, info));
+    chartBox.replaceChildren(chart(q, range, info, chartBox.clientWidth));
     rangeBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === range));
   };
   for (const [k, label] of ranges) rangeBar.append(h("button", { "data-k": k, onclick: () => { range = k; draw(); } }, label));
@@ -433,8 +455,9 @@ function openDetail(q, extra) {
       h("a", { href: "https://news.google.com/search?hl=de&gl=DE&ceid=DE:de&q=" + search }, "Google News")),
     news, ctx, noNews);
   dlg.replaceChildren(body);
+  if (!dlg.open) dlg.showModal();  // erst anzeigen, dann zeichnen: das Diagramm braucht die echte Breite
   draw();
-  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
 }
 $("detail").addEventListener("click", (e) => { if (e.target === $("detail")) $("detail").close(); });
 $("settings").addEventListener("click", (e) => { if (e.target === $("settings")) $("settings").close(); });
@@ -513,7 +536,7 @@ function glance() {
   const crash = DATA.stories.filter(s => s.alert);
   if (crash.length) rows.push(["Crash-Radar", [h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } }, `${crash.length} Meldung${crash.length > 1 ? "en" : ""}`), " mit Absturz-Stichwörtern"]]);
   const ne = nextElections(3, 21);
-  if (ne.length) rows.push(["Nächste Wahlen", ne.map((e, i) => [i ? "  ·  " : "", `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })}. ${e.country}`])]);
+  if (ne.length) rows.push(["Nächste Wahlen", ne.map((e, i) => [i ? "  ·  " : "", `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })} ${e.country}`])]);
   const soon = DATA.termine.filter(t => (new Date(t.end + "T23:59:59") - Date.now()) < 2 * dayMs).slice(0, 3);
   if (soon.length) rows.push(["Heute & morgen", soon.map((t, i) => (i ? "  ·  " : "") + t.title)]);
   const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
@@ -718,7 +741,8 @@ function show(id) {
 
 function renderChrome() {
   const g = new Date(DATA.generated);
-  $("today").textContent = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("today").textContent = new Date().toLocaleDateString("de-DE", innerWidth < 600
+    ? { weekday: "short", day: "numeric", month: "short" } : { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const stamp = "Stand " + g.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
   if (!$("status").dataset.busy) $("status").textContent = stamp;
   $("status").dataset.stamp = stamp;

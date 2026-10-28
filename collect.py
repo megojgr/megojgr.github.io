@@ -7,6 +7,7 @@ import html
 import json
 import os
 import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
@@ -323,7 +324,9 @@ def main():
     data["history"] = archive.load(cfg["history_days"])
 
     OUT.mkdir(exist_ok=True)
-    blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    for asset in (ROOT / "static").glob("*"):  # Symbole und Manifest für die Handy-App
+        shutil.copy2(asset, OUT / asset.name)
+    blob =json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     page = (ROOT / "template.html").read_text(encoding="utf-8").replace("__DATA__", blob)
     (OUT / "index.html").write_text(page, encoding="utf-8")

@@ -42,6 +42,11 @@
   .chip.src:hover { color: var(--accent); }
   .chip.watch { background: var(--accent); color: #fff; }
   .chip.hot { color: var(--down); }
+  .chip.ai { border: 1px solid var(--line); background: none; }
+  .brief { border-left: 3px solid var(--accent); }
+  .brief h2 { margin-top: 0; }
+  .brief ul { margin: 0; padding-left: 18px; }
+  .brief li { margin: 4px 0; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
   .filters button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
   .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -115,6 +120,7 @@ function story(s, showTopic) {
     s.summary && h("p", {}, s.summary),
     h("div", { class: "meta" },
       showTopic && h("span", { class: "chip" }, topicName),
+      s.ai && h("span", { class: "chip ai", title: "Zusammenfassung von Claude, aus Überschriften und Teasern der Quellen" }, "KI"),
       s.watch.map(w => h("span", { class: "chip watch" }, w)),
       s.sources.length > 2 && h("span", { class: "chip hot" }, `${s.sources.length} Quellen`),
       s.sources.slice(0, 5).map(x => h("a", { class: "chip src", href: x.url }, x.name)),
@@ -127,7 +133,10 @@ function list(items, showTopic) {
 }
 
 const views = {
-  heute: () => [h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."), list(DATA.heute, true)],
+  heute: () => [
+    DATA.briefing && DATA.briefing.length > 0 && h("section", { class: "card brief" },
+      h("h2", {}, "Morgenbriefing"), h("ul", {}, DATA.briefing.map(b => h("li", {}, b)))),
+    h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."), list(DATA.heute, true)],
   markets: () => list(DATA.stories.filter(s => s.topic === "markets").slice(0, 40)),
   world: () => list(DATA.stories.filter(s => s.topic === "world").slice(0, 40)),
   watch: () => {
@@ -196,7 +205,10 @@ function init() {
   document.getElementById("foot").replaceChildren(
     `${DATA.status.feeds.length - failed.length} von ${DATA.status.feeds.length} Quellen erreichbar. `,
     ...failed.map(f => h("span", { class: "bad" }, `${f.name} ausgefallen. `)),
-    "Nur Überschriften und Teaser, Volltext bei den Originalquellen.");
+    DATA.status.ai.summarized > 0
+      ? "Zusammenfassungen mit „KI“ stammen von Claude und beruhen nur auf Überschriften und Teasern, Details bitte in den Originalquellen prüfen. "
+      : "Nur Überschriften und Teaser, Volltext bei den Originalquellen. ",
+    DATA.status.ai.error && h("span", { class: "bad" }, "KI-Zusammenfassung fehlgeschlagen, es werden Teaser gezeigt."));
 
   let start = location.hash.slice(1);
   if (!views[start]) { try { start = localStorage.getItem("tab"); } catch {} }

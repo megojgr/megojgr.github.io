@@ -24,6 +24,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: News sammeln und Seite bauen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python collect.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

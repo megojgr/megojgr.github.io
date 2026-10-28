@@ -1,6 +1,7 @@
 {
   "max_age_hours": 36,
   "heute_per_topic": 6,
+  "ai": {"enabled": true, "model": "claude-sonnet-5-5", "top_per_topic": 12},
   "feeds": [
     {"name": "Tagesschau", "url": "https://www.tagesschau.de/index~rss2.xml", "hint": "general", "lang": "de"},
     {"name": "Tagesschau Wirtschaft", "url": "https://www.tagesschau.de/wirtschaft/index~rss2.xml", "hint": "markets", "lang": "de"},

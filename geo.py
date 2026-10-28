@@ -55,10 +55,12 @@ def find_country(name, world):
 
 def de_name(name):
     """Deutscher Landesname zu einem Namen der Weltkarte, z. B. "United States of America" -> "USA"."""
+    if name in COUNTRY_DE:
+        return COUNTRY_DE[name]
     for en, ne in ALIASES.items():
         if ne == name and en in COUNTRY_DE:
             return COUNTRY_DE[en]
-    return COUNTRY_DE.get(name) or name
+    return name
 
 
 # ---------------------------------------------------------------- Konflikte (GDELT)
@@ -215,7 +217,7 @@ def attach_news(cps, cfg_cps, stories, closure_words):
         pats = kw[cp["id"]]
         hits = [s for s in stories if any(p.search(s["title"]) for p in pats)]
         hits.sort(key=lambda s: s["score"], reverse=True)
-        cp["news"] = [{"title": s["title"], "url": s["url"], "time": s["time"]} for s in hits[:3]]
+        cp["news"] = [{"title": s.get("title_de") or s["title"], "url": s["url"], "time": s["time"]} for s in hits[:3]]
         cp["news_count"] = len(hits)
         cp["alert_count"] = sum(1 for s in hits if any(p.search(s["title"]) for p in closure))
         level = 0
@@ -295,6 +297,30 @@ def carrier_headlines():
     return [{"title": re.sub(r"\s+-\s+[^-]+$", "", i["title"]), "url": i["url"], "time": i["time"].isoformat()} for i in items]
 
 
+# ---------------------------------------------------------------- Erdbeben (USGS)
+
+def place_de(place):
+    """"191 km ENE of Nagqu, China" -> "Nagqu, China (191 km ONO)"; Himmelsrichtungen auf Deutsch (E = Ost)."""
+    m = re.match(r"^(\d+) km ([NSEW]{1,3}) of (.+)$", place)
+    return f"{m.group(3)} ({m.group(1)} km {m.group(2).replace('E', 'O')})" if m else place
+
+
+def quakes_data():
+    """Beben ab Stärke 4,5 der letzten 7 Tage (USGS, frei, ohne Schlüssel)."""
+    feed = json.loads(fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson", 30))
+    items = []
+    for f in feed["features"]:
+        p = f["properties"]
+        if p.get("mag") is None:
+            continue
+        lon, lat, depth = f["geometry"]["coordinates"][:3]
+        items.append({"lat": round(lat, 2), "lon": round(lon, 2), "mag": round(p["mag"], 1), "depth": round(depth or 0),
+                      "t": int(p["time"] / 1000), "place": place_de(p.get("place") or ""), "url": p.get("url") or "",
+                      "tsunami": int(p.get("tsunami") or 0), "felt": int(p.get("felt") or 0)})
+    items.sort(key=lambda x: -x["t"])
+    return {"items": items}
+
+
 # ---------------------------------------------------------------- Wahlen
 
 def elections_layer(election_list, world, horizon_days, today):
@@ -342,11 +368,12 @@ def build(cfg, stories, election_list, today):
                 value["stale"] = True
         return value
 
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=4) as ex:
         f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"]))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
-        conflict, cps, carriers = f_conf.result(), f_cp.result(), f_car.result()
+        f_eq = ex.submit(part, "quakes", quakes_data)
+        conflict, cps, carriers, quakes = f_conf.result(), f_cp.result(), f_car.result(), f_eq.result()
     try:
         headlines = carrier_headlines()
     except Exception:
@@ -361,6 +388,6 @@ def build(cfg, stories, election_list, today):
         carriers = dict(carriers, headlines=headlines)
     return {
         "names": {cid: de_name(name) for name, cid in world.items()},
-        "conflict": conflict, "chokepoints": items, "carriers": carriers,
+        "conflict": conflict, "chokepoints": items, "carriers": carriers, "quakes": quakes,
         "elections": elections_layer(election_list, world, g["election_days"], today), "notes": notes,
     }

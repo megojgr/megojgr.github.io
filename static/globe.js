@@ -65,7 +65,7 @@
       return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
     }
 
-    const defaults = { borders: true, names: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, minConf: 0, elDays: 90, spin: 2 };
+    const defaults = { borders: true, names: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, quakes: true, minConf: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
@@ -76,6 +76,11 @@
     const confCountry = new Map(conflict.countries.map(c => [c.id, c]));
     const maxCW = Math.max(1, ...conflict.countries.map(c => c.w));
     const cps = geo.chokepoints || [];
+    const quakeData = (geo.quakes && geo.quakes.items) || [];
+    const nowSec = () => Date.now() / 1000;
+    const quakesShown = () => quakeData.filter(q => q.mag >= S.minMag && nowSec() - q.t <= S.quakeDays * 86400);
+    const magText = (m) => m.toFixed(1).replace(".", ",");
+    const strongest = quakeData.reduce((a, q) => (!a || q.mag > a.mag ? q : a), null);
     const carriers = (geo.carriers && geo.carriers.ships || []).filter(s => s.lat != null);
     const elections = (geo.elections || []).slice().sort((a, b) => a.date.localeCompare(b.date));
     const confShown = () => conflict.points.filter(p => p.w >= maxW * (S.minConf / 100) ** 2);
@@ -115,12 +120,15 @@
       sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
+      sw("quakes", "Erdbeben", quakeData.length ? `${quakeData.length} ab Stärke 4,5 in 7 Tagen${strongest ? ", stärkstes M " + magText(strongest.mag) : ""}${stale(geo.quakes)}` : "keine Daten"),
       sw("borders", "Ländergrenzen"),
       sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
       sw("labels", "Beschriftung der Punkte"),
       h("h3", {}, "Regler"),
       slider("minConf", "Konflikte: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
       slider("elDays", "Wahlen: Zeitraum voraus", 7, 365, 1, v => v + " Tage", () => renderLists()),
+      slider("minMag", "Erdbeben: Mindest-Stärke", 4.5, 7.5, 0.1, v => "M " + magText(v), () => renderLists()),
+      slider("quakeDays", "Erdbeben: letzte Tage", 1, 7, 1, v => v + (v === 1 ? " Tag" : " Tage"), () => renderLists()),
       slider("spin", "Drehung", 0, 10, 0.5, v => v === 0 ? "aus" : v + " °/s"));
 
     // ---------- Projektion und Zeichnen
@@ -221,6 +229,23 @@
           hits.push({ x, y, r: Math.max(12, r * 0.6), type: "conflict", item: p });
         }
       }
+      // Erdbeben: Ringe nach Stärke, neuere kräftiger; Meeresbeben (Tsunami-Flag der USGS) mit blauem Außenring
+      if (S.quakes) {
+        const t = nowSec();
+        for (const q of quakesShown()) {
+          if (!vis(q.lon, q.lat)) continue;
+          const [x, y] = proj([q.lon, q.lat]);
+          const age = (t - q.t) / 86400, a = age < 1 ? 0.95 : age < 3 ? 0.75 : 0.55;
+          const r = (3 + Math.pow(q.mag - 4.4, 1.35) * 3.6) * Math.min(1.6, Math.max(0.8, zoom * 0.85));
+          g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI);
+          g2.fillStyle = `rgba(255,176,32,${(a * 0.22).toFixed(2)})`; g2.fill();
+          g2.strokeStyle = `rgba(255,196,70,${a})`; g2.lineWidth = 1.7; g2.stroke();
+          if (q.tsunami) { g2.beginPath(); g2.arc(x, y, r + 4, 0, 2 * Math.PI); g2.strokeStyle = "rgba(90,195,255,.85)"; g2.lineWidth = 1.2; g2.setLineDash([3, 3]); g2.stroke(); g2.setLineDash([]); }
+          if (isSel("quake", q)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.6; g2.beginPath(); g2.arc(x, y, r + 7, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && q.mag >= 6.3 && zoom > 0.9) halo("M " + magText(q.mag), x + r + 5, y + 4, "#ffd27a", 11);
+          hits.push({ x, y, r: Math.max(11, r), type: "quake", item: q });
+        }
+      }
       // Wahlen: Beschriftung am Landesmittelpunkt
       if (S.elections && S.labels && zoom > 1.15) {
         for (const [id, e] of elMap) {
@@ -305,7 +330,8 @@
       const [x, y] = local(e), hit = nearest(x, y);
       canvas.style.cursor = hit ? "pointer" : "grab";
       if (hit) {
-        tip.textContent = hit.type === "conflict" ? hit.item.name : hit.type === "chokepoint" ? hit.item.name : hit.item.name + " (" + hit.item.hull + ")";
+        tip.textContent = hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
+          : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.item.name;
         tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
       } else tip.classList.remove("on");
     }
@@ -374,6 +400,18 @@
           h("div", { class: "gsp", style: `color:${col}` }, spark(item.history), h("small", {}, "letzte 60 Tage, Stand " + new Date(item.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" }))),
           item.news.length ? h("div", {}, h("h4", {}, "Meldungen"), item.news.map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : h("p", { class: "note" }, "Keine aktuelle Meldung in den gesammelten Nachrichten."),
           h("p", { class: "note" }, "Zahlen: IMF PortWatch (Satelliten-Schiffsortung), Verzögerung etwa 3 Tage. Die Einstufung ist eine Schätzung aus dem Verkehr und den Nachrichten, keine amtliche Sperrung."));
+      } else if (type === "quake") {
+        lon = item.lon; lat = item.lat;
+        const when = new Date(item.t * 1000), hours = Math.round((nowSec() - item.t) / 3600);
+        const depthText = item.depth < 70 ? "flach" : item.depth < 300 ? "mittlere Tiefe" : "tief";
+        node = h("div", {}, h("h3", {}, `Erdbeben M ${magText(item.mag)}`), h("div", { class: "gtag", style: "background:#ffb020;color:#1a1200" }, item.place),
+          item.tsunami ? h("div", { class: "gtag", style: "background:#3a9fd6;color:#fff;margin-left:6px" }, "Meeresgebiet") : null,
+          h("p", {}, `${when.toLocaleString("de-DE", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} Uhr (vor ${hours < 48 ? hours + " Std." : Math.round(hours / 24) + " Tagen"})`, h("br"),
+            `Tiefe: ${item.depth} km (${depthText}). Je flacher, desto stärker die Erschütterung an der Oberfläche.`,
+            item.felt ? h("span", {}, h("br"), `${item.felt} Wahrnehmungsmeldungen von Menschen`) : null),
+          item.tsunami ? h("p", { class: "note" }, "Das Flag „Meeresgebiet“ bedeutet nur, dass die Tsunami-Warnzentren informiert werden. Ein Tsunami ist damit nicht bestätigt.") : null,
+          h("p", {}, link("Details bei der USGS", item.url)),
+          h("p", { class: "note" }, "Quelle: USGS, alle Beben ab Stärke 4,5 der letzten 7 Tage. Stärke und Ort sind anfangs vorläufig und werden oft korrigiert."));
       } else if (type === "carrier") {
         lon = item.lon; lat = item.lat;
         const c = geo.carriers;
@@ -401,6 +439,7 @@
       const conf = confShown().slice(0, 8);
       const sorted = cps.slice().sort((a, b) => b.level - a.level || (a.pct ?? 0) - (b.pct ?? 0));
       const els = elShown().slice(0, 10);
+      const qs = quakesShown().sort((a, b) => b.mag - a.mag).slice(0, 8);
       lists.replaceChildren(
         S.conflict && h("div", {}, h("h3", {}, "Brennpunkte"),
           conf.length ? conf.map(p => row(p.name, `${p.w} Meldungen`, `rgb(${COL.conflict})`, () => select("conflict", p))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
@@ -408,6 +447,9 @@
           sorted.map(c => row(c.name, c.pct == null ? "" : `Verkehr ${pct(c.pct)} ggü. ${c.base_label}`, LEVEL[c.level][1], () => select("chokepoint", c)))),
         S.elections && h("div", {}, h("h3", {}, "Wahlen"),
           els.length ? els.map(e => row(e.name_de, `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" })}, ${e.what}`, `rgb(${COL.elect})`, () => select("country", featById.get(e.id)))) : h("p", { class: "note" }, "Keine Wahl im gewählten Zeitraum.")),
+        S.quakes && h("div", {}, h("h3", {}, "Erdbeben"),
+          qs.length ? qs.map(q => row(`M ${magText(q.mag)} · ${q.place}`, `vor ${Math.round((nowSec() - q.t) / 3600) < 48 ? Math.round((nowSec() - q.t) / 3600) + " Std." : Math.round((nowSec() - q.t) / 86400) + " Tagen"}, ${q.depth} km tief`, "#ffb020", () => select("quake", q)))
+            : h("p", { class: "note" }, "Keine Beben mit diesen Einstellungen.")),
         S.carriers && geo.carriers && h("div", {}, h("h3", {}, "Flugzeugträger"),
           carriers.map(s => row(`${s.name} (${s.hull})`, s.where, "#fff", () => select("carrier", s))),
           (geo.carriers.headlines || []).length ? h("div", {}, h("h4", {}, "Aktuelle Meldungen"), geo.carriers.headlines.slice(0, 4).map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : null));

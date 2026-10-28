@@ -20,6 +20,7 @@ import depot
 import elections
 import geo
 import live
+import translate
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
 from textutil import compile_keywords, count_hits
@@ -300,6 +301,13 @@ def main():
     briefing, ai_status = summarize(stories, heute, cfg)
     for s in stories + [s for s, _ in private]:
         s.pop("titles", None)
+    # Fremdsprachige Meldungen ins Deutsche übersetzen, aber nur die, die irgendwo angezeigt werden
+    shown = list(heute)
+    for topic in cfg["topics"]:
+        shown += [s for s in stories if s["topic"] == topic][:40]
+    shown += [s for s in stories if s["watch"] or s["alert"]]
+    shown += sorted((s for s, _ in private), key=lambda s: s["score"], reverse=True)[:80]
+    translation_note = translate.apply(list({id(s): s for s in shown}.values()))
     geo_data = geo.build(cfg, stories, election_list, NOW.date())
 
     depot_data = {"state": depot_state}
@@ -323,6 +331,7 @@ def main():
         "termine": termine,
         "depot": depot_data,
         "status": {"feeds": feed_status, "ai": ai_status, "elections_note": election_note,
+                   "translation": {"note": translation_note, "count": getattr(translate.apply, "count", 0)},
                    "briefing_errors": brief_errors,
                    "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error}},
     }
@@ -357,6 +366,7 @@ def main():
           f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
           f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+    print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))
     lv = live_data["channels"]
     for c in lv:
         if c["state"] in ("aus", "unbekannt") and c.get("dbg"):

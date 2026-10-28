@@ -94,6 +94,9 @@
   .kicker .tag { background: var(--ink); color: var(--bg); padding: 1px 7px; border-radius: 3px; letter-spacing: .05em; }
   .kicker .tag.crash { background: var(--red); color: #fff; }
   .kicker .tag.dep { background: var(--link); color: var(--bg); }
+  .kicker .tag.tr { background: none; color: var(--muted); border: 1px solid var(--line); font: 600 10.5px var(--sans); letter-spacing: .04em; cursor: pointer; }
+  .kicker .tag.tr:hover { color: var(--ink); border-color: var(--ink); }
+  .teaser[hidden] { display: none; }
   .hl { margin: 0; font: 700 20px/1.28 var(--serif); letter-spacing: -.005em; }
   .hl a:hover { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   .item.lead { padding-top: 20px; }
@@ -248,6 +251,7 @@
   .gfoot { margin: 0; }
 
   .nl small { color: var(--muted); }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
 
   /* Live */
   .live-wrap { display: grid; gap: 18px 32px; grid-template-columns: minmax(0, 1fr); padding-top: 14px; }
@@ -511,6 +515,7 @@ function openDetail(q, extra) {
       h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     extra && h("div", { class: "ids" }, "WKN ", copy(extra.wkn), "ISIN ", copy(extra.isin), h("span", {}, "Kurs: " + q.symbol)),
     h("div", { class: "big" }, price(q.price) + cur, q.pct != null && h("small", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct) + " heute")),
+    q.local && h("div", { class: "sub", style: "margin-top:2px" }, `umgerechnet in Euro, Börsenkurs ${price(q.local.price)} ${q.local.currency}; die Verlaufswerte rechnen den jeweiligen Tageskurs ein`),
     rangeBar, info, chartBox,
     h("div", { class: "stats" },
       stat("1 Woche", pctSpan(pctBack(5))), stat("1 Monat", pctSpan(pctBack(21))), stat("3 Monate", pctSpan(pctBack(63))),
@@ -532,20 +537,37 @@ $("settings").addEventListener("click", (e) => { if (e.target === $("settings"))
 
 // ------------------------------------------------------------------ Meldungen
 
+const LANGS = { en: "Englisch", es: "Spanisch", fr: "Französisch", it: "Italienisch", pt: "Portugiesisch", nl: "Niederländisch", tr: "Türkisch", ru: "Russisch", ar: "Arabisch", cjk: "Ostasiatisch" };
+const translating = () => store.get("tr") !== "0";   // Standard: Fremdsprachiges ins Deutsche übersetzen
+
 function item(s, o = {}) {
+  const translated = translating() && s.title_de;
+  let original = false;  // Klick auf das Etikett wechselt zwischen Übersetzung und Original
+  const title = h("a", { href: s.url }), teaser = h("p", { class: "teaser" });
+  const paint = () => {
+    const t = translated && !original;
+    title.textContent = t ? s.title_de : s.title;
+    const sum = t && s.summary_de ? s.summary_de : s.summary;
+    teaser.textContent = sum || ""; teaser.hidden = !sum;
+  };
+  const chip = translated && h("button", { class: "tag tr", title: "Maschinell übersetzt, antippen für das Original", onclick: (e) => {
+    original = !original; e.target.textContent = original ? "Original" : "übersetzt aus " + (LANGS[s.src_lang] || "Fremdsprache"); paint();
+  } }, "übersetzt aus " + (LANGS[s.src_lang] || "Fremdsprache"));
+  paint();
   return h("article", { class: "item" + (o.lead ? " lead" : "") },
     h("div", { class: "kicker" },
       s.alert && h("span", { class: "tag crash" }, "Crash-Radar"),
       s.election && h("span", { class: "tag" }, "Wahl"),
       !o.hideTopic && h("span", { class: s.topic === "markets" ? "" : "red" }, TOPIC[s.topic] || ""),
       s.watch.map(w => h("span", { class: "tag dep" }, w)),
+      chip,
       h("span", { class: "t" }, ago(s.time))),
-    h("h3", { class: "hl" }, h("a", { href: s.url }, s.title)),
-    s.summary && h("p", { class: "teaser" }, s.summary),
+    h("h3", { class: "hl" }, title),
+    teaser,
     h("div", { class: "srcs" },
       s.sources.length > 2 && h("span", { class: "n" }, `${s.sources.length} Quellen`),
       s.sources.slice(0, 4).map(x => h("a", { href: x.url }, x.name)),
-      s.lang === "en" && h("span", {}, "Englisch")));
+      !translated && s.src_lang && s.src_lang !== "de" && h("span", {}, LANGS[s.src_lang] || "Fremdsprache")));
 }
 const items = (list, o) => list.length ? list.map((s, i) => item(s, { ...o, lead: o && o.lead && i === 0 })) : h("div", { class: "empty" }, "Keine Meldungen gefunden.");
 
@@ -601,6 +623,8 @@ function glance() {
   rows.push(["Kursalarm", alerts.length
     ? alerts.flatMap((q, i) => [i ? "  ·  " : "", `${q.short || q.name} `, pctSpan(q.pct), q.alert === "week" ? ` (5 Tage ${pct(q.week)})` : ""])
     : "keine auffälligen Bewegungen"]);
+  const quakes = ((DATA.geo && DATA.geo.quakes && DATA.geo.quakes.items) || []).filter(q => q.mag >= 6 && Date.now() / 1000 - q.t < 72 * 3600).sort((a, b) => b.mag - a.mag).slice(0, 2);
+  if (quakes.length) rows.push(["Erdbeben", [quakes.map((q, i) => [i ? "  ·  " : "", `M ${q.mag.toFixed(1).replace(".", ",")} ${q.place}`]), " in den letzten 3 Tagen, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
   const strait = ((DATA.geo && DATA.geo.chokepoints) || []).filter(c => c.level > 0);
   if (strait.length) rows.push(["Meerengen", [strait.flatMap((c, i) => [i ? "  ·  " : "", `${c.name.split(" / ")[0]} `, pctSpan(c.pct)]), " Schiffsverkehr, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
   const lv = (DATA.live && DATA.live.channels) || [];
@@ -1109,6 +1133,10 @@ function openSettings() {
       h("button", { class: "btn", onclick: () => { store.del("ghtoken"); tok.value = ""; msg.textContent = "Token entfernt."; } }, "Entfernen")),
     msg,
     h("p", { class: "note" }, "Der Token liegt nur im Browser dieses Geräts und darf ausschließlich Abrufe für dieses Repo starten. Auf fremden Geräten nicht speichern."),
+    h("h3", { class: "sec2" }, "Übersetzung"),
+    h("label", { class: "chk" }, h("input", { type: "checkbox", checked: translating() || null, onchange: (e) => { store.set("tr", e.target.checked ? "1" : "0"); renderAll(); } }),
+      " Fremdsprachige Meldungen auf Deutsch zeigen"),
+    h("p", { class: "note" }, "Englische, spanische, französische, italienische und portugiesische Überschriften werden maschinell übersetzt (freies Modell OPUS-MT, läuft bei GitHub, ohne Kosten). Die Übersetzung kann Fehler enthalten. Auf jeder Karte zeigt ein Tipp auf das Etikett „übersetzt aus …“ das Original."),
     h("h3", { class: "sec2" }, "Depot"),
     h("p", { class: "note" }, DEPOT ? "Dein Depot ist auf diesem Gerät entsperrt." : "Dein Depot ist gesperrt."),
     h("div", { class: "actions" },

@@ -50,13 +50,16 @@ def fetch_quote(q, alerts):
         meta = res["meta"]
         pairs = [(t, c) for t, c in zip(res.get("timestamp", []), res["indicators"]["quote"][0].get("close", []))
                  if c is not None]
-        closes = [c for _, c in pairs]
         price = meta["regularMarketPrice"]
+        mt = meta.get("regularMarketTime")
+        if pairs and mt and mt // 86400 > pairs[-1][0] // 86400:
+            pairs.append((mt, price))  # Der Tagesbalken fehlt noch: den aktuellen Kurs als letzten Punkt anhängen
+        closes = [c for _, c in pairs]
         pct = meta.get("regularMarketChangePercent")
         if pct is None and len(closes) >= 2:
             pct = (closes[-1] / closes[-2] - 1) * 100
         week = (price / closes[-6] - 1) * 100 if len(closes) >= 6 else None
-        month = (price / closes[0] - 1) * 100 if closes else None
+        month = (price / closes[-22] - 1) * 100 if len(closes) >= 22 else None  # 21 Handelstage
         limit = q.get("alert_day_pct") or (alerts["stock_day_pct"] if base["group"] == "stock" else alerts["index_day_pct"])
         alert = None
         if q["symbol"] == "^VIX":

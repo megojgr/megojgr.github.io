@@ -47,7 +47,7 @@
     ]
   },
   "geo": {
-    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12},
+    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5},
     "reason_countries": 20,
     "conflict_days": 2,
     "conflict_max_points": 150,

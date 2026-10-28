@@ -25,8 +25,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Datum für den Zwischenspeicher
+        id: day
+        run: echo "d=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - name: Übersetzungsmodelle zwischenspeichern
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mego
+          key: mego-translate-${{ steps.day.outputs.d }}
+          restore-keys: |
+            mego-translate-
       - name: Abhängigkeiten installieren
-        run: pip install cryptography
+        run: pip install cryptography ctranslate2 sentencepiece
       - name: News sammeln und Seite bauen
         env:
           # Depot-Positionen und Passwort liegen nur als Secrets, nie im Repo

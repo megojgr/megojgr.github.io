@@ -45,14 +45,18 @@ jobs:
           DEPOT_PASSWORT: ${{ secrets.DEPOT_PASSWORT }}
         run: python collect.py
       - name: Tagesarchiv speichern
+        # Ein Fehler hier (z. B. Konflikt mit einem gleichzeitigen Lauf) darf die Seite nicht verhindern
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add archive cache/geo.json cache/elections.json
           if ! git diff --cached --quiet; then
             git commit -m "Archiv $(date -u +%F)"
-            git pull --rebase origin main
-            git push origin HEAD:main
+            for i in 1 2 3; do
+              if git pull --rebase -X theirs origin main && git push origin HEAD:main; then break; fi
+              git rebase --abort 2>/dev/null || true
+            done
           fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

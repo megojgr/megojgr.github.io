@@ -47,29 +47,34 @@ def check(ch):
         out["error"] = "Abruf von YouTube blockiert"
         return out
     out["state"] = "aus"
+    st = status.group(1) if status else None
+    # Von Servern in Rechenzentren verlangt YouTube bei laufenden Streams oft eine Anmeldung (LOGIN_REQUIRED) und
+    # lässt die canonical-Angabe weg. Die Video-Kennung steht dann trotzdem im Block "videoDetails".
+    d = page.find('"videoDetails":{')
+    details = page[d:d + 4000] if d >= 0 else ""
+    vid = video.group(1) if video else None
+    if not vid and details:
+        m = re.search(r'"videoId":"([\w-]{11})"', details)
+        vid = m.group(1) if m else None
     if chan:
         out["channel_id"] = chan.group(1)
-    st = status.group(1) if status else None
-    out["dbg"] = f"{st}|live={'\"isLive\":true' in page}|video={bool(video)}|{len(page) // 1000}k"
-    if video:
-        # Hat der Kanal ein laufendes oder angekündigtes Video, leitet /live direkt darauf (canonical = watch?v=...).
-        # Von Servern in Rechenzentren verlangt YouTube manchmal eine Anmeldung (LOGIN_REQUIRED) und liefert dann
-        # weniger Angaben: dann gilt ein vorhandenes Live-Video trotzdem als laufend.
-        out["video"] = video.group(1)
-        out["title"] = html.unescape(title.group(1)) if title else ""
-        if st == "LIVE_STREAM_OFFLINE" and sched:
-            start = int(sched.group(1))
-            if start > dt.datetime.now(dt.timezone.utc).timestamp() - 3 * 3600:
-                out["state"], out["start"] = "geplant", start
-        elif st == "OK":
-            if '"isLive":true' in page:
-                out["state"] = "live"
-        elif st != "LIVE_STREAM_OFFLINE":
-            out["state"] = "live"
-        if out["state"] == "aus":
-            out["video"], out["title"] = None, ""
-        else:
-            out["embed"] = embeddable(out["video"])
+    elif details:
+        m = re.search(r'"channelId":"(UC[\w-]{22})"', details)
+        out["channel_id"] = m.group(1) if m else None
+    is_live = '"isLive":true' in (details or page)
+    out["dbg"] = f"{st}|live={is_live}|video={bool(vid)}|{len(page) // 1000}k"
+    out["title"] = html.unescape(title.group(1)) if title else ""
+    if st == "LIVE_STREAM_OFFLINE" and sched and vid:
+        start = int(sched.group(1))
+        if start > dt.datetime.now(dt.timezone.utc).timestamp() - 3 * 3600:
+            out["state"], out["start"] = "geplant", start
+    elif is_live and st != "LIVE_STREAM_OFFLINE" and (vid or out["channel_id"]):
+        out["state"] = "live"
+    if out["state"] == "aus":
+        out["title"] = ""
+    else:
+        out["video"] = vid
+        out["embed"] = embeddable(vid) if vid else False
     return out
 
 

@@ -20,6 +20,7 @@ import depot
 import elections
 import geo
 import live
+import localinfo
 import translate
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
@@ -97,7 +98,7 @@ def parse_feed(raw, feed):
             continue
         items.append({"title": title, "url": link, "time": when, "summary": summary[:320], "source": source,
                       "lang": feed.get("lang", "de"), "hint": feed.get("hint", "general"), "google": bool(feed.get("google")),
-                      "private": bool(feed.get("private"))})
+                      "private": bool(feed.get("private")), "max_age": feed.get("max_age_hours")})
     return items
 
 
@@ -148,12 +149,18 @@ def build_stories(cfg, extra_feeds=(), match=None):
     watch = [(w, re.compile(r"\b" + re.escape(w), re.I)) for w in cfg["watchlist"]]
     crash = compile_keywords(cfg["crash_keywords"])
     elect = compile_keywords(cfg["election_keywords"])
+    wuppertal = compile_keywords(cfg["regions"]["wuppertal"])
+    nrw = compile_keywords(cfg["regions"]["nrw"])
 
     items = []
     for _, its, _ in results:
         for it in its:
-            if it["time"] < cutoff or any(p.search(it["title"]) for p in block):
+            # Regionale Quellen dürfen länger zurückreichen; bei Wuppertal bleibt auch Lokalsport stehen
+            oldest = NOW - dt.timedelta(hours=it["max_age"]) if it.get("max_age") else cutoff
+            if it["time"] < oldest or (it["hint"] != "wuppertal" and any(p.search(it["title"]) for p in block)):
                 continue
+            if any(bad in it["source"].lower() for bad in cfg["source_blocklist"]):
+                continue  # Sammelseiten, die nur Texte anderer Medien kopieren
             items.append(it)
 
     stories, private = [], []
@@ -169,7 +176,15 @@ def build_stories(cfg, extra_feeds=(), match=None):
         blob = " ".join(m["title"] + " " + m["summary"] for m in members)
         hits = [w for w, p in watch if p.search(blob)]
         depot_match = match(blob) if match else {}
-        public_ok = bool(public_members) and (top >= 3 or bool(hits))
+        # Region: Wuppertal vor NRW; entweder aus der Quelle (Lokalfeed) oder über Stichwörter im Text
+        # Nur Regionalrubriken (kein Google News, dessen Suche auch Fremdes liefert) zählen als sicherer Hinweis;
+        # sonst entscheiden Stichwörter im Text, weil WAZ & Co. auch Bundesnachrichten bringen.
+        trusted = {m["hint"] for m in members if not m["google"] and m["hint"] in ("wuppertal", "nrw")}
+        region = ("wuppertal" if "wuppertal" in trusted or any(p.search(blob) for p in wuppertal)
+                  else "nrw" if "nrw" in trusted or any(p.search(blob) for p in nrw) else None)
+        if region and top < 3:
+            topic = "regional"  # taucht nur im Regional-Reiter auf, nicht unter Märkte oder Welt
+        public_ok = bool(public_members) and (top >= 3 or bool(hits) or bool(region))
         if not public_ok and not depot_match:
             continue
         # Leitmeldung: bevorzugt Original-Feed mit Teaser, dann die neueste
@@ -189,7 +204,7 @@ def build_stories(cfg, extra_feeds=(), match=None):
         story = {
             "title": lead["title"], "summary": lead["summary"], "url": lead["url"], "lang": lead["lang"],
             "topic": topic, "score": round(score, 2), "time": newest.isoformat(),
-            "sources": sources, "watch": hits, "alert": is_alert, "election": is_election,
+            "sources": sources, "watch": hits, "alert": is_alert, "election": is_election, "region": region,
             "titles": list(dict.fromkeys(m["title"] for m in members))[:5],
         }
         if public_ok:
@@ -286,6 +301,7 @@ def main():
         brief_f = ex.submit(briefings.build, cfg)
         elect_f = ex.submit(elections.build, cfg, today)
         live_f = ex.submit(live.build, cfg)
+        local_f = ex.submit(localinfo.build, cfg)
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
         pm_top, pm_window, pm_error = pm_f.result()
@@ -293,6 +309,7 @@ def main():
         brief_list, brief_errors = brief_f.result()
         election_list, election_note = elect_f.result()
         live_data = live_f.result()
+        local_data = local_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
@@ -327,6 +344,7 @@ def main():
         "elections": election_list,
         "geo": geo_data,
         "live": live_data,
+        "local": local_data,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -366,6 +384,10 @@ def main():
           f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
           f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+    wx = local_data["weather"]
+    print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW; "
+          f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
+          f"{len(local_data['warnings'])} DWD-Warnungen" + (f"; Fehler: {local_data['errors']}" if local_data["errors"] else ""))
     print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))
     lv = live_data["channels"]
     for c in lv:

@@ -251,6 +251,11 @@
   .gfoot { margin: 0; }
 
   .nl small { color: var(--muted); }
+  .wnow { margin: 4px 0 8px; } .wnow b { display: block; font: 700 34px/1.1 var(--serif); } .wnow span { color: var(--muted); font-size: 13.5px; }
+  .wday { display: grid; grid-template-columns: 70px 1fr auto 52px; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; align-items: baseline; font-variant-numeric: tabular-nums; }
+  .wday .wt { color: var(--muted); } .wday .wr { text-align: right; color: var(--muted); font-size: 12.5px; }
+  .wwarn { border-left: 4px solid #e0a100; background: var(--soft); padding: 8px 10px; margin: 6px 0; font-size: 13.5px; }
+  .wwarn.l3, .wwarn.l4 { border-color: #b3261e; } .wwarn small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.35; }
   .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
 
   /* Live */
@@ -324,10 +329,11 @@ let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
 let CURRENT = "heute";
 
 const TABS = [
-  ["heute", "Heute"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"], ["live", "Live"],
+  ["heute", "Heute"], ["region", "Wuppertal"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"], ["live", "Live"],
   ["germany", "Deutschland"], ["wahlen", "Wahlen & Termine"], ["pm", "Wetten"], ["verlauf", "Archiv"],
 ];
-const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland" };
+const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland", regional: "Region" };
+const REGION = { wuppertal: "Wuppertal", nrw: "NRW" };
 
 // ------------------------------------------------------------------ Helfer
 
@@ -558,7 +564,7 @@ function item(s, o = {}) {
     h("div", { class: "kicker" },
       s.alert && h("span", { class: "tag crash" }, "Crash-Radar"),
       s.election && h("span", { class: "tag" }, "Wahl"),
-      !o.hideTopic && h("span", { class: s.topic === "markets" ? "" : "red" }, TOPIC[s.topic] || ""),
+      !o.hideTopic && h("span", { class: s.topic === "markets" ? "" : "red" }, s.region ? REGION[s.region] : TOPIC[s.topic] || ""),
       s.watch.map(w => h("span", { class: "tag dep" }, w)),
       chip,
       h("span", { class: "t" }, ago(s.time))),
@@ -627,6 +633,12 @@ function glance() {
   if (quakes.length) rows.push(["Erdbeben", [quakes.map((q, i) => [i ? "  ·  " : "", `M ${q.mag.toFixed(1).replace(".", ",")} ${q.place}`]), " in den letzten 3 Tagen, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
   const strait = ((DATA.geo && DATA.geo.chokepoints) || []).filter(c => c.level > 0);
   if (strait.length) rows.push(["Meerengen", [strait.flatMap((c, i) => [i ? "  ·  " : "", `${c.name.split(" / ")[0]} `, pctSpan(c.pct)]), " Schiffsverkehr, ", h("a", { href: "#globe", onclick: (e) => { e.preventDefault(); show("globe"); } }, "auf dem Globus")]]);
+  const wl = DATA.local, wnews = DATA.stories.filter(s => s.region === "wuppertal").sort((a, b) => b.time.localeCompare(a.time))[0];
+  if (wl && (wl.weather || wnews)) rows.push(["Wuppertal", [
+    wl.weather ? `${wl.weather.now.temp} °C, ${wl.weather.now.text}` : "",
+    wl.warnings && wl.warnings.length ? [" · ", h("b", { class: "down" }, `Wetterwarnung: ${wl.warnings[0].event}`)] : "",
+    wnews ? [" · ", h("a", { href: wnews.url }, wnews.title_de || wnews.title)] : "", "  ",
+    h("a", { href: "#region", onclick: (e) => { e.preventDefault(); show("region"); } }, "alle Meldungen")]]);
   const lv = (DATA.live && DATA.live.channels) || [];
   const nowLive = lv.filter(c => c.state === "live").length;
   const upcoming = lv.filter(c => c.state === "geplant" && c.start * 1000 - Date.now() < 8 * 3600e3).sort((a, b) => a.start - b.start).slice(0, 2);
@@ -649,13 +661,37 @@ function glance() {
     h("dl", {}, rows.map(([k, v]) => h("div", { class: "g" }, h("dt", {}, k), h("dd", {}, v)))));
 }
 
+// Wetter und amtliche Warnungen für Wuppertal (Open-Meteo, Deutscher Wetterdienst)
+function weatherBlock(L, compact) {
+  if (!L || !L.weather) return h("div", { class: "blk" }, sec("Wetter"), h("p", { class: "note" }, "Wetterdaten gerade nicht verfügbar."));
+  const w = L.weather, now = w.now;
+  const warn = (L.warnings || []).map(x => h("div", { class: "wwarn l" + x.level },
+    h("b", {}, `${x.headline || x.event}`), h("div", {}, `Stufe ${x.level}, bis ${x.end ? new Date(x.end * 1000).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" }) + " Uhr" : "unbekannt"}`),
+    !compact && x.text && h("small", {}, x.text)));
+  return h("div", { class: "blk" }, sec(`Wetter in ${L.name}`),
+    h("div", { class: "wnow" }, h("b", {}, now.temp + " °C"), h("span", {}, `${now.text}, gefühlt ${now.feels} °C, Wind ${now.wind} km/h`)),
+    warn.length ? warn : h("p", { class: "note", style: "margin:6px 0" }, "Keine amtlichen Wetterwarnungen (Deutscher Wetterdienst)."),
+    w.days.slice(0, compact ? 3 : 5).map((d, i) => h("div", { class: "wday" },
+      h("span", {}, i === 0 ? "Heute" : new Date(d.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })),
+      h("span", { class: "wt" }, d.text), h("span", { class: "wn" }, `${d.tmin}° / ${d.tmax}°`), h("span", { class: "wr" }, d.rain >= 0.1 ? d.rain + " mm" : "trocken"))));
+}
+
+function linkBlock(L) {
+  if (!L || !L.links) return null;
+  return h("div", { class: "blk" }, sec("Wuppertal im Netz"), L.links.map(l => h("div", { class: "mini" }, h("a", { href: l.url }, h("b", {}, l.name)))));
+}
+
 function sidebar() {
   const dp = depotPositions();
   const locked = DATA.depot && DATA.depot.state === "enc" && !DEPOT;
+  const wup = DATA.stories.filter(s => s.region === "wuppertal").sort((a, b) => b.time.localeCompare(a.time)).slice(0, 4);
   const ne = nextElections(5, 60);
   const soon = DATA.termine.slice(0, 4);
   return h("aside", { class: "side" },
     h("div", { class: "blk" }, sec("Märkte"), quoteRows(idxQuotes().slice(0, 9))),
+    wup.length > 0 && h("div", { class: "blk" }, sec("Wuppertal", h("a", { href: "#region", onclick: (e) => { e.preventDefault(); show("region"); } }, "alle ▸")),
+      DATA.local && DATA.local.weather && h("div", { class: "mini" }, h("b", {}, `${DATA.local.weather.now.temp} °C, ${DATA.local.weather.now.text}`)),
+      wup.map(s => h("div", { class: "mini" }, h("a", { href: s.url }, h("b", {}, s.title_de || s.title)), h("span", {}, `${ago(s.time)} · ${s.sources[0] ? s.sources[0].name : ""}`)))),
     dp.length > 0 && h("div", { class: "blk" }, sec("Dein Depot", h("a", { href: "#depot", onclick: (e) => { e.preventDefault(); show("depot"); } }, "alle ▸")), quoteRows(dp, (q) => q)),
     locked && h("div", { class: "blk" }, sec("Dein Depot"), h("button", { class: "btn", onclick: () => show("depot") }, "Mit Passwort entsperren")),
     ne.length > 0 && h("div", { class: "blk" }, sec("Nächste Wahlen", h("a", { href: "#wahlen", onclick: (e) => { e.preventDefault(); show("wahlen"); } }, "Kalender ▸")),
@@ -724,6 +760,39 @@ const views = {
         h("p", { class: "note" }, "Kurse von Yahoo Finance in der Handelswährung des jeweiligen Börsenplatzes, teils verzögert. Die Meldungen werden nach den Namen und Stichwörtern deiner Positionen gesucht."),
         sec("Meldungen zu deinem Depot"), items(all.slice(0, 15), { hideTopic: true })),
       h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Heute"), quoteRows(ps.filter(p => p.price != null), (q) => q))));
+  },
+
+  region: () => {
+    const L = DATA.local;
+    const byTime = (a, b) => b.time.localeCompare(a.time);
+    const wup = DATA.stories.filter(s => s.region === "wuppertal").sort(byTime);
+    const nrw = DATA.stories.filter(s => s.region === "nrw").sort(byTime);
+    const de = DATA.stories.filter(s => s.topic === "germany" && !s.region);
+    const sections = [
+      ["Wuppertal", "wuppertal", wup, "Stadt, Schwebebahn, Polizei, Politik und Kultur aus dem Tal"],
+      ["Nordrhein-Westfalen", "nrw", nrw, "Land und Region, neueste zuerst"],
+      ["Deutschland", "de", de, "Politik und Gesellschaft bundesweit"],
+    ];
+    const state = { f: store.get("regionf") || "Alles" };
+    const box = h("div", { class: "narrow" });
+    const bar = h("div", { class: "filters" });
+    const render = () => {
+      const kids = [];
+      const want = { Wuppertal: "wuppertal", NRW: "nrw", Deutschland: "de" }[state.f];
+      for (const [title, key, list, sub] of sections) {
+        const pick = state.f === "Alles" ? list.slice(0, key === "de" ? 6 : 8) : want === key ? list.slice(0, 40) : null;
+        if (!pick) continue;
+        kids.push(sec(title, sub), pick.length ? items(pick, { hideTopic: true }) : h("div", { class: "empty" }, "Gerade keine Meldungen."));
+        if (state.f === "Alles" && list.length > pick.length)
+          kids.push(h("button", { class: "btn", style: "margin:12px 0", onclick: () => { state.f = key === "de" ? "Deutschland" : key === "nrw" ? "NRW" : "Wuppertal"; render(); scrollTo(0, 0); } }, `Alle ${list.length} Meldungen zu ${title}`));
+      }
+      box.replaceChildren(...kids.flat(Infinity).filter(Boolean));
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state.f));
+      store.set("regionf", state.f);
+    };
+    for (const f of ["Alles", "Wuppertal", "NRW", "Deutschland"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
+    render();
+    return h("div", { class: "layout" }, h("div", {}, h("div", { style: "margin-top:14px" }, bar), box), h("aside", { class: "side" }, weatherBlock(L, false), linkBlock(L)));
   },
 
   globe: () => {

@@ -20,6 +20,27 @@
   "ai": {"enabled": false, "model": "claude-sonnet-5-5", "top_per_topic": 12},
   "history_days": 14,
   "archive_hours": [4, 16],
+  "source_blocklist": ["tixio", "njuuz", "openpr", "nachrichten-heute", "nachrichten heute", "presseportal-nachrichten"],
+  "regions": {
+    "wuppertal": ["wuppertal", "schwebebahn", "wsw$", "barmen", "elberfeld", "vohwinkel", "cronenberg", "ronsdorf", "langerfeld",
+                  "oberbarmen", "uellendahl", "bergische universität", "bergische uni", "von der heydt", "pina bausch",
+                  "utopiastadt", "nordbahntrasse", "bergische"],
+    "nrw": ["nrw$", "nordrhein-westfalen", "ruhrgebiet", "düsseldorf", "landtag nrw", "hendrik wüst", "bergisches land",
+            "solingen", "remscheid", "dortmund", "bochum", "gelsenkirchen", "duisburg", "köln", "münster", "bielefeld",
+            "aachen", "krefeld", "mönchengladbach", "oberhausen", "leverkusen", "rhein-ruhr", "sauerland", "westfalen",
+            "kreis mettmann", "ennepetal", "hagen$"]
+  },
+  "local": {
+    "name": "Wuppertal", "lat": 51.2562, "lon": 7.1508, "warncells": ["805124000", "105124000"],
+    "links": [
+      {"name": "Stadt Wuppertal", "url": "https://www.wuppertal.de/"},
+      {"name": "WSW Schwebebahn & Bus", "url": "https://www.wsw-online.de/"},
+      {"name": "WZ Wuppertal", "url": "https://www.wz.de/nrw/wuppertal"},
+      {"name": "Wuppertaler Rundschau", "url": "https://www.wuppertaler-rundschau.de/"},
+      {"name": "Wuppertal Total", "url": "https://www.wuppertal-total.de/"},
+      {"name": "WDR Lokalzeit Bergisches Land", "url": "https://www1.wdr.de/fernsehen/lokalzeit/bergisches-land/index.html"}
+    ]
+  },
   "live": {
     "channels": [
       {"group": "Deutschland", "name": "tagesschau", "handle": "tagesschau", "url": "https://www.tagesschau.de/multimedia/livestreams/index.html"},
@@ -114,7 +135,19 @@
     {"name": "Google News: Unternehmen", "url": "https://news.google.com/rss/search?q=Quartalszahlen+OR+%C3%9Cbernahme+OR+B%C3%B6rsengang+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "markets", "lang": "de", "google": true},
     {"name": "Google News: Geopolitik", "url": "https://news.google.com/rss/search?q=(China+OR+Taiwan+OR+Russland+OR+Iran+OR+Nahost)+Konflikt+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true},
     {"name": "Google News: Ukraine", "url": "https://news.google.com/rss/search?q=Ukraine+Krieg+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true},
-    {"name": "Google News: Wahlen", "url": "https://news.google.com/rss/search?q=Wahl+Wahlergebnis+Wahlen+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true}
+    {"name": "Google News: Wahlen", "url": "https://news.google.com/rss/search?q=Wahl+Wahlergebnis+Wahlen+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true},
+    {"name": "WZ Wuppertal", "url": "https://www.wz.de/nrw/wuppertal/feed.rss", "hint": "wuppertal", "lang": "de", "max_age_hours": 96},
+    {"name": "Wuppertaler Rundschau", "url": "https://www.wuppertaler-rundschau.de/feed.rss", "hint": "wuppertal", "lang": "de", "max_age_hours": 96},
+    {"name": "Wuppertal Total", "url": "https://www.wuppertal-total.de/feed", "hint": "wuppertal", "lang": "de", "max_age_hours": 120},
+    {"name": "RP Online Wuppertal", "url": "https://rp-online.de/nrw/staedte/wuppertal/feed.rss", "hint": "wuppertal", "lang": "de", "max_age_hours": 96},
+    {"name": "Google News: Wuppertal", "url": "https://news.google.com/rss/search?q=Wuppertal+when:3d&hl=de&gl=DE&ceid=DE:de", "hint": "wuppertal", "lang": "de", "google": true, "max_age_hours": 96},
+    {"name": "Google News: Wuppertal Stadt", "url": "https://news.google.com/rss/search?q=Wuppertal+(Stadtrat+OR+Oberb%C3%BCrgermeister+OR+Schwebebahn+OR+WSW+OR+Polizei+OR+Feuerwehr+OR+Verkehr)+when:3d&hl=de&gl=DE&ceid=DE:de", "hint": "wuppertal", "lang": "de", "google": true, "max_age_hours": 96},
+    {"name": "WZ NRW", "url": "https://www.wz.de/nrw/feed.rss", "hint": "nrw", "lang": "de", "max_age_hours": 72},
+    {"name": "RP Online NRW", "url": "https://rp-online.de/nrw/feed.rss", "hint": "nrw", "lang": "de", "max_age_hours": 72},
+    {"name": "WAZ", "url": "https://www.waz.de/rss", "hint": "general", "lang": "de", "max_age_hours": 72},
+    {"name": "DerWesten", "url": "https://www.derwesten.de/rss", "hint": "general", "lang": "de", "max_age_hours": 72},
+    {"name": "Tagesschau NRW", "url": "https://www.tagesschau.de/inland/regional/nordrheinwestfalen/index~rss2.xml", "hint": "nrw", "lang": "de", "max_age_hours": 72},
+    {"name": "Google News: NRW", "url": "https://news.google.com/rss/search?q=(NRW+OR+Nordrhein-Westfalen)+(Landesregierung+OR+Landtag+OR+W%C3%BCst+OR+Polizei+OR+Schule+OR+Verkehr)+when:2d&hl=de&gl=DE&ceid=DE:de", "hint": "nrw", "lang": "de", "google": true, "max_age_hours": 72}
   ],
   "topics": {
     "markets": [

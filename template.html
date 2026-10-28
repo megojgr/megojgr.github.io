@@ -871,7 +871,7 @@ function openSettings() {
   const msg = h("div", { class: "note" });
   const tok = h("input", { type: "password", placeholder: "github_pat_…", autocomplete: "off" });
   tok.value = store.get("ghtoken") || "";
-  const repo = DATA.repo || "jaegermilan-dev/mego-news";
+  const repo = DATA.repo || "megojgr/megojgr.github.io";
   dlg.replaceChildren(h("div", { class: "dlg" },
     h("div", { class: "top" }, h("h2", {}, "Einstellungen"), h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     h("h3", { class: "sec2" }, "Sofort-Update"),

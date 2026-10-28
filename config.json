@@ -1,7 +1,7 @@
 {
   "max_age_hours": 36,
   "heute_per_topic": {"markets": 6, "world": 6, "germany": 4},
-  "repo": "jaegermilan-dev/mego-news",
+  "repo": "megojgr/megojgr.github.io",
   "elections": {
     "pages": ["2026_national_electoral_calendar", "2027_national_electoral_calendar"],
     "max": 80,

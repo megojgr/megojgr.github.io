@@ -67,15 +67,32 @@
   .tk .up { color: var(--band-up); } .tk .down { color: var(--band-down); }
   .tk.depot { font-weight: 700; border: 1px solid rgba(255,255,255,.35); margin: 3px 8px 3px 0; padding: 4px 12px; }
 
-  /* Reiter */
-  .tabs { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
-  .tabs .wrap { display: flex; overflow-x: auto; scrollbar-width: none; }
-  .tabs .wrap::-webkit-scrollbar { display: none; }
-  .tabs button { flex: none; background: none; border: 0; padding: 13px 13px 11px; font-size: 12.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); border-bottom: 3px solid transparent; }
+  /* Reiter (Rechner): feste Leiste mit sechs Bereichen, darunter das Börsenband */
+  .tabs { position: sticky; top: 0; z-index: 20; background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .tabs .wrap { display: flex; justify-content: center; gap: 6px; }
+  .tabs button { flex: 0 1 auto; background: none; border: 0; padding: 0 22px; min-height: 54px; font-size: 13.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; }
   .tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--ink); }
-  .tabs button:hover { color: var(--ink); }
+  .tabs button:hover { color: var(--ink); background: var(--soft); }
+  .band { margin-top: 0; }
+  .band .wrap { padding-top: 4px; padding-bottom: 4px; }
+  .tk:hover { background: none; text-decoration: underline; }
 
-  main { padding: 6px 0 56px; min-height: 60vh; }
+  /* Unterreiter innerhalb eines Bereichs */
+  .seg { display: flex; gap: 4px; background: var(--soft); border-radius: 12px; padding: 4px; margin: 16px 0 4px; max-width: 640px; }
+  .seg button { flex: 1; border: 0; background: none; border-radius: 9px; padding: 10px 8px; font-size: 14px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button:not([aria-pressed="true"]):hover { color: var(--ink); }
+
+  /* Navigationsleiste unten (Handy) */
+  .bottombar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--paper); border-top: 1px solid var(--line); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.12); }
+  .bottombar button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; padding: 7px 2px 5px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .02em; border-radius: 10px; position: relative; }
+  .bottombar button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .bottombar button[aria-selected="true"] { color: var(--ink); }
+  .bottombar button[aria-selected="true"] svg { stroke-width: 2.4; }
+  .bottombar button[aria-selected="true"]::before { content: ""; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--ink); }
+  .bottombar .dot { position: absolute; top: 6px; right: calc(50% - 20px); margin: 0; }
+
+  main { padding: 6px 0 64px; min-height: 60vh; }
   .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
   @media (min-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } }
   .narrow { max-width: 760px; }
@@ -291,6 +308,39 @@
 
   footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; padding: 18px 0 calc(44px + env(safe-area-inset-bottom)); }
 
+  /* Handy: kompakter Kopf, Navigation unten, mehr Luft in den Listen */
+  @media (max-width: 759px) {
+    .tabs { display: none; }
+    .bottombar { display: flex; }
+    .mast { border-top-width: calc(3px + env(safe-area-inset-top)); }
+    .mast .wrap { display: flex; flex-wrap: wrap; align-items: center; padding-top: 8px; }
+    .mast h1 { order: 1; flex: 1; text-align: left; font-size: 25px; padding: 0; }
+    .mast-bar { order: 2; padding: 0; }
+    #today, .mast-bar .grow { display: none; }
+    .statusline { order: 3; width: 100%; text-align: left; padding: 2px 0 8px; min-height: 0; }
+    .btn.primary .lb { display: none; } .btn.primary { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
+    .btn.primary .ic { display: inline-block; }
+    .btn.icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 17px; }
+    .band .wrap { padding-top: 2px; padding-bottom: 2px; }
+    main { padding: 4px 0 calc(92px + env(safe-area-inset-bottom)); }
+    .item { padding: 18px 0 19px; }
+    .hl { font-size: 19px; line-height: 1.3; }
+    .item.lead .hl { font-size: 24px; }
+    .srcs a:nth-of-type(n+3) { display: none; }
+    .sec { margin-top: 30px; }
+    .glance { padding: 14px 14px 6px; margin-top: 12px; }
+    .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+    footer { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .seg { margin-top: 12px; }
+  }
+  .glance.collapsed .g:nth-of-type(n+7) { display: none; }
+  .glance .more { display: none; width: 100%; margin: 6px 0 8px; }
+  @media (max-width: 759px) { .glance.can-collapse .more { display: block; } }
+  @media (min-width: 760px) { .glance.collapsed .g:nth-of-type(n+7) { display: grid; } }
+  .btn.primary .ic { display: none; }
+  .btn.primary .ic.spin { display: inline-block; }
+  @media (max-width: 759px) { .btn.primary .ic { display: inline-block; } }
+
   /* Handy: Detailansicht als Vollbild, Kopf bleibt oben stehen */
   @media (max-width: 640px) {
     dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; margin: 0; }
@@ -307,18 +357,19 @@
   <div class="wrap">
     <div class="mast-bar">
       <span id="today"></span><span class="grow"></span>
-      <button class="btn primary" id="btn-refresh">Aktualisieren</button>
-      <button class="btn icon" id="btn-settings" aria-label="Einstellungen" title="Einstellungen">&#9881;</button>
+      <button class="btn primary" id="btn-refresh" aria-label="Aktualisieren"><span class="ic">↻</span><span class="lb">Aktualisieren</span></button>
+      <button class="btn icon" id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
     <h1>Mego News</h1>
     <div class="statusline" id="status" role="status"></div>
   </div>
 </header>
 <div class="alertbar" id="alertbar"></div>
-<div class="band"><div class="wrap" id="ticker"></div></div>
-<nav class="tabs"><div class="wrap" id="tabs" role="tablist"></div></nav>
+<nav class="tabs" aria-label="Bereiche"><div class="wrap" id="tabs" role="tablist"></div></nav>
+<div class="band" aria-label="Kurse"><div class="wrap" id="ticker"></div></div>
 <main><div class="wrap" id="view"></div></main>
 <footer><div class="wrap" id="foot"></div></footer>
+<nav class="bottombar" id="bottombar" aria-label="Bereiche"></nav>
 <dialog id="detail"></dialog>
 <dialog id="settings"></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -328,10 +379,22 @@ let DATA = __DATA__;
 let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
 let CURRENT = "heute";
 
-const TABS = [
-  ["heute", "Heute"], ["region", "Wuppertal"], ["markets", "Märkte"], ["depot", "Depot"], ["world", "Welt"], ["globe", "Globus"], ["live", "Live"],
-  ["germany", "Deutschland"], ["wahlen", "Wahlen & Termine"], ["pm", "Wetten"], ["verlauf", "Archiv"],
-];
+// Sechs Hauptbereiche; alles Weitere liegt in Unterreitern (Archiv, Wahlen & Termine, Wetten, Depot, Deutschland)
+const TABS = [["heute", "Heute"], ["region", "Wuppertal"], ["welt", "Welt"], ["markets", "Märkte"], ["globe", "Globus"], ["live", "Live"]];
+const SUBS = { heute: ["Heute", "Archiv"], welt: ["Meldungen", "Wahlen & Termine", "Wetten"], markets: ["Übersicht", "Depot"] };
+// Alte Kurznamen (Lesezeichen, Verweise) führen in den passenden Unterreiter
+const ROUTES = { depot: ["markets", "Depot"], wahlen: ["welt", "Wahlen & Termine"], pm: ["welt", "Wetten"], world: ["welt", "Meldungen"],
+                 germany: ["region", "Deutschland"], verlauf: ["heute", "Archiv"], watch: ["markets", "Übersicht"] };
+const ICONS = {
+  heute: '<path d="M4 5h12v14H6a2 2 0 0 1-2-2V5z"/><path d="M16 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 12h6M7 15h3"/>',
+  region: '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  welt: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  markets: '<path d="M4 19V5M4 19h16M8 15l3-4 3 3 5-7"/>',
+  globe: '<circle cx="12" cy="12" r="6.5"/><path d="M2.5 14.5c4-6.5 15-8.5 19-4"/>',
+  live: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10.5 9.2l4.5 2.8-4.5 2.8z"/>',
+};
+let SUB = {};   // gewählter Unterreiter je Bereich
+try { SUB = JSON.parse(localStorage.getItem("sub") || "{}"); } catch {}
 const TOPIC = { markets: "Märkte", world: "Welt", germany: "Deutschland", regional: "Region" };
 const REGION = { wuppertal: "Wuppertal", nrw: "NRW" };
 
@@ -657,8 +720,25 @@ function glance() {
   for (const e of DATA.prediction) for (const r of e.rows.slice(0, 2))
     if (r.d1 != null && r.p - r.d1 >= 0.03 && r.p >= 0.05 && r.p <= 0.95 && (!move || Math.abs(r.d1) > Math.abs(move.r.d1))) move = { e, r };
   if (move) rows.push(["Wetten", `${move.e.title}: ${move.r.label} ${probText(move.r.p)} (${move.r.d1 > 0 ? "+" : ""}${Math.round(move.r.d1 * 100)} Punkte)`]);
-  return h("section", { class: "glance" }, h("h2", {}, "Auf einen Blick"),
-    h("dl", {}, rows.map(([k, v]) => h("div", { class: "g" }, h("dt", {}, k), h("dd", {}, v)))));
+  // Am Handy erst die ersten sechs Zeilen zeigen, der Rest klappt auf
+  const many = rows.length > 6;
+  const box = h("section", { class: "glance" + (many ? " can-collapse" + (innerWidth < 760 ? " collapsed" : "") : "") }, h("h2", {}, "Auf einen Blick"),
+    h("dl", {}, rows.map(([k, v]) => h("div", { class: "g" }, h("dt", {}, k), h("dd", {}, v)))),
+    many && h("button", { class: "btn more", onclick: (e) => {
+      box.classList.toggle("collapsed");
+      e.currentTarget.textContent = box.classList.contains("collapsed") ? `Mehr anzeigen (${rows.length - 6})` : "Weniger anzeigen";
+    } }, `Mehr anzeigen (${rows.length - 6})`));
+  return box;
+}
+
+// Sendungen und Briefings (tagesschau 20 Uhr, tagesthemen, Morning Briefing) mit ihren Themen
+function briefingsBlock() {
+  const shows = DATA.briefings || [];
+  if (!shows.length) return null;
+  return [sec("Sendungen & Briefings"), shows.map(b => h("section", { class: "show" },
+    h("h3", {}, h("a", { href: b.url }, b.title)),
+    h("div", { class: "when" }, ago(b.time)),
+    b.topics.length > 0 && h("ol", {}, b.topics.map(t => h("li", {}, t)))))];
 }
 
 // Wetter und amtliche Warnungen für Wuppertal (Open-Meteo, Deutscher Wetterdienst)
@@ -775,13 +855,14 @@ const views = {
     ];
     const state = { f: store.get("regionf") || "Alles" };
     const box = h("div", { class: "narrow" });
-    const bar = h("div", { class: "filters" });
+    const bar = h("div", { class: "seg", style: "margin-top:14px" });
     const render = () => {
       const kids = [];
       const want = { Wuppertal: "wuppertal", NRW: "nrw", Deutschland: "de" }[state.f];
       for (const [title, key, list, sub] of sections) {
         const pick = state.f === "Alles" ? list.slice(0, key === "de" ? 6 : 8) : want === key ? list.slice(0, 40) : null;
         if (!pick) continue;
+        if (key === "de" && state.f === "Deutschland") kids.push(briefingsBlock());
         kids.push(sec(title, sub), pick.length ? items(pick, { hideTopic: true }) : h("div", { class: "empty" }, "Gerade keine Meldungen."));
         if (state.f === "Alles" && list.length > pick.length)
           kids.push(h("button", { class: "btn", style: "margin:12px 0", onclick: () => { state.f = key === "de" ? "Deutschland" : key === "nrw" ? "NRW" : "Wuppertal"; render(); scrollTo(0, 0); } }, `Alle ${list.length} Meldungen zu ${title}`));
@@ -792,7 +873,7 @@ const views = {
     };
     for (const f of ["Alles", "Wuppertal", "NRW", "Deutschland"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
     render();
-    return h("div", { class: "layout" }, h("div", {}, h("div", { style: "margin-top:14px" }, bar), box), h("aside", { class: "side" }, weatherBlock(L, false), linkBlock(L)));
+    return h("div", { class: "layout" }, h("div", {}, bar, box), h("aside", { class: "side" }, weatherBlock(L, false), linkBlock(L)));
   },
 
   globe: () => {
@@ -865,18 +946,6 @@ const views = {
   },
 
   world: () => h("div", { class: "narrow" }, items(DATA.stories.filter(s => s.topic === "world").slice(0, 50), { lead: true, hideTopic: true })),
-
-  germany: () => {
-    const shows = DATA.briefings;
-    return h("div", { class: "layout" },
-      h("div", {},
-        shows.length > 0 && [sec("Sendungen & Briefings"), shows.map(b => h("section", { class: "show" },
-          h("h3", {}, h("a", { href: b.url }, b.title)),
-          h("div", { class: "when" }, ago(b.time)),
-          b.topics.length > 0 && h("ol", {}, b.topics.map(t => h("li", {}, t)))))],
-        sec("Deutschland", "Politik, Gesellschaft, Wirtschaft"), items(DATA.stories.filter(s => s.topic === "germany").slice(0, 50), { hideTopic: true })),
-      sidebar());
-  },
 
   wahlen: () => {
     const state = { f: "Wichtige" };
@@ -994,13 +1063,36 @@ function bet(e) {
 
 // ------------------------------------------------------------------ Rahmen: Reiter, Band, Alarm, Fuß
 
-function show(id) {
-  if (!views[id]) id = "heute";
-  CURRENT = id;
-  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.id === id));
-  $("view").replaceChildren(...[views[id]()].flat(Infinity).filter(Boolean));
-  store.set("tab", id);
-  history.replaceState(null, "", "#" + id);
+const BUILD = {
+  heute: (s) => s === "Archiv" ? views.verlauf() : views.heute(),
+  region: () => views.region(),
+  welt: (s) => (s === "Wahlen & Termine" ? views.wahlen : s === "Wetten" ? views.pm : views.world)(),
+  markets: (s) => s === "Depot" ? views.depot() : views.markets(),
+  globe: () => views.globe(),
+  live: () => views.live(),
+};
+
+// Zeichnet den Inhalt des aktuellen Bereichs samt Unterreitern
+function paintView() {
+  const tab = CURRENT, kids = [];
+  if (SUBS[tab]) kids.push(h("div", { class: "seg", role: "tablist" }, SUBS[tab].map(s =>
+    h("button", { "aria-pressed": String(s === SUB[tab]), onclick: () => { SUB[tab] = s; store.set("sub", JSON.stringify(SUB)); paintView(); scrollTo(0, 0); } }, s))));
+  kids.push(BUILD[tab](SUB[tab]));
+  $("view").replaceChildren(...kids.flat(Infinity).filter(Boolean));
+}
+
+function show(id, sub) {
+  const route = ROUTES[id];
+  let tab = route ? route[0] : id;
+  if (route) sub = sub || route[1];
+  if (!BUILD[tab]) tab = "heute";
+  CURRENT = tab;
+  if (tab === "region" && route) store.set("regionf", route[1]);
+  if (SUBS[tab]) SUB[tab] = sub && SUBS[tab].includes(sub) ? sub : (SUB[tab] && SUBS[tab].includes(SUB[tab]) ? SUB[tab] : SUBS[tab][0]);
+  document.querySelectorAll("#tabs button, #bottombar button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === tab)));
+  paintView();
+  store.set("tab", tab); store.set("sub", JSON.stringify(SUB));
+  history.replaceState(null, "", "#" + tab);
   scrollTo(0, 0);
 }
 
@@ -1019,11 +1111,15 @@ function renderChrome() {
   const tick = (q, extra) => h("button", { class: "tk", onclick: () => openDetail(q, extra) },
     h("b", {}, q.short || q.name), price(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct)));
   $("ticker").replaceChildren(
-    h("button", { class: "tk depot", onclick: () => show("depot"), title: "Meine Aktien und ETFs" }, DEPOT ? "Mein Depot ▸" : "Depot ▸"),
+    h("button", { class: "tk depot", onclick: () => show("depot") }, DEPOT ? "Mein Depot ▸" : "Depot ▸"),
     ...depotPositions().map(p => tick(p, p)), ...idxQuotes().map(q => tick(q)));
 
   const liveNow = ((DATA.live && DATA.live.channels) || []).some(c => c.state === "live");
-  $("tabs").replaceChildren(...TABS.map(([id, label]) => h("button", { role: "tab", "data-id": id, "aria-selected": id === CURRENT, onclick: () => show(id) }, label, id === "live" && liveNow && h("i", { class: "dot", title: "Sender senden gerade" }))));
+  const icon = (id) => { const s = document.createElement("span"); s.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[id]}</svg>`; return s.firstChild; };
+  const makeTabs = (bottom) => TABS.map(([id, label]) => h("button", { role: "tab", "data-id": id, "aria-selected": String(id === CURRENT), onclick: () => show(id) },
+    bottom && icon(id), bottom ? h("span", {}, label) : label, id === "live" && liveNow && h("i", { class: "dot" })));
+  $("tabs").replaceChildren(...makeTabs(false));
+  $("bottombar").replaceChildren(...makeTabs(true));
 
   const failed = DATA.status.feeds.filter(f => f.error);
   $("foot").replaceChildren(
@@ -1118,7 +1214,8 @@ async function refresh() {
   if (location.protocol === "file:") { location.reload(); return; }
   refreshing = true;
   const btn = $("btn-refresh"), before = DATA;
-  btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }, "↻"), " Lädt …");
+  const setBtn = (text, spin) => btn.replaceChildren(h("span", { class: "ic" + (spin ? " spin" : "") }, spin ? "↻" : "↻"), h("span", { class: "lb" }, " " + text));
+  btn.disabled = true; setBtn("Lädt …", true);
   let ok = false;
   try {
     if (navigator.onLine === false) throw new Error("Keine Internetverbindung.");
@@ -1164,8 +1261,8 @@ async function refresh() {
     toast("err", "Aktualisieren hat nicht geklappt: " + friendly(e));
   } finally {
     refreshing = false; btn.disabled = false;
-    btn.textContent = ok ? "✓ Aktualisiert" : "Aktualisieren";
-    if (ok) setTimeout(() => { if (!refreshing) btn.textContent = "Aktualisieren"; }, 3500);
+    setBtn(ok ? "Aktualisiert" : "Aktualisieren", false);
+    if (ok) setTimeout(() => { if (!refreshing) setBtn("Aktualisieren", false); }, 3500);
   }
 }
 $("btn-refresh").addEventListener("click", refresh);
@@ -1187,21 +1284,35 @@ function openSettings() {
   const tok = h("input", { type: "password", placeholder: "github_pat_…", autocomplete: "off" });
   tok.value = store.get("ghtoken") || "";
   const repo = DATA.repo || "megojgr/megojgr.github.io";
+  const prefill = `https://github.com/settings/personal-access-tokens/new?name=Mego+News+Aktualisieren&description=Startet+den+Aktualisieren-Knopf+der+Seite&target_name=${encodeURIComponent(repo.split("/")[0])}&expires_in=365&actions=write`;
+  const testToken = async () => {
+    const v = tok.value.trim() || store.get("ghtoken");
+    if (!v) { msg.textContent = "Bitte zuerst das Token einfügen."; return; }
+    msg.textContent = "Prüfe …";
+    try {
+      const r = await gh("/actions/workflows/daily.yml", v);
+      msg.textContent = r.status === 200 ? "✓ Das Token funktioniert. Der Aktualisieren-Knopf startet jetzt sofort neue Abrufe."
+        : r.status === 401 ? "✕ Das Token ist ungültig oder abgelaufen."
+        : r.status === 403 || r.status === 404 ? "✕ Keine Berechtigung: Prüfe, ob das richtige Repository gewählt ist und „Actions“ auf „Read and write“ steht."
+        : "✕ GitHub antwortet mit Fehler " + r.status;
+    } catch (e) { msg.textContent = "✕ Keine Verbindung: " + e.message; }
+  };
   dlg.replaceChildren(h("div", { class: "dlg" },
     h("div", { class: "top" }, h("h2", {}, "Einstellungen"), h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     h("h3", { class: "sec2" }, "Sofort-Update"),
-    h("p", { class: "note" }, "Ohne Token lädt „Aktualisieren“ nur den zuletzt veröffentlichten Stand (zweimal täglich). Mit einem Token startet der Knopf einen neuen Abruf bei GitHub und lädt das Ergebnis nach etwa ein bis zwei Minuten."),
+    h("p", { class: "note" }, "Die Seite aktualisiert sich ohnehin jede Stunde von selbst. Mit einem Token startet „Aktualisieren“ sofort einen neuen Abruf bei GitHub (Ergebnis nach etwa 1 bis 2 Minuten). Ohne Token lädt der Knopf nur den zuletzt veröffentlichten Stand."),
     h("ol", { class: "steps" },
-      h("li", {}, "Öffne ", h("a", { href: "https://github.com/settings/personal-access-tokens/new", style: "text-decoration:underline" }, "GitHub → neuen Fine-grained Token"), "."),
-      h("li", {}, `Repository access: „Only select repositories“ → ${repo}.`),
-      h("li", {}, "Permissions → Repository permissions → „Actions“: Read and write."),
-      h("li", {}, "Ablauf z. B. 1 Jahr, Token erzeugen und hier einfügen.")),
+      h("li", {}, h("a", { href: prefill, style: "text-decoration:underline" }, "Diesen Link öffnen"), ". GitHub verlangt dabei dein Login. Name, Ablauf von 1 Jahr und das Recht „Actions“ sind schon vorausgefüllt."),
+      h("li", {}, `Unter „Repository access“ den Punkt „Only select repositories“ wählen und dann ${repo.split("/")[1]} auswählen.`),
+      h("li", {}, "Unter „Permissions“ → „Repository permissions“ muss „Actions“ auf „Read and write“ stehen. Falls nicht, dort einstellen."),
+      h("li", {}, "Ganz unten „Generate token“ klicken, das Token (beginnt mit github_pat_) kopieren und hier einfügen.")),
     tok,
     h("div", { class: "actions" },
-      h("button", { class: "btn primary", onclick: () => { const v = tok.value.trim(); if (v) { store.set("ghtoken", v); msg.textContent = "Token gespeichert (nur auf diesem Gerät)."; } } }, "Speichern"),
+      h("button", { class: "btn primary", onclick: () => { const v = tok.value.trim(); if (v) { store.set("ghtoken", v); msg.textContent = "Token gespeichert (nur auf diesem Gerät). Jetzt „Testen“ drücken."; } } }, "Speichern"),
+      h("button", { class: "btn", onclick: testToken }, "Testen"),
       h("button", { class: "btn", onclick: () => { store.del("ghtoken"); tok.value = ""; msg.textContent = "Token entfernt."; } }, "Entfernen")),
     msg,
-    h("p", { class: "note" }, "Der Token liegt nur im Browser dieses Geräts und darf ausschließlich Abrufe für dieses Repo starten. Auf fremden Geräten nicht speichern."),
+    h("p", { class: "note" }, "Das Token liegt nur im Browser dieses Geräts und darf ausschließlich Abrufe für dieses Repository starten, mehr nicht. Auf fremden Geräten bitte nicht speichern. Nach einem Jahr läuft es ab, dann einfach ein neues erzeugen."),
     h("h3", { class: "sec2" }, "Übersetzung"),
     h("label", { class: "chk" }, h("input", { type: "checkbox", checked: translating() || null, onchange: (e) => { store.set("tr", e.target.checked ? "1" : "0"); renderAll(); } }),
       " Fremdsprachige Meldungen auf Deutsch zeigen"),
@@ -1218,9 +1329,13 @@ $("btn-settings").addEventListener("click", openSettings);
 
 async function init() {
   DATA.history ||= [];
-  CURRENT = location.hash.slice(1);
-  if (!views[CURRENT]) CURRENT = store.get("tab");
-  if (!views[CURRENT]) CURRENT = "heute";
+  const known = (x) => x && (BUILD[x] || ROUTES[x]);
+  let start = location.hash.slice(1);
+  if (!known(start)) start = store.get("tab");
+  if (!known(start)) start = "heute";
+  const route = ROUTES[start];
+  CURRENT = route ? route[0] : start;
+  if (route) { if (SUBS[CURRENT]) SUB[CURRENT] = route[1]; else if (CURRENT === "region") store.set("regionf", route[1]); }
   renderAll();
   await autoUnlock();
   renderAll();

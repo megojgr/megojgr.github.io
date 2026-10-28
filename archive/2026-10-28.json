@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T15:12:14.306733+00:00",
+ "generated": "2026-10-28T15:14:08.641324+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25658.25,
-   "pct": 0.264,
+   "price": 25664.88,
+   "pct": 0.29,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7733.23,
-   "pct": 0.138,
+   "price": 7734.33,
+   "pct": 0.152,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26464.324,
-   "pct": -0.051,
+   "price": 26468.268,
+   "pct": -0.036,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52459.89,
-   "pct": 0.157,
+   "price": 52473.09,
+   "pct": 0.182,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6157.9,
-   "pct": -0.11,
+   "price": 6159.66,
+   "pct": -0.082,
    "alert": null
   },
   {
@@ -68,8 +68,8 @@
   {
    "name": "Gold",
    "group": "index",
-   "price": 4055.1,
-   "pct": -0.479,
+   "price": 4055.4,
+   "pct": -0.471,
    "alert": null
   },
   {
@@ -82,8 +82,8 @@
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72336.31,
-   "pct": 0.2,
+   "price": 72356.55,
+   "pct": 0.228,
    "alert": null
   }
  ],
@@ -92,7 +92,7 @@
    "title": "Ukraine-Krieg - Waffenruhe um russisch besetzte Frontstadt Oleschky wird eingehalten",
    "url": "https://www.deutschlandfunk.de/waffenruhe-um-russisch-besetzte-frontstadt-oleschky-wird-eingehalten-100.html",
    "topic": "world",
-   "n": 14,
+   "n": 15,
    "alert": false
   },
   {
@@ -105,6 +105,13 @@
   {
    "title": "USA - Brasilianischer Wahlverlierer Flávio Bolsonaro in Miami gelandet",
    "url": "https://www.deutschlandfunk.de/brasilianischer-wahlverlierer-fl-vio-bolsonaro-in-miami-gelandet-100.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "„Sehr bald“: Trump kündigt Treffen mit Putin und Selenskyj an",
+   "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNajJ6VjZBb2dpc0o5MTRqZWVYdXBWSWVWa0NmbVhiM3ktVENOYWxzanJsbEprYzJaR0xBcklLVnVxMFhLUUtlTlgxdEVseFRJOXp0M29YUW94SW9meE14TVFIdGJBMjh2bm90OFF1MlNJaE41YXgxS0tHd3pFeFFtWEVhaGpadWhfVWJLeFhyaVo1SXFhY09jVU5lNE4yZw?oc=5",
    "topic": "world",
    "n": 7,
    "alert": false
@@ -131,13 +138,6 @@
    "alert": false
   },
   {
-   "title": "Trump: Iran-Krieg endet, wann ich es will",
-   "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNNVQ3a19Fb0JvdTkxakJLS2ZQTHc3Q05KMDNydDlfVE9lbWFCaUZvSmh6NXdVT0pQS0FOdzRHdDQ1dUE2bEJVbUk5dTlXdk1tWnZ4Sk43eXFJRnNsM0h3LWh2MnJUSW5mcHNiSnktN2pMUDFYb0ItM0ZLc0RIRmtCdVpuMHpCSUNCYmNn?oc=5",
-   "topic": "world",
-   "n": 5,
-   "alert": false
-  },
-  {
    "title": "Regierungspläne - Elterngeld soll erstmals seit Einführung erhöht werden",
    "url": "https://www.deutschlandfunk.de/elterngeld-soll-erstmals-seit-einfuehrung-erhoeht-werden-102.html",
    "topic": "germany",
@@ -145,17 +145,17 @@
    "alert": false
   },
   {
-   "title": "Deutsche Börse startet 24/7-Handel für 40 Dax-Aktien über 360X",
-   "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOWlJPTkNDc1hfYkc3MklZQTNLR3ZjSnk2VV85RUVLLVFBZDNkMEQwZzlZZDZaSGJSZE0ybVhJTWFtTjBUVVIzZklhYUxJbFRjYUotVGsxUUtDWkpHbjJWOEhwWmhfdzhpX0dWUllnc084YmM4TVFyVWZNSFJ2VURUdGJHMmNld2tzVlhtdThn?oc=5",
-   "topic": "markets",
-   "n": 4,
-   "alert": false
-  },
-  {
    "title": "Dax aktuell: Anleger halten sich inmitten der Bilanzsaison zurück – Symrise verliert neun Prozent",
    "url": "https://www.handelsblatt.com/finanzen/maerkte/marktberichte/dax-aktuell-anleger-halten-sich-inmitten-der-bilanzsaison-zurueck/100265482.html",
    "topic": "markets",
    "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Bundespräsidentenwahl: „Ziemlich desaströs“ – in der CDU wächst der Ärger über Merz’ Vorgehen bei Steinmeier-Nachfolge",
+   "url": "https://www.handelsblatt.com/politik/deutschland/bundespraesidentenwahl-in-der-cdu-waechst-der-aerger-ueber-merz-wegen-steinmeier-nachfolge/100265472.html",
+   "topic": "germany",
+   "n": 4,
    "alert": false
   }
  ],
@@ -173,8 +173,8 @@
    "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
    "source": "Polymarket",
    "lead": "No change",
-   "p": 0.9485,
-   "d1": 0.005
+   "p": 0.949,
+   "d1": 0.0055
   },
   {
    "title": "Israeli Legislative Election Winner",
@@ -205,7 +205,7 @@
    "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
    "source": "Polymarket",
    "lead": "↓ 80,000",
-   "p": 0.795,
+   "p": 0.785,
    "d1": null
   }
  ]

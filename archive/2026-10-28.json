@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T15:23:21.954998+00:00",
+ "generated": "2026-10-28T15:28:01.751969+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25656.4,
-   "pct": 0.256,
+   "price": 25683.75,
+   "pct": 0.363,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7739.18,
-   "pct": 0.215,
+   "price": 7736.48,
+   "pct": 0.18,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26478.398,
-   "pct": 0.002,
+   "price": 26464.33,
+   "pct": -0.051,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52533.63,
-   "pct": 0.298,
+   "price": 52522.63,
+   "pct": 0.277,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6158.72,
-   "pct": -0.097,
+   "price": 6164.33,
+   "pct": -0.006,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 17.27,
-   "pct": -1.427,
+   "price": 17.28,
+   "pct": -1.37,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1137,
-   "pct": 0.0557,
+   "price": 1.1138,
+   "pct": 0.0668,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4057.7,
-   "pct": -0.415,
+   "price": 4057.0,
+   "pct": -0.432,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 111.79,
-   "pct": 2.175,
+   "price": 111.7,
+   "pct": 2.093,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72406.76,
-   "pct": 0.297,
+   "price": 72389.19,
+   "pct": 0.273,
    "alert": null
   }
  ],
@@ -92,7 +92,7 @@
    "title": "Ukraine-Krieg - Waffenruhe um russisch besetzte Frontstadt Oleschky wird eingehalten",
    "url": "https://www.deutschlandfunk.de/waffenruhe-um-russisch-besetzte-frontstadt-oleschky-wird-eingehalten-100.html",
    "topic": "world",
-   "n": 15,
+   "n": 13,
    "alert": false
   },
   {
@@ -103,15 +103,15 @@
    "alert": false
   },
   {
-   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
-   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
-   "topic": "world",
+   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
+   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
+   "topic": "markets",
    "n": 6,
    "alert": false
   },
   {
-   "title": "Ukraine-Krieg: Trump kündigt baldiges Treffen mit Putin und Selenskyj an",
-   "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxPUU9NUnI2UGdDUGl0cGdQZjl0NnRrZGExV1dJYnI5ZzAxeEl5UVJrTXNmSVVHS0lVUURxemlEenhiV3ZZR3RwMjRGMkpDUFhnclRXbEI3YWhTenVPUTNpcEowSmxuUUdIbFY1S3ExUXE3YkF6OVNJSm5Ya0R5YmtOUHVwbzk5Uk1sTzBYbkRmTFk4VVlhY3BvbmdETVpuRUxMN3I3dmxLZi1BV1BMcHFZaklOclhJdFZKRU9JblctUVFJdw?oc=5",
+   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
+   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
    "topic": "world",
    "n": 6,
    "alert": false
@@ -131,13 +131,6 @@
    "alert": false
   },
   {
-   "title": "Israel election: what we know so far",
-   "url": "https://www.theguardian.com/world/2026/oct/28/israel-election-results-what-we-know-so-far-ntwnfb",
-   "topic": "world",
-   "n": 5,
-   "alert": false
-  },
-  {
    "title": "Quartalszahlen: Deutsche Bank erzielt Milliardengewinn und übertrifft Erwartungen – Aktie an der Dax-Spitze",
    "url": "https://www.handelsblatt.com/finanzen/banken-versicherungen/banken/banken-deutsche-bank-uebertrifft-erwartungen-aktie-steigt-deutlich/100263571.html",
    "topic": "markets",
@@ -145,10 +138,17 @@
    "alert": false
   },
   {
-   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
-   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
-   "topic": "markets",
-   "n": 4,
+   "title": "At least 68 people dead in high-speed Spain train crash",
+   "url": "https://www.cnbc.com/2026/10/28/spain-high-speed-train-crash.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Ukraine-Krieg: Trump kündigt baldiges Treffen mit Putin und Selenskyj an",
+   "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxPUU9NUnI2UGdDUGl0cGdQZjl0NnRrZGExV1dJYnI5ZzAxeEl5UVJrTXNmSVVHS0lVUURxemlEenhiV3ZZR3RwMjRGMkpDUFhnclRXbEI3YWhTenVPUTNpcEowSmxuUUdIbFY1S3ExUXE3YkF6OVNJSm5Ya0R5YmtOUHVwbzk5Uk1sTzBYbkRmTFk4VVlhY3BvbmdETVpuRUxMN3I3dmxLZi1BV1BMcHFZaklOclhJdFZKRU9JblctUVFJdw?oc=5",
+   "topic": "world",
+   "n": 5,
    "alert": false
   },
   {

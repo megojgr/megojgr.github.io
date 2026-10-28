@@ -1123,7 +1123,9 @@ function renderChrome() {
   const g = new Date(DATA.generated);
   $("today").textContent = new Date().toLocaleDateString("de-DE", innerWidth < 600
     ? { weekday: "short", day: "numeric", month: "short" } : { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  const stamp = "Stand " + g.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
+  const ageMin = Math.round((Date.now() - g) / 60000);
+  const stamp = "Stand " + g.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr"
+    + (ageMin > 90 ? ` (vor ${ageMin >= 2880 ? Math.round(ageMin / 1440) + " Tagen" : Math.round(ageMin / 60) + " Std."})` : "");
   $("status").textContent = stamp;
 
   $("alertbar").replaceChildren();
@@ -1270,7 +1272,7 @@ async function refresh() {
       toast("busy", "Suche nach einem neueren Stand …");
       const d = await fetchLatest();
       if (d.generated === before.generated) {
-        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Die Seite wird stündlich aktualisiert. Für einen sofortigen Abruf richte unter ⚙ das Token ein.`, { ms: 11000 });
+        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. Neue Stände erscheinen, sobald GitHub einen Abruf ausführt. Mit einem Token unter ⚙ startest du ihn sofort selbst.`, { ms: 11000 });
         return;
       }
       fresh = d;
@@ -1290,6 +1292,17 @@ async function refresh() {
 }
 $("btn-refresh").addEventListener("click", refresh);
 
+// Sind die Daten älter als eine Stunde und ist ein Token hinterlegt, stößt die Seite beim Öffnen selbst einen neuen
+// Abruf an. Das ist der Ersatz dafür, dass GitHub die stündlichen Läufe nicht zuverlässig startet.
+async function autoRefresh() {
+  if (refreshing || location.protocol === "file:" || !store.get("ghtoken")) return;
+  const ageMin = (Date.now() - new Date(DATA.generated)) / 60000;
+  if (ageMin < 65 || Date.now() - Number(store.get("autotry") || 0) < 15 * 60000) return;  // höchstens alle 15 Minuten
+  store.set("autotry", String(Date.now()));
+  toast("info", `Die Daten sind ${ageMin >= 120 ? Math.round(ageMin / 60) + " Stunden" : "über eine Stunde"} alt. Ein neuer Abruf wird gestartet …`, { ms: 5000 });
+  await refresh();
+}
+
 // Beim Zurückkehren zur Seite still prüfen, ob es einen neueren Stand gibt
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible" || refreshing || location.protocol === "file:") return;
@@ -1297,6 +1310,7 @@ document.addEventListener("visibilitychange", async () => {
     const d = await fetchLatest();
     if (d.generated !== DATA.generated) { await applyData(d); toast("ok", `Neuer Stand geladen: ${fmtTime(d.generated)} Uhr.`, { ms: 5000 }); }
   } catch {}
+  autoRefresh();
 });
 
 // ------------------------------------------------------------------ Einstellungen
@@ -1323,7 +1337,7 @@ function openSettings() {
   dlg.replaceChildren(h("div", { class: "dlg" },
     h("div", { class: "top" }, h("h2", {}, "Einstellungen"), h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     h("h3", { class: "sec2" }, "Sofort-Update"),
-    h("p", { class: "note" }, "Die Seite aktualisiert sich ohnehin jede Stunde von selbst. Mit einem Token startet „Aktualisieren“ sofort einen neuen Abruf bei GitHub (Ergebnis nach etwa 1 bis 2 Minuten). Ohne Token lädt der Knopf nur den zuletzt veröffentlichten Stand."),
+    h("p", { class: "note" }, "Geplant ist ein stündlicher Abruf bei GitHub, den GitHub aber nicht zuverlässig startet. Mit einem Token startet „Aktualisieren“ sofort einen neuen Abruf (Ergebnis nach etwa 1 bis 2 Minuten), und die Seite holt sich beim Öffnen von selbst frische Daten, wenn die vorhandenen älter als eine Stunde sind. Ohne Token lädt der Knopf nur den zuletzt veröffentlichten Stand."),
     h("ol", { class: "steps" },
       h("li", {}, h("a", { href: prefill, style: "text-decoration:underline" }, "Diesen Link öffnen"), ". GitHub verlangt dabei dein Login. Name, Ablauf von 1 Jahr und das Recht „Actions“ sind schon vorausgefüllt."),
       h("li", {}, `Unter „Repository access“ den Punkt „Only select repositories“ wählen und dann ${repo.split("/")[1]} auswählen.`),
@@ -1362,6 +1376,7 @@ async function init() {
   renderAll();
   await autoUnlock();
   renderAll();
+  autoRefresh();
 }
 init();
 </script>

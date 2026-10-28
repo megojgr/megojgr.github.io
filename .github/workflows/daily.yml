@@ -2,18 +2,19 @@ name: Tägliche News
 
 on:
   schedule:
-    # 04:00 UTC = 05:00 Uhr im Winter, 06:00 Uhr im Sommer (Berlin). GitHub startet oft ein paar Minuten später.
-    - cron: "0 4 * * *"
+    # Zeiten in UTC. Berlin = UTC+1 im Winter, UTC+2 im Sommer. GitHub startet oft ein paar Minuten später.
+    - cron: "0 4 * * *"    # Morgens: 05:00 / 06:00 Uhr, mit dem Schlusskurs von Wall Street und Asien
+    - cron: "0 16 * * *"   # Nachmittags: 17:00 / 18:00 Uhr, nach Börsenschluss in Europa
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # Tagesarchiv in archive/ ins Repo schreiben
   pages: write
   id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -27,6 +28,16 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python collect.py
+      - name: Tagesarchiv speichern
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archive
+          if ! git diff --cached --quiet; then
+            git commit -m "Archiv $(date -u +%F)"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

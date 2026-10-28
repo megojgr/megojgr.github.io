@@ -7,12 +7,12 @@
 <style>
   :root {
     --bg: #f6f6f3; --card: #ffffff; --ink: #1a1a18; --muted: #6b6b66; --line: #e4e3dd;
-    --accent: #1f5fd6; --up: #1a8a4a; --down: #c23a2b; --chip: #eceae3;
+    --accent: #1f5fd6; --up: #1a8a4a; --down: #c23a2b; --chip: #eceae3; --warn-bg: #fdeceb;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #121211; --card: #1c1c1a; --ink: #ecebe6; --muted: #9a9992; --line: #2f2f2b;
-      --accent: #6b9bff; --up: #4cc27f; --down: #ef6f60; --chip: #2a2a26;
+      --accent: #6b9bff; --up: #4cc27f; --down: #ef6f60; --chip: #2a2a26; --warn-bg: #3a1f1c;
     }
   }
   * { box-sizing: border-box; }
@@ -21,6 +21,9 @@
   header { padding: 14px 16px 0; max-width: 860px; margin: 0 auto; }
   h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
   .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .alertbar { max-width: 860px; margin: 10px auto 0; padding: 0 16px; }
+  .alertbar a { display: block; background: var(--warn-bg); border: 1px solid var(--down); color: var(--ink); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .alertbar b { color: var(--down); }
   .ticker { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; max-width: 860px; margin: 0 auto; scrollbar-width: none; }
   .ticker::-webkit-scrollbar { display: none; }
   .q { flex: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 104px; }
@@ -42,12 +45,13 @@
   .chip.src:hover { color: var(--accent); }
   .chip.watch { background: var(--accent); color: #fff; }
   .chip.hot { color: var(--down); }
-  .chip.ai { border: 1px solid var(--line); background: none; }
-  .brief { border-left: 3px solid var(--accent); }
-  .brief h2 { margin-top: 0; }
-  .brief ul { margin: 0; padding-left: 18px; }
-  .brief li { margin: 4px 0; }
-  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip.crash { background: var(--down); color: #fff; }
+  .chip.vote { border: 1px solid var(--accent); background: none; color: var(--accent); }
+  .overview { border-left: 3px solid var(--accent); }
+  .overview ul { margin: 0; padding-left: 18px; }
+  .overview li { margin: 5px 0; font-size: 15px; }
+  .overview h2 { margin-top: 0; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .filters button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
   .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .row { display: grid; grid-template-columns: minmax(80px, 1.2fr) 2fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 3px 0; }
@@ -59,6 +63,24 @@
   .note { color: var(--muted); font-size: 12px; margin: 10px 0 16px; }
   .empty { color: var(--muted); padding: 28px 0; text-align: center; }
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .qc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .qc.alert { border-color: var(--down); }
+  .qc b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .qc .px { font-variant-numeric: tabular-nums; font-size: 15px; }
+  .qc .px em { font-style: normal; font-size: 12px; margin-left: 6px; }
+  .qc small { display: block; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .spark { width: 100%; height: 28px; margin-top: 4px; display: block; }
+  .spark polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+  .spark .u { stroke: var(--up); } .spark .d { stroke: var(--down); }
+  .term { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .term:first-of-type { border-top: 0; }
+  .term .lead { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .term .meta { grid-column: 1 / -1; }
+  details.day { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; margin-bottom: 8px; }
+  details.day summary { cursor: pointer; font-weight: 600; }
+  details.day summary span { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  details.day ul { margin: 6px 0 10px; padding-left: 18px; font-size: 14px; }
   footer { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 12px; }
   footer .bad { color: var(--down); }
 </style>
@@ -68,6 +90,7 @@
   <h1>Mego News</h1>
   <div class="sub" id="updated"></div>
 </header>
+<div class="alertbar" id="alertbar"></div>
 <div class="ticker" id="ticker"></div>
 <nav><div role="tablist" id="tabs"></div></nav>
 <main id="view"></main>
@@ -80,8 +103,10 @@ const TABS = [
   ["heute", "Heute"],
   ["markets", "Märkte"],
   ["world", "Welt"],
+  ["termine", "Wahlen & Termine"],
   ["pm", "Prediction Markets"],
   ["watch", "Watchlist"],
+  ["verlauf", "Verlauf"],
 ];
 
 function h(tag, attrs, ...kids) {
@@ -98,6 +123,7 @@ function h(tag, attrs, ...kids) {
 
 const de = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 });
 const dePct = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2, minimumFractionDigits: 2, signDisplay: "exceptZero" });
+const pctSpan = (v) => v == null ? "" : h("span", { class: v >= 0 ? "up" : "down" }, dePct.format(v) + " %");
 
 function ago(iso) {
   const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
@@ -112,6 +138,50 @@ function money(x) {
   if (x >= 1e3) return de.format(x / 1e3) + " Tsd. $";
   return de.format(x) + " $";
 }
+function volume(x, unit) {
+  if (unit === "usd") return money(x);
+  if (x >= 1e6) return de.format(x / 1e6) + " Mio. Kontrakte";
+  if (x >= 1e3) return de.format(x / 1e3) + " Tsd. Kontrakte";
+  return de.format(Math.round(x)) + " Kontrakte";
+}
+const probText = (p) => p < 0.01 ? "<1 %" : Math.round(p * 100) + " %";
+const dateDe = (iso) => iso.split("-").reverse().join(".");
+function dayLabel(iso) {
+  const d = new Date(iso + "T12:00:00");
+  const diff = Math.round((d - new Date(new Date().toDateString() + " 12:00")) / 864e5);
+  const base = d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
+  return diff === 0 ? "Heute, " + base : diff === 1 ? "Morgen, " + base : base;
+}
+
+// ---------------------------------------------------------------- Kurse
+
+function spark(series) {
+  const NS = "http://www.w3.org/2000/svg", w = 100, ht = 28;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${ht}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("class", "spark");
+  if (series.length < 2) return svg;
+  const min = Math.min(...series), span = (Math.max(...series) - min) || 1;
+  const pl = document.createElementNS(NS, "polyline");
+  pl.setAttribute("points", series.map((v, i) =>
+    `${(i / (series.length - 1) * w).toFixed(1)},${(ht - 2 - ((v - min) / span) * (ht - 4)).toFixed(1)}`).join(" "));
+  pl.setAttribute("class", series[series.length - 1] >= series[0] ? "u" : "d");
+  svg.append(pl);
+  return svg;
+}
+
+function quoteCard(q) {
+  return h("div", { class: "qc" + (q.alert ? " alert" : ""), title: q.symbol },
+    h("b", {}, q.name),
+    h("div", { class: "px" }, de.format(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, dePct.format(q.pct) + " %")),
+    spark(q.series),
+    h("small", {}, "5 Tage ", q.week != null ? dePct.format(q.week) + " %" : "–", "  ·  1 Monat ", q.month != null ? dePct.format(q.month) + " %" : "–"));
+}
+
+const quotes = (group) => DATA.quotes.filter(q => q.group === group && q.price != null);
+
+// ---------------------------------------------------------------- Meldungen
 
 function story(s, showTopic) {
   const topicName = { markets: "Märkte", world: "Welt" }[s.topic];
@@ -119,8 +189,10 @@ function story(s, showTopic) {
     h("h3", {}, h("a", { href: s.url }, s.title)),
     s.summary && h("p", {}, s.summary),
     h("div", { class: "meta" },
+      s.alert && h("span", { class: "chip crash" }, "Crash-Radar"),
+      s.election && h("span", { class: "chip vote" }, "Wahl"),
       showTopic && h("span", { class: "chip" }, topicName),
-      s.ai && h("span", { class: "chip ai", title: "Zusammenfassung von Claude, aus Überschriften und Teasern der Quellen" }, "KI"),
+      s.ai && h("span", { class: "chip" }, "KI"),
       s.watch.map(w => h("span", { class: "chip watch" }, w)),
       s.sources.length > 2 && h("span", { class: "chip hot" }, `${s.sources.length} Quellen`),
       s.sources.slice(0, 5).map(x => h("a", { class: "chip src", href: x.url }, x.name)),
@@ -132,60 +204,146 @@ function list(items, showTopic) {
   return items.length ? items.map(s => story(s, showTopic)) : h("div", { class: "empty" }, "Keine Meldungen gefunden.");
 }
 
-const views = {
-  heute: () => [
-    DATA.briefing && DATA.briefing.length > 0 && h("section", { class: "card brief" },
-      h("h2", {}, "Morgenbriefing"), h("ul", {}, DATA.briefing.map(b => h("li", {}, b)))),
-    h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."), list(DATA.heute, true)],
-  markets: () => list(DATA.stories.filter(s => s.topic === "markets").slice(0, 40)),
-  world: () => list(DATA.stories.filter(s => s.topic === "world").slice(0, 40)),
-  watch: () => {
-    const w = DATA.stories.filter(s => s.watch.length);
-    return [h("p", { class: "note" }, "Meldungen, in denen eines deiner Stichwörter vorkommt. Die Liste steht in config.json unter „watchlist“."), list(w, true)];
-  },
-  pm: () => {
-    const cats = ["Alle", ...new Set(DATA.polymarket.map(e => e.category))];
-    const box = h("div");
-    const render = (cat) => {
-      box.replaceChildren(...DATA.polymarket.filter(e => cat === "Alle" || e.category === cat).map(pmCard));
-      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === cat));
-    };
-    const bar = h("div", { class: "filters" }, cats.map(c => h("button", { onclick: () => render(c) }, c)));
-    render("Alle");
-    return [
-      h("p", { class: "note" }, "Wahrscheinlichkeiten laut Polymarket (Marktpreis = geschätzte Chance). Das sind Stimmungsbilder von Wettenden, keine Fakten. Sortiert nach 24-Std.-Handelsvolumen."),
-      DATA.status.polymarket_error ? h("div", { class: "empty" }, "Polymarket nicht erreichbar: " + DATA.status.polymarket_error) : [bar, box],
-    ];
-  },
-};
+// ---------------------------------------------------------------- Prediction Markets
 
 function pmCard(e) {
   return h("article", { class: "card" },
     h("h3", {}, h("a", { href: e.url }, e.title)),
     e.rows.map(r => {
-      const p = Math.round(r.p * 100);
       const d = r.d1 == null ? null : r.d1 * 100;
       return h("div", { class: "row" },
         h("span", { class: "lbl", title: r.label }, r.label),
-        h("div", { class: "bar" }, h("i", { style: `width:${Math.max(1, p)}%` })),
-        h("span", { class: "pct" }, p < 1 ? "<1 %" : p + " %",
+        h("div", { class: "bar" }, h("i", { style: `width:${Math.max(1, Math.round(r.p * 100))}%` })),
+        h("span", { class: "pct" }, probText(r.p),
           d != null && Math.abs(d) >= 0.5 && h("small", { class: d > 0 ? "up" : "down" }, (d > 0 ? "▲" : "▼") + Math.abs(Math.round(d)))));
     }),
     e.more > 0 && h("div", { class: "note" }, `+ ${e.more} weitere Optionen`),
     h("div", { class: "meta", style: "margin-top:8px" },
-      h("span", { class: "chip" }, e.category),
-      h("span", {}, "24 Std.: " + money(e.vol24h)),
-      h("span", {}, "gesamt: " + money(e.vol)),
-      e.end && h("span", {}, "Ende: " + e.end.split("-").reverse().join(".")))
-  );
+      h("span", { class: "chip" }, e.source), h("span", { class: "chip" }, e.category),
+      h("span", {}, "24 Std.: " + volume(e.vol24h, e.unit)),
+      e.end && h("span", {}, "Ende: " + dateDe(e.end))));
 }
+
+// ---------------------------------------------------------------- Ansichten
+
+function overview() {
+  const idx = quotes("index");
+  const line = (qs) => qs.flatMap((q, i) => [i ? "  ·  " : "", q.name + " " + de.format(q.price) + " ", pctSpan(q.pct)]);
+  const alerts = idx.concat(quotes("stock")).filter(q => q.alert);
+  const crash = DATA.stories.filter(s => s.alert);
+  const soon = DATA.termine.filter(t => (new Date(t.end + "T23:59:59") - Date.now()) < 2 * 864e5).slice(0, 3);
+  let move = null;
+  for (const e of DATA.prediction) for (const r of e.rows.slice(0, 2))
+    if (r.d1 != null && r.p - r.d1 >= 0.03 && r.p <= 0.95 && r.p >= 0.05 && (!move || Math.abs(r.d1) > Math.abs(move.r.d1))) move = { e, r };
+  return h("section", { class: "card overview" },
+    h("h2", {}, "Auf einen Blick"),
+    h("ul", {},
+      idx.length > 0 && h("li", {}, h("b", {}, "Märkte: "), line(idx.slice(0, 4))),
+      h("li", {}, h("b", {}, "Kursalarm: "), alerts.length
+        ? alerts.flatMap((q, i) => [i ? "  ·  " : "", q.name + " ", pctSpan(q.pct), q.alert === "week" ? " (5 Tage " + dePct.format(q.week) + " %)" : ""])
+        : "keine auffälligen Bewegungen"),
+      crash.length > 0 && h("li", {}, h("b", {}, "Crash-Radar: "), `${crash.length} Meldung${crash.length > 1 ? "en" : ""} mit Absturz-Stichwörtern, siehe Märkte`),
+      soon.length > 0 && h("li", {}, h("b", {}, "In den nächsten 2 Tagen: "), soon.map((t, i) => (i ? "  ·  " : "") + t.title)),
+      move && h("li", {}, h("b", {}, "Größte Bewegung bei Wetten: "), `${move.e.title}: ${move.r.label} ${probText(move.r.p)} (${move.r.d1 > 0 ? "+" : ""}${Math.round(move.r.d1 * 100)} Punkte)`)));
+}
+
+const views = {
+  heute: () => [
+    overview(),
+    DATA.briefing && DATA.briefing.length > 0 && h("section", { class: "card overview" },
+      h("h2", {}, "Briefing (KI)"), h("ul", {}, DATA.briefing.map(b => h("li", {}, b)))),
+    h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."),
+    list(DATA.heute, true)],
+
+  markets: () => {
+    const crash = DATA.stories.filter(s => s.alert).slice(0, 6);
+    return [
+      h("h2", {}, "Indizes, Rohstoffe, Währungen"),
+      h("div", { class: "grid" }, quotes("index").map(quoteCard)),
+      h("h2", {}, "Aktien aus deiner Liste"),
+      h("div", { class: "grid" }, quotes("stock").map(quoteCard)),
+      h("p", { class: "note" }, "Kurse von Yahoo Finance, teils verzögert. Alarm bei großen Tagesbewegungen oder über 5 % Minus in 5 Handelstagen."),
+      crash.length > 0 && [h("h2", {}, "Crash-Radar"), crash.map(s => story(s, false))],
+      h("h2", {}, "Meldungen"),
+      list(DATA.stories.filter(s => s.topic === "markets").slice(0, 40)),
+    ];
+  },
+
+  world: () => list(DATA.stories.filter(s => s.topic === "world").slice(0, 40)),
+
+  termine: () => {
+    const byDay = {};
+    for (const t of DATA.termine) (byDay[t.end] ||= []).push(t);
+    const votes = DATA.stories.filter(s => s.election).slice(0, 15);
+    return [
+      h("p", { class: "note" }, "Entscheidungen, auf die an Prediction Markets gewettet wird und die in den nächsten 30 Tagen enden: Wahlen, Zinsentscheide, Wirtschaftsdaten. Rechts steht die aktuell führende Option."),
+      Object.keys(byDay).length ? Object.entries(byDay).map(([day, items]) => [
+        h("h2", {}, dayLabel(day)),
+        h("div", { class: "card" }, items.map(t => h("div", { class: "term" },
+          h("a", { href: t.url }, t.title),
+          h("span", { class: "lead" }, t.lead.label.slice(0, 26) + " " + probText(t.lead.p)),
+          h("div", { class: "meta" }, h("span", { class: "chip" }, t.source), h("span", { class: "chip" }, t.category),
+            h("span", {}, "24 Std.: " + volume(t.vol24h, t.unit))))))])
+        : h("div", { class: "empty" }, "Keine anstehenden Termine gefunden."),
+      h("h2", {}, "Aktuelle Wahl-Nachrichten"),
+      list(votes, true),
+    ];
+  },
+
+  pm: () => {
+    const sources = ["Alle", ...new Set(DATA.prediction.map(e => e.source))];
+    const cats = ["Alle", ...new Set(DATA.prediction.map(e => e.category))];
+    const state = { src: "Alle", cat: "Alle" };
+    const box = h("div");
+    const bars = { src: h("div", { class: "filters" }), cat: h("div", { class: "filters" }) };
+    const render = () => {
+      box.replaceChildren(...DATA.prediction
+        .filter(e => (state.src === "Alle" || e.source === state.src) && (state.cat === "Alle" || e.category === state.cat))
+        .sort((a, b) => b.vol24h / (b.unit === "usd" ? 1 : 3) - a.vol24h / (a.unit === "usd" ? 1 : 3))
+        .map(pmCard));
+      if (!box.children.length) box.append(h("div", { class: "empty" }, "Nichts in dieser Auswahl."));
+      for (const k of ["src", "cat"]) bars[k].querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state[k]));
+    };
+    for (const [k, vals] of [["src", sources], ["cat", cats]])
+      bars[k].append(...vals.map(v => h("button", { onclick: () => { state[k] = v; render(); } }, v)));
+    render();
+    const errs = Object.entries(DATA.status.prediction_errors).filter(([, e]) => e);
+    return [
+      h("p", { class: "note" }, "Wahrscheinlichkeiten laut Polymarket und Kalshi (Marktpreis = geschätzte Chance). Das sind Stimmungsbilder von Wettenden, keine Fakten. Pfeile zeigen die Veränderung in Prozentpunkten, bei Kalshi ungefähr zum Vortag. Polymarket-Volumen in Dollar, Kalshi in Kontrakten (nicht direkt vergleichbar)."),
+      errs.map(([n, e]) => h("div", { class: "note bad" }, `${n} nicht erreichbar: ${e}`)),
+      bars.src, bars.cat, box];
+  },
+
+  watch: () => [
+    h("p", { class: "note" }, "Meldungen, in denen eines deiner Stichwörter vorkommt. Die Liste steht in config.json unter „watchlist“."),
+    list(DATA.stories.filter(s => s.watch.length).slice(0, 40), true)],
+
+  verlauf: () => {
+    if (!DATA.history.length) return h("div", { class: "empty" }, "Das Archiv füllt sich ab dem ersten automatischen Lauf auf GitHub, pro Tag eine Zeile.");
+    return [
+      h("p", { class: "note" }, "Die letzten Tage im Rückblick: Kurse, wichtigste Meldungen und Wetten. Pro Tag wird der letzte Stand gespeichert."),
+      DATA.history.map((day, i) => {
+        const idx = day.quotes.slice(0, 4);
+        return h("details", { class: "day", ...(i === 0 ? { open: "" } : {}) },
+          h("summary", {}, new Date(day.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" }),
+            h("span", {}, idx.length ? idx.map(q => q.name + " " + dePct.format(q.pct) + " %").join("  ·  ") : "")),
+          idx.length > 0 && h("h2", {}, "Kurse"),
+          idx.length > 0 && h("ul", {}, day.quotes.map(q => h("li", {}, q.name + " " + de.format(q.price) + " ", pctSpan(q.pct), q.alert ? " (Alarm)" : ""))),
+          h("h2", {}, "Wichtigste Meldungen"),
+          h("ul", {}, day.heute.map(s => h("li", {}, h("a", { href: s.url }, s.title), s.alert ? " [Crash-Radar]" : "", s.n > 2 ? ` (${s.n} Quellen)` : ""))),
+          day.pm.length > 0 && h("h2", {}, "Wetten mit dem meisten Handel"),
+          day.pm.length > 0 && h("ul", {}, day.pm.map(p => h("li", {}, h("a", { href: p.url }, p.title), ` – ${p.lead} ${probText(p.p)} (${p.source})`))));
+      })];
+  },
+};
 
 function show(id) {
   if (!views[id]) id = "heute";
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.id === id));
-  document.getElementById("view").replaceChildren(...[views[id]()].flat(Infinity));
+  document.getElementById("view").replaceChildren(...[views[id]()].flat(Infinity).filter(Boolean));
   try { localStorage.setItem("tab", id); } catch {}
   history.replaceState(null, "", "#" + id);
+  scrollTo(0, 0);
 }
 
 function init() {
@@ -193,7 +351,13 @@ function init() {
   document.getElementById("updated").textContent =
     "Stand: " + g.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
 
-  document.getElementById("ticker").replaceChildren(...DATA.quotes.filter(q => q.price != null).map(q =>
+  const alerts = DATA.quotes.filter(q => q.alert && q.price != null);
+  if (alerts.length) document.getElementById("alertbar").append(
+    h("a", { href: "#markets", onclick: (e) => { e.preventDefault(); show("markets"); } },
+      h("b", {}, "Auffällige Bewegung: "),
+      alerts.flatMap((q, i) => [i ? "  ·  " : "", q.name + " ", pctSpan(q.pct)])));
+
+  document.getElementById("ticker").replaceChildren(...quotes("index").map(q =>
     h("div", { class: "q" }, h("b", {}, q.name),
       h("span", {}, de.format(q.price)),
       q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, dePct.format(q.pct) + " %"))));
@@ -205,10 +369,7 @@ function init() {
   document.getElementById("foot").replaceChildren(
     `${DATA.status.feeds.length - failed.length} von ${DATA.status.feeds.length} Quellen erreichbar. `,
     ...failed.map(f => h("span", { class: "bad" }, `${f.name} ausgefallen. `)),
-    DATA.status.ai.summarized > 0
-      ? "Zusammenfassungen mit „KI“ stammen von Claude und beruhen nur auf Überschriften und Teasern, Details bitte in den Originalquellen prüfen. "
-      : "Nur Überschriften und Teaser, Volltext bei den Originalquellen. ",
-    DATA.status.ai.error && h("span", { class: "bad" }, "KI-Zusammenfassung fehlgeschlagen, es werden Teaser gezeigt."));
+    "Nur Überschriften und Teaser, Volltext bei den Originalquellen. Keine Anlageberatung.");
 
   let start = location.hash.slice(1);
   if (!views[start]) { try { start = localStorage.getItem("tab"); } catch {} }

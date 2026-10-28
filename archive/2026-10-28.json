@@ -1,0 +1,212 @@
+{
+ "date": "2026-10-28",
+ "generated": "2026-10-28T13:38:57.868240+00:00",
+ "quotes": [
+  {
+   "name": "DAX",
+   "group": "index",
+   "price": 25701.27,
+   "pct": 0.432,
+   "alert": null
+  },
+  {
+   "name": "S&P 500",
+   "group": "index",
+   "price": 7733.71,
+   "pct": 0.144,
+   "alert": null
+  },
+  {
+   "name": "Nasdaq",
+   "group": "index",
+   "price": 26541.348,
+   "pct": 0.24,
+   "alert": null
+  },
+  {
+   "name": "Dow Jones",
+   "group": "index",
+   "price": 52400.94,
+   "pct": 0.045,
+   "alert": null
+  },
+  {
+   "name": "Euro Stoxx 50",
+   "group": "index",
+   "price": 6174.57,
+   "pct": 0.16,
+   "alert": null
+  },
+  {
+   "name": "Nikkei 225",
+   "group": "index",
+   "price": 63954.19,
+   "pct": 1.084,
+   "alert": null
+  },
+  {
+   "name": "Hang Seng",
+   "group": "index",
+   "price": 23094.83,
+   "pct": 0.232,
+   "alert": null
+  },
+  {
+   "name": "VIX (Angstindex)",
+   "group": "index",
+   "price": 17.31,
+   "pct": -1.199,
+   "alert": null
+  },
+  {
+   "name": "EUR/USD",
+   "group": "index",
+   "price": 1.1138,
+   "pct": 0.0668,
+   "alert": null
+  },
+  {
+   "name": "Gold",
+   "group": "index",
+   "price": 4065.2,
+   "pct": -0.231,
+   "alert": null
+  },
+  {
+   "name": "Öl (Brent)",
+   "group": "index",
+   "price": 111.34,
+   "pct": 1.764,
+   "alert": null
+  },
+  {
+   "name": "Bitcoin (EUR)",
+   "group": "index",
+   "price": 72454.35,
+   "pct": 1.055,
+   "alert": null
+  }
+ ],
+ "heute": [
+  {
+   "title": "Ukraine-Krieg - Waffenruhe um russisch besetzte Frontstadt Oleschky wird eingehalten",
+   "url": "https://www.deutschlandfunk.de/waffenruhe-um-russisch-besetzte-frontstadt-oleschky-wird-eingehalten-100.html",
+   "topic": "world",
+   "n": 21,
+   "alert": false
+  },
+  {
+   "title": "Bahnkatastrophe: «Überall Blut» - Mehr als 60 Tote bei Zugunglück in Spanien",
+   "url": "https://www.zeit.de/news/2026-10/28/mehrere-verletzte-bei-zugkollision-in-spanien",
+   "topic": "world",
+   "n": 8,
+   "alert": false
+  },
+  {
+   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
+   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "40 DAX-Aktien jetzt rund um die Uhr handelbar",
+   "url": "https://www.tagesschau.de/wirtschaft/finanzen/dax-aktien-handel-100.html",
+   "topic": "markets",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Regierungsbildung - Nach Parlamentswahl in Israel: Vier Szenarien, wie es politisch weitergehen könnte",
+   "url": "https://www.deutschlandfunk.de/nach-parlamentswahl-in-israel-vier-szenarien-wie-es-politisch-weitergehen-koennte-100.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Business-Ticker: Schneider: Audi wettet „auf ein totes Pferd“",
+   "url": "https://www.faz.net/aktuell/wirtschaft/unternehmen/business-liveticker-schneider-audi-wettet-auf-ein-totes-pferd-faz-200452404.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "FEC campaign finance system offline days before midterms after hackers reportedly target site",
+   "url": "https://www.cnbc.com/2026/10/28/fec-hack-outage-campaign-finance-filings.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Investors Brace for Big Tech’s A.I. Spending Bill",
+   "url": "https://www.nytimes.com/2026/10/28/business/dealbook/ai-spending-quarterly-results-amazon-microsoft.html",
+   "topic": "markets",
+   "n": 2,
+   "alert": false
+  },
+  {
+   "title": "DAX-FLASH: Etwas Zurückhaltung vor Fed-Entscheid und Quartalszahlen - 28.10.26 - News",
+   "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQUW9Kbl9wS0NUOEJwVXZ6MWhvZVREUzI5b01fY2FDUFNVV21xM0ZselFSOFEtSDJ5c1hvTGIxVHFyb2hHUGlqUHRyeGNoeERxT21Ib3ZFZk1iMVdub01MNHBWVzVlSy1hN0J3Mm9KLVZSVzY5cUVuZzlPX1BUOXdHcDBUNnRKTm5xeHNJOThodzI?oc=5",
+   "topic": "markets",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Anthropic hielt vor dem Börsengang mehr liquide Mittel als Nvidia und Apple zusammen",
+   "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOMWh2aF9ldVJMQVJBaUFwT29DX1lDR1Nrem1UTXd2VTRwaUNnSldjVmVJc2VBelVSdm1wMzBrT2xWVUpjSzAxTjBQNHJQX29wWGlvbUlQcTR2a1lTb3NOOEVTdU5qVG93TWVINkxPcVQxbHZWb2ZEUC1hTUxsd1dwNXVZTlMwTEdFTmFvWWMtUXZObjF1azB3akswdUNib1ZWSlE?oc=5",
+   "topic": "markets",
+   "n": 2,
+   "alert": false
+  }
+ ],
+ "pm": [
+  {
+   "title": "Prime Minister of Israel after the next election?",
+   "url": "https://polymarket.com/event/who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
+   "source": "Polymarket",
+   "lead": "Benjamin Netanyahu",
+   "p": 0.47,
+   "d1": 0.255
+  },
+  {
+   "title": "Fed Decision in October?",
+   "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
+   "source": "Polymarket",
+   "lead": "No change",
+   "p": 0.948,
+   "d1": 0.008
+  },
+  {
+   "title": "Israeli Legislative Election Winner",
+   "url": "https://polymarket.com/event/israeli-legislative-election-winner",
+   "source": "Polymarket",
+   "lead": "Likud",
+   "p": 0.987,
+   "d1": 0.777
+  },
+  {
+   "title": "Israel Election: Likud # of seats?",
+   "url": "https://polymarket.com/event/israel-election-likud-of-seats",
+   "source": "Polymarket",
+   "lead": "25-29",
+   "p": 0.974,
+   "d1": 0.839
+  },
+  {
+   "title": "Balance of Power: 2026 Midterms",
+   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
+   "source": "Polymarket",
+   "lead": "Democrats Sweep",
+   "p": 0.665,
+   "d1": 0.02
+  },
+  {
+   "title": "What price will Bitcoin hit in October?",
+   "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
+   "source": "Polymarket",
+   "lead": "↓ 80,000",
+   "p": 0.76,
+   "d1": null
+  }
+ ]
+}

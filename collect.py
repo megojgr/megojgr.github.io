@@ -8,16 +8,17 @@ import json
 import os
 import re
 import sys
-import urllib.parse
-import urllib.request
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
+import archive
+from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
+from net import fetch
+
 ROOT = Path(__file__).parent
 OUT = ROOT / "docs"
-UA = "Mozilla/5.0 (private-news-reader)"
 NOW = dt.datetime.now(dt.timezone.utc)
 
 STOPWORDS = set(
@@ -26,12 +27,6 @@ STOPWORDS = set(
     "the and for with from that this has have will are was were its their after over into about says say new"
     .split()
 )
-
-
-def fetch(url, timeout=20):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
 
 
 def clean(s):
@@ -149,6 +144,8 @@ def build_stories(cfg):
     block = compile_keywords(cfg["blocklist"])
     topics = {k: compile_keywords(v) for k, v in cfg["topics"].items()}
     watch = [(w, re.compile(r"\b" + re.escape(w), re.I)) for w in cfg["watchlist"]]
+    crash = compile_keywords(cfg["crash_keywords"])
+    elect = compile_keywords(cfg["election_keywords"])
 
     items = []
     for _, its, _ in results:
@@ -179,11 +176,15 @@ def build_stories(cfg):
                 sources.append({"name": m["source"], "url": m["url"]})
         newest = max(m["time"] for m in members)
         age_h = (NOW - newest).total_seconds() / 3600
-        score = 3 * len(sources) + min(top, 6) + max(0, 3 - age_h / 8) + min(3 * len(hits), 6)
+        headlines = " ".join(m["title"] for m in members)
+        is_alert = topic == "markets" and any(p.search(headlines) for p in crash)  # Zugunglück o. Ä. ausschließen
+        is_election = any(p.search(headlines) for p in elect)
+        score = (3 * len(sources) + min(top, 6) + max(0, 3 - age_h / 8) + min(3 * len(hits), 6)
+                 + (3 if is_alert else 0) + (2 if is_election else 0))
         stories.append({
             "title": lead["title"], "summary": lead["summary"], "url": lead["url"], "lang": lead["lang"],
             "topic": topic, "score": round(score, 2), "time": newest.isoformat(),
-            "sources": sources, "watch": hits,
+            "sources": sources, "watch": hits, "alert": is_alert, "election": is_election,
             "titles": list(dict.fromkeys(m["title"] for m in members))[:5],
         })
     stories.sort(key=lambda s: s["score"], reverse=True)
@@ -257,87 +258,20 @@ def summarize(stories, heute, cfg):
     return briefing[:6], status
 
 
-def fetch_quote(q):
-    url = "https://query1.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(q["symbol"]) + "?interval=1d&range=5d"
-    try:
-        meta = json.loads(fetch(url, 15))["chart"]["result"][0]["meta"]
-        return {"name": q["name"], "symbol": q["symbol"], "price": meta["regularMarketPrice"],
-                "pct": meta.get("regularMarketChangePercent"), "currency": meta.get("currency", "")}
-    except Exception as e:
-        return {"name": q["name"], "symbol": q["symbol"], "price": None, "pct": None, "currency": "", "error": str(e)}
-
-
-PM_CATEGORIES = [
-    ("Wahlen", {"elections", "global-elections", "world-elections", "main-election"}),
-    ("Geopolitik", {"geopolitics", "world", "middle-east", "ukraine", "china", "russia"}),
-    ("Politik", {"politics"}),
-    ("Wirtschaft", {"economy", "finance", "business", "fed"}),
-    ("Krypto", {"crypto"}),
-    ("Tech", {"tech"}),
-]
-
-
-def num(x, default=0.0):
-    try:
-        return float(x)
-    except (TypeError, ValueError):
-        return default
-
-
-def jlist(x):
-    if isinstance(x, list):
-        return x
-    try:
-        return json.loads(x)
-    except Exception:
-        return []
-
-
-def build_polymarket(cfg):
-    pm = cfg["polymarket"]
-    url = ("https://gamma-api.polymarket.com/events?active=true&closed=false&order=volume24hr&ascending=false"
-           f"&limit={pm['fetch_limit']}")
-    try:
-        events = json.loads(fetch(url, 30))
-    except Exception as e:
-        return [], f"{type(e).__name__}: {e}"
-    include, exclude = set(pm["include_tags"]), set(pm["exclude_tags"])
-    out = []
-    for ev in events:
-        tags = {t.get("slug", "") for t in ev.get("tags", [])}
-        if tags & exclude or not tags & include:
-            continue
-        rows = []
-        for m in ev.get("markets", []):
-            if m.get("closed") or not m.get("active", True):
-                continue
-            prices = jlist(m.get("outcomePrices"))
-            if not prices:
-                continue
-            multi = len(ev.get("markets", [])) > 1
-            rows.append({"label": (m.get("groupItemTitle") or m.get("question")) if multi else "Ja",
-                         "p": num(prices[0]), "d1": m.get("oneDayPriceChange")})
-        if not rows:
-            continue
-        rows.sort(key=lambda r: r["p"], reverse=True)
-        category = next((name for name, slugs in PM_CATEGORIES if tags & slugs), "Sonstiges")
-        out.append({"title": ev.get("title", ""), "url": "https://polymarket.com/event/" + ev.get("slug", ""),
-                    "category": category, "vol24h": num(ev.get("volume24hr")), "vol": num(ev.get("volume")),
-                    "end": (ev.get("endDate") or "")[:10], "rows": rows[:5], "more": max(0, len(rows) - 5)})
-        if len(out) >= pm["max_events"]:
-            break
-    return out, None
-
-
 def main():
     cfg = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
     with ThreadPoolExecutor(max_workers=8) as ex:
-        quotes_f = [ex.submit(fetch_quote, q) for q in cfg["quotes"]]
+        quotes_f = [ex.submit(fetch_quote, q, cfg["alerts"]) for q in cfg["quotes"]]
         pm_f = ex.submit(build_polymarket, cfg)
+        kalshi_f = ex.submit(build_kalshi, cfg)
         stories, feed_status = build_stories(cfg)
         quotes = [f.result() for f in quotes_f]
-        polymarket, pm_error = pm_f.result()
+        pm_top, pm_window, pm_error = pm_f.result()
+        kalshi_all, kalshi_error = kalshi_f.result()
 
+    kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
+    prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
+    termine = build_termine(pm_window + pm_top + kalshi_all, cfg["termine_days"])
     heute = build_heute(stories, cfg["heute_per_topic"])
     briefing, ai_status = summarize(stories, heute, cfg)
     for s in stories:
@@ -349,9 +283,16 @@ def main():
         "briefing": briefing,
         "stories": stories,
         "heute": heute,
-        "polymarket": polymarket,
-        "status": {"feeds": feed_status, "polymarket_error": pm_error, "ai": ai_status},
+        "prediction": prediction,
+        "termine": termine,
+        "status": {"feeds": feed_status, "ai": ai_status,
+                   "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error}},
     }
+    today = NOW.date().isoformat()
+    if os.environ.get("GITHUB_ACTIONS") or "--archive" in sys.argv:
+        archive.write(data, today)
+    data["history"] = archive.load(cfg["history_days"])
+
     OUT.mkdir(exist_ok=True)
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -360,12 +301,16 @@ def main():
 
     for f in feed_status:
         print(("OK   " if not f["error"] else "FAIL ") + f"{f['name']:<28} {f['count']:>3}  {f['error'] or ''}")
-    print(f"\n{len(stories)} Meldungen, {len(polymarket)} Prediction Markets, "
-          f"{sum(1 for q in quotes if q['price'] is not None)}/{len(quotes)} Kurse -> {OUT / 'index.html'}")
-    if ai_status["enabled"]:
-        print(f"KI: {ai_status['summarized']} Zusammenfassungen" + (f", FEHLER: {ai_status['error']}" if ai_status["error"] else ""))
-    else:
-        print("KI: aus (kein ANTHROPIC_API_KEY gesetzt), Teaser der Quellen werden angezeigt")
+    alerts = [q["name"] for q in quotes if q["alert"]]
+    print(f"\n{len(stories)} Meldungen ({sum(s['alert'] for s in stories)} Crash-Radar, {sum(s['election'] for s in stories)} Wahlen), "
+          f"{sum(1 for q in quotes if q['price'] is not None)}/{len(quotes)} Kurse, Alarm: {alerts or 'keiner'}")
+    print(f"Prediction Markets: {len(pm_top)} Polymarket, {min(len(kalshi_top), cfg['kalshi']['max_events'])} Kalshi "
+          f"({len(kalshi_all)} Kalshi-Events geladen), {len(termine)} Termine, Verlauf: {len(data['history'])} Tage")
+    for name, err in data["status"]["prediction_errors"].items():
+        if err:
+            print(f"FEHLER {name}: {err}")
+    print("KI: aus" if not ai_status["enabled"] else f"KI: {ai_status['summarized']} Zusammenfassungen")
+    print(f"-> {OUT / 'index.html'}")
 
 
 if __name__ == "__main__":

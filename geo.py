@@ -66,78 +66,143 @@ def de_name(name):
 # ---------------------------------------------------------------- Konflikte (GDELT)
 
 def gdelt_day(day):
-    """Ein Tag GDELT-Ereignisse: bewaffnete Gewalt (CAMEO 18-20 mit Militär- oder Rebellenbeteiligung)."""
+    """Ein Tag GDELT-Ereignisse, zusammengefasst je Land und je Ort (1°-Raster).
+
+    Gezählt wird, was an einem Ort passiert ist: bewaffnete Kämpfe (CAMEO 19/20 mit Militär oder Rebellen) und
+    Unruhen (Proteste, Krawalle, Angriffe ohne bewaffnete Gruppe). Je Land zählen wir auch alle Ereignisse, damit
+    sich der Anteil berechnen lässt: Das Verhältnis zählt, nicht die Menge, denn über die USA wird einfach mehr berichtet."""
     raw = fetch(f"https://data.gdeltproject.org/events/{day:%Y%m%d}.export.CSV.zip", 150, retries=1)
     z = zipfile.ZipFile(io.BytesIO(raw))
-    cells, countries = {}, collections.Counter()
+    stats = collections.defaultdict(collections.Counter)
+    war_cells, unrest_cells = {}, {}
+
+    def add(cells, key, w, lat, lon, full):
+        c = cells.setdefault(key, {"w": 0, "n": 0, "best": (0, lat, lon, full)})
+        c["w"] += w
+        c["n"] += 1
+        if w > c["best"][0]:
+            c["best"] = (w, lat, lon, full)
+
     with z.open(z.namelist()[0]) as f:
         for line in f:
             p = line.decode("utf-8", "replace").rstrip("\n").split("\t")
             if len(p) < 58:
                 continue
-            root, actors = p[28], p[5] + p[15]
-            armed = any(x in actors for x in ("MIL", "REB", "SPY"))
-            if not ((root in ("19", "20") and (armed or root == "20")) or (root == "18" and armed)):
-                continue
-            try:
-                lat, lon, geo_type, w = float(p[53]), float(p[54]), p[49], max(1, int(p[31] or 1))
-            except ValueError:
-                continue
             full = p[50]
             if full.startswith(("White House", "Capitol")):
                 continue  # Behörden-Treffer in Washington sind keine Kampfhandlungen
-            country = full if geo_type == "1" else full.split(",")[-1].strip()
-            if "Gaza" in full or "West Bank" in full:
-                country = "Palestine"
-            countries[country] += w
-            if geo_type in ("3", "4", "5"):  # nur Orte, keine Länder-Mittelpunkte
-                key = (round(lat), round(lon))
-                c = cells.setdefault(key, {"w": 0, "n": 0, "best": (0, lat, lon, full)})
-                c["w"] += w
-                c["n"] += 1
-                if w > c["best"][0]:
-                    c["best"] = (w, lat, lon, full)
-    return cells, countries
+            try:
+                lat, lon = float(p[53]), float(p[54])
+            except ValueError:
+                continue
+            root, code, quad, geo_type = p[28], p[26], p[29], p[49]
+            w = max(1, int(p[31] or 1))
+            armed = any(x in p[5] + p[15] for x in ("MIL", "REB", "SPY"))
+            parts = [x.strip() for x in full.split(",") if x.strip()]
+            country = "Palestine" if ("Gaza" in full or "West Bank" in full) else (full if geo_type == "1" else (parts[-1] if parts else ""))
+            c = stats[country]
+            c["all_n"] += 1
+            if quad == "4":
+                c["q4_n"] += 1
+            specific = geo_type in ("3", "4", "5")  # ein Ort, kein Länder-Mittelpunkt
+            key = (round(lat), round(lon))
+            if specific and root in ("19", "20") and (armed or root == "20"):
+                c["war_n"] += 1
+                c["war_w"] += w
+                if code.startswith(("193", "194", "195", "20")):
+                    c["heavy_n"] += 1  # Gefecht mit Schusswaffen, Artillerie, Luftwaffe oder Massengewalt
+                add(war_cells, key, w, lat, lon, full)
+            elif root == "14":
+                c["prot_n"] += 1
+                if code.startswith("145"):
+                    c["riot_n"] += 1
+                if specific:
+                    add(unrest_cells, key, w, lat, lon, full)
+            elif specific and root == "18" and not armed:
+                add(unrest_cells, key, w, lat, lon, full)
+    return stats, war_cells, unrest_cells
+
+
+def classify(c):
+    """"war": anhaltende bewaffnete Kämpfe. "unrest": Unruhen und Spannungen. Sonst None.
+
+    Schwellen sind an Tageswerten geeicht: Kanada, USA, Großbritannien und Australien bleiben unauffällig, Israel,
+    Gaza, Jemen, Ukraine, Sudan oder Somalia werden als Krieg eingestuft."""
+    n = max(1, c["all_n"])
+    if c["war_n"] >= 10 and c["war_n"] / n >= 0.006 and c["war_w"] >= 80:
+        return "war"
+    protests = c["prot_n"] + 2 * c["riot_n"]
+    if (c["q4_n"] >= 30 and c["q4_n"] / n >= 0.17) or (c["prot_n"] / n >= 0.025 and protests >= 40):
+        return "unrest"
+    return None
+
+
+def merge_cells(into, cells):
+    for key, v in cells.items():
+        t = into.setdefault(key, {"w": 0, "n": 0, "best": v["best"]})
+        t["w"] += v["w"]
+        t["n"] += v["n"]
+        if v["best"][0] > t["best"][0]:
+            t["best"] = v["best"]
+
+
+def cell_points(cells, level_of, world, level, limit):
+    out = []
+    for v in sorted(cells.values(), key=lambda v: v["w"], reverse=True):
+        _, lat, lon, full = v["best"]
+        parts = [x.strip() for x in full.split(",") if x.strip()]
+        country = "Palestine" if ("Gaza" in full or "West Bank" in full) else (parts[-1] if parts else "")
+        cid = find_country(country, world)[1]
+        if level_of.get(cid) != level:
+            continue  # Punkte nur in Ländern mit dieser Einstufung, sonst wirkt jede Handvoll Meldungen wie ein Konflikt
+        out.append({"lat": round(lat, 2), "lon": round(lon, 2), "w": v["w"], "n": v["n"],
+                    "name": ", ".join(dict.fromkeys([parts[0], parts[-1]])) if parts else full, "cid": cid})
+        if len(out) >= limit:
+            break
+    return out
 
 
 def conflicts(today, days, max_points, world, reason_countries=20):
-    cells, countries, used = {}, collections.Counter(), []
+    stats, war_cells, unrest_cells, used = collections.defaultdict(collections.Counter), {}, {}, []
     for back in range(1, days + 3):
         if len(used) >= days:
             break
         day = today - dt.timedelta(days=back)
         try:
-            c, k = gdelt_day(day)
+            s, wc, uc = gdelt_day(day)
         except Exception:
             continue  # Tagesdatei noch nicht da: einen Tag weiter zurück
         used.append(day.isoformat())
-        countries.update(k)
-        for key, v in c.items():
-            t = cells.setdefault(key, {"w": 0, "n": 0, "best": v["best"]})
-            t["w"] += v["w"]
-            t["n"] += v["n"]
-            if v["best"][0] > t["best"][0]:
-                t["best"] = v["best"]
+        for name, counter in s.items():
+            stats[name].update(counter)
+        merge_cells(war_cells, wc)
+        merge_cells(unrest_cells, uc)
     if not used:
         raise RuntimeError("keine GDELT-Tagesdatei erreichbar")
-    points = []
-    for v in sorted(cells.values(), key=lambda v: v["w"], reverse=True)[:max_points]:
-        _, lat, lon, full = v["best"]
-        parts = [x.strip() for x in full.split(",") if x.strip()]
-        country = "Palestine" if ("Gaza" in full or "West Bank" in full) else (parts[-1] if parts else "")
-        points.append({"lat": round(lat, 2), "lon": round(lon, 2), "w": v["w"], "n": v["n"],
-                       "name": ", ".join(dict.fromkeys([parts[0], parts[-1]])) if parts else full,
-                       "cid": find_country(country, world)[1]})
-    merged = collections.Counter()
-    for name, w in countries.items():
+
+    merged = collections.defaultdict(collections.Counter)  # Länder unter ihrem Namen auf der Weltkarte zusammenfassen
+    for name, counter in stats.items():
         ne, _ = find_country(name, world)
         if ne:
-            merged[ne] += w
-    top = [{"id": world[n], "name": n, "name_de": de_name(n), "w": w} for n, w in merged.most_common(40)]
-    reasons(top, reason_countries)
-    return {"days": used, "points": points, "countries": top}
+            merged[ne].update(counter)
+    countries = []
+    for ne, c in merged.items():
+        level = classify(c)
+        if level:
+            n = max(1, c["all_n"])
+            countries.append({"id": world[ne], "name": ne, "name_de": de_name(ne), "level": level, "w": c["war_w"], "n": c["war_n"],
+                              "heavy": c["heavy_n"], "share": round(100 * c["q4_n"] / n, 1), "events": c["all_n"],
+                              "protests": c["prot_n"], "riots": c["riot_n"]})
+    countries.sort(key=lambda c: (c["level"] != "war", -(c["w"] if c["level"] == "war" else c["share"])))
+    level_of = {c["id"]: c["level"] for c in countries}
+    result = {"days": used, "countries": countries,
+              "points": cell_points(war_cells, level_of, world, "war", max_points),
+              "unrest": cell_points(unrest_cells, level_of, world, "unrest", 80)}
+    reasons(countries, reason_countries)
+    return result
 
 
+SCHEMA = {"conflict": 2}  # Version der Datenstruktur im Zwischenspeicher
 REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
 
 
@@ -145,7 +210,9 @@ def reasons(countries, how_many):
     """Zu den Ländern mit den meisten Konfliktmeldungen: aktuelle Schlagzeilen als Hinweis auf den Anlass."""
     def one(c):
         name = REASON_NAMES.get(c["name"]) or c["name_de"]
-        q = f"({name}) (Krieg OR Angriff OR Kämpfe OR Beschuss OR Militär OR Anschlag OR Luftangriff OR Raketen) when:2d"
+        words = ("Krieg OR Angriff OR Kämpfe OR Beschuss OR Militär OR Anschlag OR Luftangriff OR Raketen" if c["level"] == "war"
+                 else "Proteste OR Unruhen OR Ausschreitungen OR Spannungen OR Anschlag OR Krise OR Gewalt")
+        q = f"({name}) ({words}) when:2d"
         url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=de&gl=DE&ceid=DE:de"
         try:
             items = sorted(rss_items(fetch(url, 20)), key=lambda i: i["time"], reverse=True)
@@ -164,8 +231,10 @@ def reasons(countries, how_many):
                 break
         return out
 
+    war = [c for c in countries if c["level"] == "war"][:how_many]
+    unrest = [c for c in countries if c["level"] == "unrest"][:10]
     with ThreadPoolExecutor(max_workers=6) as ex:
-        for c, news in zip(countries[:how_many], ex.map(one, countries[:how_many])):
+        for c, news in zip(war + unrest, ex.map(one, war + unrest)):
             c["news"] = news
 
 
@@ -353,13 +422,14 @@ def build(cfg, stories, election_list, today):
     def part(key, fn):
         """Langsame Quellen nur nach Ablauf ihrer Frist neu laden (stündliche Läufe bleiben schlank)."""
         cached = cache.get(key)
-        if cached and not force and cached.get("fetched") and not cached.get("stale"):
+        if cached and not force and cached.get("fetched") and not cached.get("stale") and cached.get("v", 1) == SCHEMA.get(key, 1):
             age_h = (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(cached["fetched"])).total_seconds() / 3600
             if age_h < g["ttl_hours"].get(key, 6):
                 return cached
         try:
             value = fn()
             value["fetched"] = now
+            value["v"] = SCHEMA.get(key, 1)
             cache[key] = value
         except Exception as e:
             notes[key] = f"{type(e).__name__}: {str(e)[:90]}"

@@ -239,6 +239,9 @@
   .gcanvas { display: block; width: 100%; touch-action: none; cursor: grab; }
   .gbtns { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .gbtns button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(160,200,255,.3); background: rgba(10,20,34,.8); color: #e8eef6; font-size: 20px; line-height: 1; }
+  .glegend { position: absolute; left: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 4px; background: rgba(8,16,28,.72); border: 1px solid rgba(160,200,255,.18); border-radius: 8px; padding: 7px 10px; font-size: 11.5px; color: #cfe0f2; pointer-events: none; }
+  .glegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; }
+  @media (max-width: 520px) { .glegend { font-size: 10.5px; padding: 5px 8px; } }
   .gtip { position: absolute; pointer-events: none; background: rgba(5,10,18,.92); color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 6px; opacity: 0; transition: opacity .1s; max-width: 240px; }
   .gtip.on { opacity: 1; }
   .gside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
@@ -276,25 +279,32 @@
   .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
 
   /* Live */
-  .live-wrap { display: grid; gap: 18px 32px; grid-template-columns: minmax(0, 1fr); padding-top: 14px; }
-  @media (min-width: 980px) { .live-wrap { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
-  .pstage { position: relative; background: #05080d; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; border: 1px solid #1a2a3d; display: grid; place-items: center; color: #9fb3c8; text-align: center; padding: 16px; font-size: 14.5px; }
+  .live-wrap { display: grid; gap: 20px 32px; grid-template-columns: minmax(0, 1fr); padding-top: 16px; }
+  @media (min-width: 980px) { .live-wrap { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } .lpanel { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow-y: auto; padding-right: 4px; } }
+  .pstage { position: relative; background: #05080d; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; color: #9fb3c8; text-align: center; padding: 16px; font-size: 14.5px; }
   .pstage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  .ptitle { margin: 12px 0 4px; font: 700 19px/1.3 var(--serif); }
-  .pmeta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+  .pbtn { background: none; border: 0; color: #cfe0f2; display: grid; gap: 4px; place-items: center; } .pbtn b { font: 700 20px var(--serif); } .pbtn span { font-size: 13px; opacity: .75; }
+  .pinfo { margin-top: 12px; } .ptitle { font: 700 22px/1.25 var(--serif); } .psub { color: var(--muted); font-size: 14.5px; margin-top: 3px; }
+  .pmeta { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
   .pmeta a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
-  .lrow { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 2px; font-size: 14.5px; }
-  .lrow:hover, .lrow[aria-current="true"] { background: var(--soft); } .lrow b { display: block; font-weight: 600; line-height: 1.3; }
-  .lrow small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 1px; }
-  .livechip { flex: none; font: 700 10.5px var(--sans); letter-spacing: .06em; color: #fff; background: #d4241a; border-radius: 3px; padding: 2px 6px; margin-top: 2px; text-transform: uppercase; }
-  .livechip.soon { background: #e0a100; color: #111; } .livechip.off { background: var(--line); color: var(--muted); }
+  .pbadge { font: 700 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: var(--soft); color: var(--muted); }
+  .pbadge.live { background: #d4241a; color: #fff; } .pbadge.geplant { background: #e0a100; color: #111; }
+  .tonight { background: var(--soft); border-radius: 12px; padding: 12px 14px; margin-top: 14px; font-size: 14px; line-height: 1.5; }
+  .tonight a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+  .seg.scroll { overflow-x: auto; scrollbar-width: none; max-width: none; margin-top: 0; } .seg.scroll::-webkit-scrollbar { display: none; }
+  .seg.scroll button { flex: 0 0 auto; padding: 9px 13px; font-size: 13px; }
+  .lsec { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 4px; font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .lsec em { font-style: normal; font-weight: 600; background: var(--soft); border-radius: 999px; padding: 1px 8px; }
+  .lgrp { margin: 14px 0 2px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .lrow { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 10px 8px; font-size: 14.5px; color: inherit; text-decoration: none; }
+  .lrow:hover, .lrow[aria-current="true"] { background: var(--soft); }
+  .lt { min-width: 0; } .lt b { display: block; font-weight: 600; line-height: 1.3; }
+  .lt small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 1px; }
+  .sdot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--line); }
+  .sdot.live { background: #d4241a; box-shadow: 0 0 0 4px rgba(212,36,26,.18); } .sdot.soon { background: #e0a100; }
+  .lempty { color: var(--muted); font-size: 14px; padding: 10px 8px; }
+  .lmore { margin-top: 18px; } .lmore summary { cursor: pointer; font-size: 13px; color: var(--muted); padding: 6px 8px; }
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d4241a; margin-left: 6px; vertical-align: 1px; }
-  .tonight { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 14px 16px; margin-bottom: 14px; }
-  .tonight h3 { margin: 0 0 4px; font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
-  .tonight p { margin: 4px 0; font-size: 14.5px; } .tonight a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
-  .chips button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 13px; font-size: 13px; }
-  .chips button:hover { border-color: var(--ink); }
 
   /* Rückmeldung beim Aktualisieren */
   .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 60; display: flex; gap: 10px; align-items: center; width: max-content; max-width: min(580px, 94vw); background: var(--ink); color: var(--bg); padding: 11px 12px 11px 14px; border-radius: 10px; box-shadow: 0 8px 30px var(--shadow); transition: opacity .2s, transform .2s; font-size: 14px; line-height: 1.35; }
@@ -889,14 +899,21 @@ const views = {
     const L = DATA.live;
     if (!L || !L.channels.length) return h("div", { class: "empty" }, "Noch keine Senderliste vorhanden.");
     const chans = L.channels;
-    const stage = h("div", { class: "pstage" }, h("div", {}, h("b", {}, "Sender wählen"), h("br"), "Tippe rechts oder unten auf einen Sender. Der Stream startet erst nach deiner Auswahl."));
-    const meta = h("div");
-    let current = null;
+    const groups = ["Alle", ...new Set(chans.map(c => c.group))];
+    const state = { f: store.get("livef") || "Alle" };
+    if (!groups.includes(state.f)) state.f = "Alle";
+
+    const last = chans.find(c => c.name === store.get("livech"));
+    const placeholder = () => last && last.state !== "extern"
+      ? h("button", { class: "pbtn", onclick: () => play(last) }, h("b", {}, last.name), h("span", {}, "Zuletzt gesehen, zum Abspielen tippen"))
+      : h("div", {}, h("b", {}, "Sender wählen"), h("br"), "Tippe in der Liste auf einen Sender.");
+    const stage = h("div", { class: "pstage" }, placeholder());
+    const meta = h("div", { class: "pinfo" });
 
     const ytLink = (c) => c.video ? "https://www.youtube.com/watch?v=" + c.video : c.handle ? `https://www.youtube.com/@${c.handle}/live` : c.url;
-    const play = (c) => {
+    function play(c) {
       if (c.state === "extern" || (!c.video && !c.channel_id)) { window.open(c.url || ytLink(c), "_blank", "noopener"); return; }
-      current = c; store.set("livech", c.name);
+      store.set("livech", c.name);
       const src = c.video && c.embed
         ? `https://www.youtube-nocookie.com/embed/${c.video}?autoplay=1&rel=0&playsinline=1`
         : `https://www.youtube-nocookie.com/embed/live_stream?channel=${c.channel_id}&autoplay=1&rel=0&playsinline=1`;
@@ -904,45 +921,51 @@ const views = {
         ? h("div", {}, "Der Player braucht die Webadresse und läuft nicht aus einer lokalen Datei.")
         : h("iframe", { src, title: c.name, allow: "autoplay; encrypted-media; picture-in-picture; fullscreen", allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin" }));
       const badge = c.state === "live" ? "Live" : c.state === "geplant" ? "Angekündigt" : "Kein laufender Stream erkannt";
-      meta.replaceChildren(h("div", { class: "ptitle" }, c.name + (c.title ? ": " + c.title : "")),
-        h("div", { class: "pmeta" }, h("span", {}, badge + (c.state === "geplant" && c.start ? ", " + startText(c.start) : "")),
+      meta.replaceChildren(h("div", { class: "ptitle" }, c.name), c.title && h("div", { class: "psub" }, c.title),
+        h("div", { class: "pmeta" }, h("span", { class: "pbadge " + c.state }, badge + (c.state === "geplant" && c.start ? ", " + startText(c.start) : "")),
           h("a", { href: ytLink(c) }, "Auf YouTube öffnen"), c.url && h("a", { href: c.url }, "Offizielle Seite")));
-      document.querySelectorAll(".lrow").forEach(r => r.setAttribute("aria-current", r.dataset.name === c.name));
+      document.querySelectorAll(".lrow").forEach(r => r.setAttribute("aria-current", String(r.dataset.name === c.name)));
       stage.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    };
+    }
 
-    const row = (c, chip, sub) => h("button", { class: "lrow", "data-name": c.name, onclick: () => play(c) },
-      chip, h("span", {}, h("b", {}, c.name), sub && h("small", {}, sub)));
-    const liveRows = chans.filter(c => c.state === "live");
-    const soonRows = chans.filter(c => c.state === "geplant").sort((a, b) => a.start - b.start);
-    const quiet = chans.filter(c => c.state === "aus" || c.state === "unbekannt");
-    const external = chans.filter(c => c.state === "extern" || (c.url && c.state !== "extern"));
-    const groups = [...new Set(chans.map(c => c.group))];
+    const row = (c, kind, sub) => h("button", { class: "lrow", "data-name": c.name, "aria-current": "false", onclick: () => play(c) },
+      h("i", { class: "sdot " + kind }), h("span", { class: "lt" }, h("b", {}, c.name), sub && h("small", {}, sub)));
+    const section = (title, count, kids) => [h("div", { class: "lsec" }, title, count !== "" && h("em", {}, count)), kids];
+
+    const list = h("div");
+    const bar = h("div", { class: "seg scroll" });
+    const renderList = () => {
+      const ok = c => state.f === "Alle" || c.group === state.f;
+      const liveRows = chans.filter(c => c.state === "live" && ok(c));
+      const soonRows = chans.filter(c => c.state === "geplant" && ok(c)).sort((a, b) => a.start - b.start);
+      const quiet = chans.filter(c => (c.state === "aus" || c.state === "unbekannt") && ok(c));
+      const links = chans.filter(c => c.url && ok(c));
+      const byGroup = (rows) => state.f === "Alle"
+        ? groups.slice(1).flatMap(g => { const r = rows.filter(c => c.group === g); return r.length ? [h("div", { class: "lgrp" }, g), r.map(c => row(c, "live", c.title || ""))] : []; })
+        : rows.map(c => row(c, "live", c.title || ""));
+      list.replaceChildren(...[
+        soonRows.length > 0 && section("Angekündigt", String(soonRows.length), soonRows.map(c => row(c, "soon", `${startText(c.start)}${c.title ? ": " + c.title : ""}`))),
+        section("Jetzt live", String(liveRows.length), liveRows.length ? byGroup(liveRows) : h("div", { class: "lempty" }, "Gerade nichts erkannt.")),
+        quiet.length > 0 && h("details", { class: "lmore" }, h("summary", {}, `Weitere Sender ohne laufenden Stream (${quiet.length})`), quiet.map(c => row(c, "off", c.group))),
+        links.length > 0 && section("Offizielle Seiten", "", links.map(c => h("a", { class: "lrow link", href: c.url }, h("i", { class: "sdot off" }), h("span", { class: "lt" }, h("b", {}, c.name), h("small", {}, "öffnet die Seite des Senders"))))),
+      ].flat(Infinity).filter(Boolean));
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.textContent === state.f)));
+    };
+    for (const g of groups) bar.append(h("button", { onclick: () => { state.f = g; store.set("livef", g); renderList(); } }, g));
+    renderList();
 
     const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
-    const tonight = h("section", { class: "tonight" }, h("h3", {}, "Heute Abend"),
-      h("p", {}, h("b", {}, "tagesschau 20 Uhr: "), tagesschauCountdown()),
-      h("p", {}, h("a", { href: "https://www.tagesschau.de/multimedia/livestreams/index.html" }, "Live bei tagesschau.de"),
-        "  ·  ", h("a", { href: "https://www.ardmediathek.de/live" }, "ARD Mediathek live"),
-        ts && ["  ·  ", h("a", { href: ts.url }, "letzte Sendung mit Themen")]));
+    const tonight = h("div", { class: "tonight compact" },
+      h("b", {}, "tagesschau 20 Uhr: "), tagesschauCountdown(), h("br"),
+      h("a", { href: "https://www.tagesschau.de/multimedia/livestreams/index.html" }, "Live bei tagesschau.de"),
+      " · ", h("a", { href: "https://www.ardmediathek.de/live" }, "ARD Mediathek"),
+      ts && [" · ", h("a", { href: ts.url }, "letzte Sendung")]);
 
     const stamp = L.checked ? ago(L.checked) : "";
-    const side = h("aside", { class: "side" },
-      h("div", { class: "blk" }, sec("Jetzt live", liveRows.length + " Sender"), liveRows.length ? liveRows.map(c => row(c, h("span", { class: "livechip" }, "Live"), c.title || c.group)) : h("div", { class: "empty" }, "Gerade nichts erkannt.")),
-      soonRows.length > 0 && h("div", { class: "blk" }, sec("Angekündigt", "Reden, Pressekonferenzen, Sondersendungen"), soonRows.map(c => row(c, h("span", { class: "livechip soon" }, "bald"), `${startText(c.start)}: ${c.title}`))),
-      h("p", { class: "note" }, `Die Liste wird stündlich auf YouTube geprüft${stamp ? " (zuletzt " + stamp + ")" : ""}${L.stale ? ", Abruf gerade gestört, alter Stand" : ""}. Ob ein Stream wirklich läuft, zeigt dir der Player.`));
-
-    const last = store.get("livech");
-    const pre = chans.find(c => c.name === last) || liveRows[0];
-    if (pre && pre.state !== "extern") setTimeout(() => { if (stage.isConnected) { stage.replaceChildren(h("div", {}, h("b", {}, pre.name), h("br"), "Zum Abspielen tippen")); stage.style.cursor = "pointer"; stage.onclick = () => { stage.style.cursor = ""; stage.onclick = null; play(pre); }; } }, 0);
-
     return h("div", { class: "live-wrap" },
-      h("div", {}, tonight, stage, meta,
-        sec("Alle Sender", "antippen zum Abspielen"),
-        groups.map(g => [h("div", { class: "note", style: "margin:12px 0 0;font-weight:700" }, g),
-          h("div", { class: "chips" }, chans.filter(c => c.group === g).map(c => h("button", { onclick: () => play(c) }, (c.state === "live" ? "● " : c.state === "geplant" ? "◔ " : "") + c.name)))]),
-        h("p", { class: "note" }, "● läuft gerade, ◔ angekündigt. Die Videos kommen direkt von YouTube und den Sendern. Manche Sender lassen sich nicht einbetten, dann öffnet „Auf YouTube öffnen“ den Kanal. ZDF, ARD und n-tv bieten ihre Livestreams auf den offiziellen Seiten an (Link bei den Sendern).")),
-      side);
+      h("div", {}, stage, meta, tonight),
+      h("aside", { class: "lpanel" }, bar, list,
+        h("p", { class: "note" }, `Stündlich bei YouTube geprüft${stamp ? " (zuletzt " + stamp + ")" : ""}${L.stale ? ", Abruf gerade gestört, alter Stand" : ""}. Ob ein Stream wirklich läuft, zeigt der Player.`)));
   },
 
   world: () => h("div", { class: "narrow" }, items(DATA.stories.filter(s => s.topic === "world").slice(0, 50), { lead: true, hideTopic: true })),

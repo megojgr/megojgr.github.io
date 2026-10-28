@@ -5,7 +5,7 @@
 
   const COL = {
     ocean1: "#17375a", ocean2: "#08131f", land: "#24384d", border: "rgba(130,170,215,.55)", grid: "rgba(130,170,220,.10)",
-    conflict: "255,77,61", elect: "77,163,255", ok: "#3ddc97", warn: "#ffb020", bad: "#ff4d3d", ink: "#e8eef6",
+    conflict: "255,77,61", unrest: "176,124,255", elect: "77,163,255", ok: "#3ddc97", warn: "#ffb020", bad: "#ff4d3d", ink: "#e8eef6",
   };
   const LEVEL = [["normal", COL.ok], ["gestört", COL.warn], ["stark eingeschränkt", COL.bad]];
 
@@ -65,16 +65,21 @@
       return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
     }
 
-    const defaults = { borders: true, names: true, labels: true, conflict: true, chokes: true, elections: true, carriers: true, quakes: true, minConf: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
+    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
 
     // ---------- Daten aufbereiten
-    const conflict = geo.conflict || { points: [], countries: [], days: [] };
+    const conflict = geo.conflict || { points: [], unrest: [], countries: [], days: [] };
+    const unrestPoints = conflict.unrest || [];
+    const warCountries = conflict.countries.filter(c => c.level === "war");
+    const unrestCountries = conflict.countries.filter(c => c.level === "unrest");
     const maxW = Math.max(1, ...conflict.points.map(p => p.w));
+    const maxU = Math.max(1, ...unrestPoints.map(p => p.w));
     const confCountry = new Map(conflict.countries.map(c => [c.id, c]));
-    const maxCW = Math.max(1, ...conflict.countries.map(c => c.w));
+    const maxCW = Math.max(1, ...warCountries.map(c => c.w));
+    const unrestShown = () => unrestPoints.filter(p => p.w >= maxU * (S.minUnrest / 100) ** 2);
     const cps = geo.chokepoints || [];
     const quakeData = (geo.quakes && geo.quakes.items) || [];
     const nowSec = () => Date.now() / 1000;
@@ -91,7 +96,10 @@
     const canvas = h("canvas", { class: "gcanvas", "aria-label": "Globus" });
     const g2 = canvas.getContext("2d");
     const tip = h("div", { class: "gtip" });
-    const stage = h("div", { class: "gstage" }, canvas, tip,
+    const legend = h("div", { class: "glegend" },
+      [["255,77,61", "Krieg / bewaffneter Konflikt"], ["176,124,255", "Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"]]
+        .map(([c, t]) => h("span", {}, h("i", { style: `background:rgb(${c})` }), t)));
+    const stage = h("div", { class: "gstage" }, canvas, tip, legend,
       h("div", { class: "gbtns" },
         h("button", { onclick: () => { zoomTo(zoom * 1.4); }, "aria-label": "Vergrößern" }, "+"),
         h("button", { onclick: () => { zoomTo(zoom / 1.4); }, "aria-label": "Verkleinern" }, "−"),
@@ -116,7 +124,8 @@
     const stale = (x) => x && x.stale ? " (alter Stand)" : "";
     const controls = h("div", { class: "gctl" },
       h("h3", {}, "Ebenen"),
-      sw("conflict", "Konflikte & Kämpfe", `${conflict.points.length} Orte, ${cDays || "keine Daten"}${stale(conflict)}`),
+      sw("conflict", "Kriege & Kampfhandlungen", `${warCountries.length} Länder, ${cDays || "keine Daten"}${stale(conflict)}`),
+      sw("unrest", "Unruhen & Spannungen", `${unrestCountries.length} Länder: Proteste, Krawalle, Gewalt`),
       sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
@@ -125,7 +134,8 @@
       sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
       sw("labels", "Beschriftung der Punkte"),
       h("h3", {}, "Regler"),
-      slider("minConf", "Konflikte: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
+      slider("minConf", "Kämpfe: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
+      slider("minUnrest", "Unruhen: Mindest-Intensität", 0, 90, 5, v => v + " %", () => renderLists()),
       slider("elDays", "Wahlen: Zeitraum voraus", 7, 365, 1, v => v + " Tage", () => renderLists()),
       slider("minMag", "Erdbeben: Mindest-Stärke", 4.5, 7.5, 0.1, v => "M " + magText(v), () => renderLists()),
       slider("quakeDays", "Erdbeben: letzte Tage", 1, 7, 1, v => v + (v === 1 ? " Tag" : " Tage"), () => renderLists()),
@@ -168,11 +178,14 @@
 
       // Land, Konflikt- und Wahlländer
       g2.beginPath(); path(allLand); g2.fillStyle = COL.land; g2.fill();
-      if (S.conflict) {
-        for (const c of conflict.countries) {
-          const f = featById.get(c.id); if (!f) continue;
-          g2.beginPath(); path(f); g2.fillStyle = `rgba(${COL.conflict},${(0.10 + 0.42 * Math.sqrt(c.w / maxCW)).toFixed(3)})`; g2.fill();
-        }
+      // Einfärbung: Rot nur für Krieg und bewaffnete Konflikte, Violett für Unruhen und Spannungen
+      for (const c of conflict.countries) {
+        const war = c.level === "war";
+        if (!(war ? S.conflict : S.unrest)) continue;
+        const f = featById.get(c.id); if (!f) continue;
+        g2.beginPath(); path(f);
+        g2.fillStyle = war ? `rgba(${COL.conflict},${(0.2 + 0.4 * Math.sqrt(c.w / maxCW)).toFixed(3)})` : `rgba(${COL.unrest},0.24)`;
+        g2.fill();
       }
       const elMap = elByCountry();
       if (S.elections) {
@@ -227,6 +240,20 @@
           g2.fillStyle = "#ffd9d4"; g2.beginPath(); g2.arc(x, y, 1.8, 0, 2 * Math.PI); g2.fill();
           if (isSel("conflict", p)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r * 0.7 + 3, 0, 2 * Math.PI); g2.stroke(); }
           hits.push({ x, y, r: Math.max(12, r * 0.6), type: "conflict", item: p });
+        }
+      }
+      // Unruhen und Spannungen: kleinere violette Punkte
+      if (S.unrest) {
+        for (const p of unrestShown()) {
+          if (!vis(p.lon, p.lat)) continue;
+          const [x, y] = proj([p.lon, p.lat]);
+          const r = (3 + 8 * Math.sqrt(p.w / maxU)) * Math.min(1.5, Math.max(0.8, zoom * 0.85));
+          const rg = g2.createRadialGradient(x, y, 0, x, y, r);
+          rg.addColorStop(0, `rgba(${COL.unrest},.75)`); rg.addColorStop(0.5, `rgba(${COL.unrest},.28)`); rg.addColorStop(1, `rgba(${COL.unrest},0)`);
+          g2.fillStyle = rg; g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI); g2.fill();
+          g2.strokeStyle = `rgba(${COL.unrest},.9)`; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(x, y, Math.max(2.2, r * 0.32), 0, 2 * Math.PI); g2.stroke();
+          if (isSel("unrest", p)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r * 0.7 + 3, 0, 2 * Math.PI); g2.stroke(); }
+          hits.push({ x, y, r: Math.max(11, r * 0.6), type: "unrest", item: p });
         }
       }
       // Erdbeben: Ringe nach Stärke, neuere kräftiger; Meeresbeben (Tsunami-Flag der USGS) mit blauem Außenring
@@ -330,7 +357,7 @@
       const [x, y] = local(e), hit = nearest(x, y);
       canvas.style.cursor = hit ? "pointer" : "grab";
       if (hit) {
-        tip.textContent = hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
+        tip.textContent = hit.type === "unrest" ? `Unruhen: ${hit.item.name}` : hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
           : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.item.name;
         tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
       } else tip.classList.remove("on");
@@ -391,6 +418,13 @@
           h("p", {}, `${item.n} Ereignisse mit ${item.w} Medienmeldungen in den letzten 2 Tagen. Das ist die Zahl der Meldungen, kein Maß für Opfer oder Ausmaß.`),
           f && newsBlock(cc && cc.news && cc.news.length ? cc.news : null, storiesFor(f), `Anlass: aktuelle Meldungen zu ${cname}`),
           h("p", { class: "note" }, "Maschinell aus Nachrichten gewonnen (GDELT). Orte können falsch zugeordnet sein. Die Schlagzeilen gehören zum ganzen Land, nicht nur zu diesem Ort."));
+      } else if (type === "unrest") {
+        lon = item.lon; lat = item.lat;
+        const f = item.cid && featById.get(item.cid), cc = item.cid && confCountry.get(item.cid);
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, "Unruhen & Spannungen"),
+          h("p", {}, `${item.n} Ereignisse (Proteste, Krawalle, Gewalt) mit ${item.w} Medienmeldungen in den letzten 2 Tagen.`),
+          f && newsBlock(cc && cc.news && cc.news.length ? cc.news : null, storiesFor(f), `Hintergrund: aktuelle Meldungen zu ${nameOf(f)}`),
+          h("p", { class: "note" }, "Maschinell aus Nachrichten gewonnen (GDELT). Die Einstufung ist eine Schätzung, kein Urteil über die Lage."));
       } else if (type === "chokepoint") {
         lon = item.lon; lat = item.lat;
         const [lvl, col] = LEVEL[item.level];
@@ -422,8 +456,12 @@
         const f = item, c = confCountry.get(f.id), e = elByCountry().get(f.id) || elections.find(x => x.id === f.id);
         const ll = centroid.get(f.id); lon = ll[0]; lat = ll[1];
         node = h("div", {}, h("h3", {}, nameOf(f)),
-          c ? h("p", {}, `Konfliktmeldungen: ${c.w} in den letzten 2 Tagen (Rang ${conflict.countries.indexOf(c) + 1} von ${conflict.countries.length}).`) : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen in den Daten."),
-          newsBlock(c && c.news && c.news.length ? c.news : null, storiesFor(f), c ? "Anlass: aktuelle Meldungen zum Konflikt" : "Meldungen zu diesem Land"),
+          c && c.level === "war" ? [h("div", { class: "gtag bad" }, "Krieg / bewaffneter Konflikt"),
+            h("p", {}, `${c.n} Kampfereignisse mit ${c.w} Medienmeldungen in den letzten 2 Tagen, davon ${c.heavy} schwere Gefechte (Schusswaffen, Artillerie, Luftangriffe).`)]
+            : c ? [h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, "Unruhen & Spannungen"),
+              h("p", {}, `${c.share} % der Ereignisse sind Gewalt oder Zwang${c.protests ? `, ${c.protests} Proteste` : ""}${c.riots ? `, ${c.riots} Krawalle` : ""} in den letzten 2 Tagen.`)]
+            : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen oder Unruhen in den Daten."),
+          newsBlock(c && c.news && c.news.length ? c.news : null, storiesFor(f), c ? (c.level === "war" ? "Anlass: aktuelle Meldungen zum Konflikt" : "Hintergrund: aktuelle Meldungen") : "Meldungen zu diesem Land"),
           e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."));
         lon = ll[0]; lat = ll[1];
       }
@@ -436,13 +474,16 @@
     function renderLists() {
       const row = (label, sub, color, onclick) => h("button", { class: "grow", onclick },
         color && h("i", { style: `background:${color}` }), h("span", {}, label, sub && h("small", {}, sub)));
-      const conf = confShown().slice(0, 8);
+      const warList = warCountries.filter(c => c.w >= maxCW * (S.minConf / 100) ** 2).slice(0, 8);
+      const unrestList = unrestCountries.slice(0, 8);
       const sorted = cps.slice().sort((a, b) => b.level - a.level || (a.pct ?? 0) - (b.pct ?? 0));
       const els = elShown().slice(0, 10);
       const qs = quakesShown().sort((a, b) => b.mag - a.mag).slice(0, 8);
       lists.replaceChildren(
-        S.conflict && h("div", {}, h("h3", {}, "Brennpunkte"),
-          conf.length ? conf.map(p => row(p.name, `${p.w} Meldungen`, `rgb(${COL.conflict})`, () => select("conflict", p))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
+        S.conflict && h("div", {}, h("h3", {}, "Kriege & Kampfhandlungen"),
+          warList.length ? warList.map(c => row(c.name_de, `${c.n} Kampfereignisse, ${c.w} Meldungen`, `rgb(${COL.conflict})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
+        S.unrest && h("div", {}, h("h3", {}, "Unruhen & Spannungen"),
+          unrestList.length ? unrestList.map(c => row(c.name_de, c.protests ? `${c.protests} Proteste, ${c.share} % Gewaltanteil` : `${c.share} % Gewaltanteil`, `rgb(${COL.unrest})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts auffällig.")),
         S.chokes && h("div", {}, h("h3", {}, "Meerengen"),
           sorted.map(c => row(c.name, c.pct == null ? "" : `Verkehr ${pct(c.pct)} ggü. ${c.base_label}`, LEVEL[c.level][1], () => select("chokepoint", c)))),
         S.elections && h("div", {}, h("h3", {}, "Wahlen"),

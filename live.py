@@ -49,15 +49,23 @@ def check(ch):
     out["state"] = "aus"
     if chan:
         out["channel_id"] = chan.group(1)
+    st = status.group(1) if status else None
+    out["dbg"] = f"{st}|live={'\"isLive\":true' in page}|video={bool(video)}|{len(page) // 1000}k"
     if video:
+        # Hat der Kanal ein laufendes oder angekündigtes Video, leitet /live direkt darauf (canonical = watch?v=...).
+        # Von Servern in Rechenzentren verlangt YouTube manchmal eine Anmeldung (LOGIN_REQUIRED) und liefert dann
+        # weniger Angaben: dann gilt ein vorhandenes Live-Video trotzdem als laufend.
         out["video"] = video.group(1)
         out["title"] = html.unescape(title.group(1)) if title else ""
-        if status and status.group(1) == "OK" and '"isLive":true' in page:
-            out["state"] = "live"
-        elif status and status.group(1) == "LIVE_STREAM_OFFLINE" and sched:
+        if st == "LIVE_STREAM_OFFLINE" and sched:
             start = int(sched.group(1))
             if start > dt.datetime.now(dt.timezone.utc).timestamp() - 3 * 3600:
                 out["state"], out["start"] = "geplant", start
+        elif st == "OK":
+            if '"isLive":true' in page:
+                out["state"] = "live"
+        elif st != "LIVE_STREAM_OFFLINE":
+            out["state"] = "live"
         if out["state"] == "aus":
             out["video"], out["title"] = None, ""
         else:

@@ -358,6 +358,9 @@ def main():
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
           f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
     lv = live_data["channels"]
+    for c in lv:
+        if c["state"] in ("aus", "unbekannt") and c.get("dbg"):
+            print(f"  Live-Diagnose {c['name']}: {c['dbg']}" + (f" {c['error']}" if c.get("error") else ""))
     print(f"Live: {sum(c['state'] == 'live' for c in lv)} live, {sum(c['state'] == 'geplant' for c in lv)} geplant, "
           f"{live_data['failed']} Abrufe fehlgeschlagen" + (" (alter Stand)" if live_data.get("stale") else ""))
     print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")

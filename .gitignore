@@ -1,5 +1,7 @@
 docs/
 __pycache__/
+# ändert sich bei jedem Lauf, würde stündlich einen Commit erzeugen
+cache/live.json
 # Depot-Positionen gehören nicht ins öffentliche Repo (im Workflow kommen sie aus dem Secret DEPOT_JSON)
 depot.json
 depot*.local.json

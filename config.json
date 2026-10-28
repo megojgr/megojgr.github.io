@@ -1,0 +1,69 @@
+{
+  "max_age_hours": 36,
+  "heute_per_topic": 6,
+  "feeds": [
+    {"name": "Tagesschau", "url": "https://www.tagesschau.de/index~rss2.xml", "hint": "general", "lang": "de"},
+    {"name": "Tagesschau Wirtschaft", "url": "https://www.tagesschau.de/wirtschaft/index~rss2.xml", "hint": "markets", "lang": "de"},
+    {"name": "Handelsblatt", "url": "https://www.handelsblatt.com/contentexport/feed/top-themen", "hint": "markets", "lang": "de"},
+    {"name": "FAZ Finanzen", "url": "https://www.faz.net/rss/aktuell/finanzen/", "hint": "markets", "lang": "de"},
+    {"name": "Spiegel", "url": "https://www.spiegel.de/schlagzeilen/index.rss", "hint": "general", "lang": "de"},
+    {"name": "Zeit", "url": "https://newsfeed.zeit.de/index", "hint": "general", "lang": "de"},
+    {"name": "Deutsche Welle", "url": "https://rss.dw.com/rdf/rss-de-all", "hint": "world", "lang": "de"},
+    {"name": "BBC World", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "hint": "world", "lang": "en"},
+    {"name": "Al Jazeera", "url": "https://www.aljazeera.com/xml/rss/all.xml", "hint": "world", "lang": "en"},
+    {"name": "CNBC", "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114", "hint": "markets", "lang": "en"},
+    {"name": "MarketWatch", "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories", "hint": "markets", "lang": "en"},
+    {"name": "Google News: DAX & Börse", "url": "https://news.google.com/rss/search?q=DAX+B%C3%B6rse+Aktien+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "markets", "lang": "de", "google": true},
+    {"name": "Google News: Unternehmen", "url": "https://news.google.com/rss/search?q=Quartalszahlen+OR+%C3%9Cbernahme+OR+B%C3%B6rsengang+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "markets", "lang": "de", "google": true},
+    {"name": "Google News: Geopolitik", "url": "https://news.google.com/rss/search?q=(China+OR+Taiwan+OR+Russland+OR+Iran+OR+Nahost)+Konflikt+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true},
+    {"name": "Google News: Ukraine", "url": "https://news.google.com/rss/search?q=Ukraine+Krieg+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true},
+    {"name": "Google News: Wahlen", "url": "https://news.google.com/rss/search?q=Wahl+Wahlergebnis+Wahlen+when:1d&hl=de&gl=DE&ceid=DE:de", "hint": "world", "lang": "de", "google": true}
+  ],
+  "topics": {
+    "markets": [
+      "dax", "mdax", "börse", "aktie", "aktien", "anleger", "kurs$", "kurse", "index", "dow jones", "nasdaq", "s&p",
+      "wall street", "fed$", "ezb", "zins", "zinsen", "leitzins", "inflation", "anleihe", "rendite", "ölpreis", "gold$",
+      "bitcoin", "krypto", "etf", "dividende", "quartal", "gewinn", "umsatz", "prognose", "übernahme", "fusion", "ipo$",
+      "börsengang", "konzern", "unternehmen", "insolvenz", "rezession", "konjunktur", "bip$", "arbeitslos", "zoll", "zölle",
+      "handelskrieg", "stock$", "stocks$", "shares$", "earnings", "market$", "markets$", "investor", "bond$", "bonds$",
+      "yield", "treasury", "oil$", "merger", "acquisition", "profit", "revenue", "guidance", "rally$", "selloff",
+      "crypto", "tariff", "nvidia", "apple", "tesla", "microsoft", "amazon", "bank$", "banken", "ceo$", "wirtschaft",
+      "economy", "inflation", "interest rate", "rate cut", "rate hike"
+    ],
+    "world": [
+      "krieg", "war$", "ukraine", "russland", "russia", "putin", "selenskyj", "zelensky", "nato$", "china", "taiwan",
+      "xi jinping", "usa$", "us$", "trump", "biden", "wahl", "wahlen", "wahlkampf", "election", "präsident", "president",
+      "regierung", "government", "israel", "gaza", "iran", "hamas", "hisbollah", "hezbollah", "libanon", "syrien",
+      "nahost", "middle east", "sanktion", "sanction", "geopolit", "waffenstillstand", "ceasefire", "angriff", "attack",
+      "rakete", "missile", "militär", "military", "armee", "troops", "eu$", "kreml", "kremlin", "peking", "beijing",
+      "washington", "indien", "india", "nordkorea", "north korea", "venezuela", "referendum", "koalition", "kanzler",
+      "bundestag", "parlament", "parliament", "premier", "prime minister", "netanjahu", "netanyahu", "putsch", "coup",
+      "vote$", "poll$", "polls$", "diplomat"
+    ]
+  },
+  "blocklist": [
+    "bundesliga", "fußball", "football", "champions league", "formel 1", "formula 1", "tennis", "handball", "promi",
+    "horoskop", "wetter", "rezept", "krimi", "tatort", "dschungelcamp", "premier league", "nba$", "nfl$", "olympi",
+    "sport$", "bachelor", "serie$", "film$", "kino", "konzert", "gewinnspiel", "lotto"
+  ],
+  "watchlist": [
+    "Nvidia", "Apple", "Microsoft", "Tesla", "Amazon", "Alphabet", "Meta", "TSMC", "ASML", "SAP", "Siemens",
+    "Allianz", "Volkswagen", "Rheinmetall", "Deutsche Bank", "Bitcoin"
+  ],
+  "quotes": [
+    {"name": "DAX", "symbol": "^GDAXI"},
+    {"name": "S&P 500", "symbol": "^GSPC"},
+    {"name": "Nasdaq", "symbol": "^IXIC"},
+    {"name": "Euro Stoxx 50", "symbol": "^STOXX50E"},
+    {"name": "EUR/USD", "symbol": "EURUSD=X"},
+    {"name": "Gold", "symbol": "GC=F"},
+    {"name": "Öl (Brent)", "symbol": "BZ=F"},
+    {"name": "Bitcoin", "symbol": "BTC-EUR"}
+  ],
+  "polymarket": {
+    "fetch_limit": 150,
+    "max_events": 24,
+    "include_tags": ["politics", "geopolitics", "elections", "world", "middle-east", "economy", "finance", "business", "crypto", "tech", "fed", "global-elections", "ukraine", "china", "russia"],
+    "exclude_tags": ["sports", "nba", "nfl", "soccer", "football", "mlb", "nhl", "tennis", "esports", "culture", "pop-culture", "music", "movies", "celebrities"]
+  }
+}

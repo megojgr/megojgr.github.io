@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mego News</title>
+<style>
+  :root {
+    --bg: #f6f6f3; --card: #ffffff; --ink: #1a1a18; --muted: #6b6b66; --line: #e4e3dd;
+    --accent: #1f5fd6; --up: #1a8a4a; --down: #c23a2b; --chip: #eceae3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121211; --card: #1c1c1a; --ink: #ecebe6; --muted: #9a9992; --line: #2f2f2b;
+      --accent: #6b9bff; --up: #4cc27f; --down: #ef6f60; --chip: #2a2a26;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  header { padding: 14px 16px 0; max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .ticker { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; max-width: 860px; margin: 0 auto; scrollbar-width: none; }
+  .ticker::-webkit-scrollbar { display: none; }
+  .q { flex: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 104px; }
+  .q b { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .q span { font-variant-numeric: tabular-nums; font-size: 14px; }
+  .q em { font-style: normal; font-size: 12px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  nav { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav div { display: flex; gap: 4px; overflow-x: auto; max-width: 860px; margin: 0 auto; padding: 0 12px; scrollbar-width: none; }
+  nav button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 15px; padding: 12px 10px; cursor: pointer; border-bottom: 2px solid transparent; }
+  nav button[aria-selected="true"] { color: var(--ink); border-color: var(--accent); font-weight: 600; }
+  main { max-width: 860px; margin: 0 auto; padding: 14px 16px 48px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .card h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.3; }
+  .card h3 a:hover { color: var(--accent); }
+  .card p { margin: 4px 0 8px; color: var(--muted); font-size: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+  .chip { background: var(--chip); border-radius: 999px; padding: 2px 8px; }
+  .chip.src:hover { color: var(--accent); }
+  .chip.watch { background: var(--accent); color: #fff; }
+  .chip.hot { color: var(--down); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filters button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .row { display: grid; grid-template-columns: minmax(80px, 1.2fr) 2fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 3px 0; }
+  .row .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .pct { font-variant-numeric: tabular-nums; min-width: 78px; text-align: right; }
+  .pct small { font-size: 11px; margin-left: 4px; }
+  .note { color: var(--muted); font-size: 12px; margin: 10px 0 16px; }
+  .empty { color: var(--muted); padding: 28px 0; text-align: center; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  footer { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 12px; }
+  footer .bad { color: var(--down); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mego News</h1>
+  <div class="sub" id="updated"></div>
+</header>
+<div class="ticker" id="ticker"></div>
+<nav><div role="tablist" id="tabs"></div></nav>
+<main id="view"></main>
+<footer id="foot"></footer>
+
+<script>
+const DATA = __DATA__;
+
+const TABS = [
+  ["heute", "Heute"],
+  ["markets", "Märkte"],
+  ["world", "Welt"],
+  ["pm", "Prediction Markets"],
+  ["watch", "Watchlist"],
+];
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v;
+    else if (k === "href") { if (/^https?:\/\//.test(v)) { el.href = v; el.target = "_blank"; el.rel = "noopener noreferrer"; } }
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return el;
+}
+
+const de = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 });
+const dePct = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2, minimumFractionDigits: 2, signDisplay: "exceptZero" });
+
+function ago(iso) {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  if (min < 60) return `vor ${min} Min.`;
+  if (min < 1440) return `vor ${Math.round(min / 60)} Std.`;
+  return `vor ${Math.round(min / 1440)} Tg.`;
+}
+
+function money(x) {
+  if (x >= 1e9) return de.format(x / 1e9) + " Mrd. $";
+  if (x >= 1e6) return de.format(x / 1e6) + " Mio. $";
+  if (x >= 1e3) return de.format(x / 1e3) + " Tsd. $";
+  return de.format(x) + " $";
+}
+
+function story(s, showTopic) {
+  const topicName = { markets: "Märkte", world: "Welt" }[s.topic];
+  return h("article", { class: "card" },
+    h("h3", {}, h("a", { href: s.url }, s.title)),
+    s.summary && h("p", {}, s.summary),
+    h("div", { class: "meta" },
+      showTopic && h("span", { class: "chip" }, topicName),
+      s.watch.map(w => h("span", { class: "chip watch" }, w)),
+      s.sources.length > 2 && h("span", { class: "chip hot" }, `${s.sources.length} Quellen`),
+      s.sources.slice(0, 5).map(x => h("a", { class: "chip src", href: x.url }, x.name)),
+      h("span", {}, ago(s.time)),
+      s.lang === "en" && h("span", { class: "chip" }, "EN")));
+}
+
+function list(items, showTopic) {
+  return items.length ? items.map(s => story(s, showTopic)) : h("div", { class: "empty" }, "Keine Meldungen gefunden.");
+}
+
+const views = {
+  heute: () => [h("p", { class: "note" }, "Die wichtigsten Meldungen der letzten 36 Stunden, nach Anzahl der Quellen, Themenbezug und Aktualität gewichtet."), list(DATA.heute, true)],
+  markets: () => list(DATA.stories.filter(s => s.topic === "markets").slice(0, 40)),
+  world: () => list(DATA.stories.filter(s => s.topic === "world").slice(0, 40)),
+  watch: () => {
+    const w = DATA.stories.filter(s => s.watch.length);
+    return [h("p", { class: "note" }, "Meldungen, in denen eines deiner Stichwörter vorkommt. Die Liste steht in config.json unter „watchlist“."), list(w, true)];
+  },
+  pm: () => {
+    const cats = ["Alle", ...new Set(DATA.polymarket.map(e => e.category))];
+    const box = h("div");
+    const render = (cat) => {
+      box.replaceChildren(...DATA.polymarket.filter(e => cat === "Alle" || e.category === cat).map(pmCard));
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === cat));
+    };
+    const bar = h("div", { class: "filters" }, cats.map(c => h("button", { onclick: () => render(c) }, c)));
+    render("Alle");
+    return [
+      h("p", { class: "note" }, "Wahrscheinlichkeiten laut Polymarket (Marktpreis = geschätzte Chance). Das sind Stimmungsbilder von Wettenden, keine Fakten. Sortiert nach 24-Std.-Handelsvolumen."),
+      DATA.status.polymarket_error ? h("div", { class: "empty" }, "Polymarket nicht erreichbar: " + DATA.status.polymarket_error) : [bar, box],
+    ];
+  },
+};
+
+function pmCard(e) {
+  return h("article", { class: "card" },
+    h("h3", {}, h("a", { href: e.url }, e.title)),
+    e.rows.map(r => {
+      const p = Math.round(r.p * 100);
+      const d = r.d1 == null ? null : r.d1 * 100;
+      return h("div", { class: "row" },
+        h("span", { class: "lbl", title: r.label }, r.label),
+        h("div", { class: "bar" }, h("i", { style: `width:${Math.max(1, p)}%` })),
+        h("span", { class: "pct" }, p < 1 ? "<1 %" : p + " %",
+          d != null && Math.abs(d) >= 0.5 && h("small", { class: d > 0 ? "up" : "down" }, (d > 0 ? "▲" : "▼") + Math.abs(Math.round(d)))));
+    }),
+    e.more > 0 && h("div", { class: "note" }, `+ ${e.more} weitere Optionen`),
+    h("div", { class: "meta", style: "margin-top:8px" },
+      h("span", { class: "chip" }, e.category),
+      h("span", {}, "24 Std.: " + money(e.vol24h)),
+      h("span", {}, "gesamt: " + money(e.vol)),
+      e.end && h("span", {}, "Ende: " + e.end.split("-").reverse().join(".")))
+  );
+}
+
+function show(id) {
+  if (!views[id]) id = "heute";
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.id === id));
+  document.getElementById("view").replaceChildren(...[views[id]()].flat(Infinity));
+  try { localStorage.setItem("tab", id); } catch {}
+  history.replaceState(null, "", "#" + id);
+}
+
+function init() {
+  const g = new Date(DATA.generated);
+  document.getElementById("updated").textContent =
+    "Stand: " + g.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " Uhr";
+
+  document.getElementById("ticker").replaceChildren(...DATA.quotes.filter(q => q.price != null).map(q =>
+    h("div", { class: "q" }, h("b", {}, q.name),
+      h("span", {}, de.format(q.price)),
+      q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, dePct.format(q.pct) + " %"))));
+
+  document.getElementById("tabs").replaceChildren(...TABS.map(([id, label]) =>
+    h("button", { role: "tab", "data-id": id, onclick: () => show(id) }, label)));
+
+  const failed = DATA.status.feeds.filter(f => f.error);
+  document.getElementById("foot").replaceChildren(
+    `${DATA.status.feeds.length - failed.length} von ${DATA.status.feeds.length} Quellen erreichbar. `,
+    ...failed.map(f => h("span", { class: "bad" }, `${f.name} ausgefallen. `)),
+    "Nur Überschriften und Teaser, Volltext bei den Originalquellen.");
+
+  let start = location.hash.slice(1);
+  if (!views[start]) { try { start = localStorage.getItem("tab"); } catch {} }
+  show(start);
+}
+init();
+</script>
+</body>
+</html>

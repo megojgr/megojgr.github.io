@@ -1,40 +1,40 @@
 {
  "date": "2026-10-28",
- "generated": "2026-10-28T15:28:01.751969+00:00",
+ "generated": "2026-10-28T15:55:55.193331+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25683.75,
-   "pct": 0.363,
+   "price": 25690.27,
+   "pct": 0.389,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7736.48,
-   "pct": 0.18,
+   "price": 7736.67,
+   "pct": 0.182,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26464.33,
-   "pct": -0.051,
+   "price": 26458.24,
+   "pct": -0.074,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52522.63,
-   "pct": 0.277,
+   "price": 52520.7,
+   "pct": 0.273,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6164.33,
-   "pct": -0.006,
+   "price": 6167.21,
+   "pct": 0.041,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 17.28,
-   "pct": -1.37,
+   "price": 17.2,
+   "pct": -1.826,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1138,
-   "pct": 0.0668,
+   "price": 1.114,
+   "pct": 0.078,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4057.0,
-   "pct": -0.432,
+   "price": 4057.5,
+   "pct": -0.42,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 111.7,
-   "pct": 2.093,
+   "price": 112.06,
+   "pct": 2.422,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 72389.19,
-   "pct": 0.273,
+   "price": 72233.72,
+   "pct": 0.057,
    "alert": null
   }
  ],
@@ -92,49 +92,21 @@
    "title": "Ukraine-Krieg - Waffenruhe um russisch besetzte Frontstadt Oleschky wird eingehalten",
    "url": "https://www.deutschlandfunk.de/waffenruhe-um-russisch-besetzte-frontstadt-oleschky-wird-eingehalten-100.html",
    "topic": "world",
-   "n": 13,
-   "alert": false
-  },
-  {
-   "title": "Region Toledo - Mehr als 60 Tote nach Kollision von zwei Zügen in Spanien",
-   "url": "https://www.deutschlandfunk.de/mehr-als-60-tote-nach-kollision-von-zwei-zuegen-in-spanien-100.html",
-   "topic": "world",
-   "n": 8,
-   "alert": false
-  },
-  {
-   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
-   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
-   "topic": "markets",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "Israel - Netanjahu liegt bei Parlamentswahl vorn, aber ohne Mehrheit - beide Lager sehen Regierungsauftrag",
-   "url": "https://www.deutschlandfunk.de/netanjahu-liegt-bei-parlamentswahl-vorn-aber-ohne-mehrheit-beide-lager-sehen-regierungsauftrag-100.html",
-   "topic": "world",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "40 DAX-Aktien jetzt rund um die Uhr handelbar",
-   "url": "https://www.tagesschau.de/wirtschaft/finanzen/dax-aktien-handel-100.html",
-   "topic": "markets",
-   "n": 4,
+   "n": 12,
    "alert": false
   },
   {
    "title": "USA - Brasilianischer Wahlverlierer Flávio Bolsonaro in Miami gelandet",
    "url": "https://www.deutschlandfunk.de/brasilianischer-wahlverlierer-fl-vio-bolsonaro-in-miami-gelandet-100.html",
    "topic": "world",
-   "n": 5,
+   "n": 10,
    "alert": false
   },
   {
-   "title": "Quartalszahlen: Deutsche Bank erzielt Milliardengewinn und übertrifft Erwartungen – Aktie an der Dax-Spitze",
-   "url": "https://www.handelsblatt.com/finanzen/banken-versicherungen/banken/banken-deutsche-bank-uebertrifft-erwartungen-aktie-steigt-deutlich/100263571.html",
+   "title": "Region Toledo - Mindestens 68 Tote nach Kollision von zwei Zügen in Spanien",
+   "url": "https://www.deutschlandfunk.de/mindestens-68-tote-nach-kollision-von-zwei-zuegen-in-spanien-100.html",
    "topic": "markets",
-   "n": 4,
+   "n": 10,
    "alert": false
   },
   {
@@ -145,10 +117,24 @@
    "alert": false
   },
   {
-   "title": "Ukraine-Krieg: Trump kündigt baldiges Treffen mit Putin und Selenskyj an",
-   "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxPUU9NUnI2UGdDUGl0cGdQZjl0NnRrZGExV1dJYnI5ZzAxeEl5UVJrTXNmSVVHS0lVUURxemlEenhiV3ZZR3RwMjRGMkpDUFhnclRXbEI3YWhTenVPUTNpcEowSmxuUUdIbFY1S3ExUXE3YkF6OVNJSm5Ya0R5YmtOUHVwbzk5Uk1sTzBYbkRmTFk4VVlhY3BvbmdETVpuRUxMN3I3dmxLZi1BV1BMcHFZaklOclhJdFZKRU9JblctUVFJdw?oc=5",
+   "title": "„Sehr bald“: Trump kündigt Treffen mit Putin und Selenskyj an",
+   "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNajJ6VjZBb2dpc0o5MTRqZWVYdXBWSWVWa0NmbVhiM3ktVENOYWxzanJsbEprYzJaR0xBcklLVnVxMFhLUUtlTlgxdEVseFRJOXp0M29YUW94SW9meE14TVFIdGJBMjh2bm90OFF1MlNJaE41YXgxS0tHd3pFeFFtWEVhaGpadWhfVWJLeFhyaVo1SXFhY09jVU5lNE4yZw?oc=5",
    "topic": "world",
    "n": 5,
+   "alert": false
+  },
+  {
+   "title": "40 DAX-Aktien jetzt rund um die Uhr handelbar",
+   "url": "https://www.tagesschau.de/wirtschaft/finanzen/dax-aktien-handel-100.html",
+   "topic": "markets",
+   "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Größter IPO Indiens: Jio Platforms startet Frontalangriff auf US-Tech-Giganten",
+   "url": "https://www.n-tv.de/wirtschaft/Jio-Platforms-startet-Frontalangriff-auf-US-Tech-Giganten-id31463650.html",
+   "topic": "markets",
+   "n": 4,
    "alert": false
   },
   {
@@ -157,40 +143,54 @@
    "topic": "germany",
    "n": 5,
    "alert": false
+  },
+  {
+   "title": "For Israel’s Neighbors in Middle East, the Election Offers Little Hope of a Reset",
+   "url": "https://www.nytimes.com/2026/10/28/world/middleeast/israel-election-middle-east-relations.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Flávio Bolsonaro Lands in Miami After Fleeing Brazil",
+   "url": "https://www.nytimes.com/2026/10/28/world/americas/flavio-bolsonaro-us-miami-brazil-trump.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
   }
  ],
  "pm": [
-  {
-   "title": "Prime Minister of Israel after the next election?",
-   "url": "https://polymarket.com/event/who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
-   "source": "Polymarket",
-   "lead": "Benjamin Netanyahu",
-   "p": 0.465,
-   "d1": 0.24
-  },
   {
    "title": "Fed Decision in October?",
    "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
    "source": "Polymarket",
    "lead": "No change",
-   "p": 0.9475,
-   "d1": 0.004
+   "p": 0.9535,
+   "d1": 0.009
+  },
+  {
+   "title": "Prime Minister of Israel after the next election?",
+   "url": "https://polymarket.com/event/who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
+   "source": "Polymarket",
+   "lead": "Benjamin Netanyahu",
+   "p": 0.435,
+   "d1": 0.25
   },
   {
    "title": "Israeli Legislative Election Winner",
    "url": "https://polymarket.com/event/israeli-legislative-election-winner",
    "source": "Polymarket",
    "lead": "Likud",
-   "p": 0.991,
-   "d1": 0.756
+   "p": 0.993,
+   "d1": 0.758
   },
   {
    "title": "Israel Election: Likud # of seats?",
    "url": "https://polymarket.com/event/israel-election-likud-of-seats",
    "source": "Polymarket",
    "lead": "25-29",
-   "p": 0.973,
-   "d1": 0.813
+   "p": 0.9805,
+   "d1": 0.8355
   },
   {
    "title": "Balance of Power: 2026 Midterms",
@@ -205,7 +205,7 @@
    "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
    "source": "Polymarket",
    "lead": "↓ 80,000",
-   "p": 0.765,
+   "p": 0.825,
    "d1": null
   }
  ]

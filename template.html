@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#17160f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -287,6 +288,41 @@
   .wpanel .wtitle { font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
   @media (max-width: 560px) { .wpanel { padding: 14px 14px 10px; } .wpanel .wico { font-size: 44px; } .wpanel .wnow b { font-size: 38px; } .wdays .wday { grid-template-columns: 24px 62px 1fr auto 48px; } .wdays .wday .wp { display: none; } }
   .show .yt { display: inline-block; margin: 0 0 8px; font-size: 13.5px; font-weight: 600; color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+  /* Quartalszahlen */
+  .efilter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 14px 0 0; }
+  .efilter .seg { margin: 0; flex: 0 1 380px; } .efilter .seg button { padding: 9px 10px; }
+  .echip { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; color: var(--muted); min-height: 36px; }
+  .echip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .eday { margin: 28px 0 10px; padding-top: 7px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .eday h3 { margin: 0; font: 700 22px/1.2 var(--serif); } .eday span { color: var(--muted); font-size: 13px; }
+  .egrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); }
+  .ecard { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 2px; padding: 15px 18px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .ecard.beat { border-top-color: var(--up); } .ecard.miss { border-top-color: var(--down); }
+  .ehead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .ename { margin: 0; font: 700 21px/1.2 var(--serif); letter-spacing: -.005em; }
+  .esym { display: inline-block; vertical-align: 3px; margin-left: 8px; font: 700 11px var(--sans); letter-spacing: .06em; padding: 2px 7px; border-radius: 3px; background: var(--soft); color: var(--muted); }
+  .ecap { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; line-height: 1.3; } .ecap b { display: block; font-size: 13.5px; color: var(--ink); font-weight: 600; }
+  .ewhen { font-size: 12.5px; color: var(--muted); margin-top: -4px; }
+  .eres { display: grid; gap: 9px; }
+  .everdict { display: inline-block; justify-self: start; font: 700 13.5px var(--sans); padding: 4px 11px; border-radius: 999px; background: var(--soft); color: var(--muted); }
+  .everdict.beat { background: color-mix(in srgb, var(--up) 15%, transparent); color: var(--up); }
+  .everdict.miss { background: color-mix(in srgb, var(--down) 15%, transparent); color: var(--down); }
+  .ebars { display: grid; gap: 5px; } .eb { display: grid; grid-template-columns: 66px 1fr 76px; gap: 9px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .eb b { text-align: right; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ebar { height: 9px; background: var(--soft); border-radius: 5px; overflow: hidden; } .ebar i { display: block; height: 100%; border-radius: 5px; background: var(--line); }
+  .ebar i.est { background: color-mix(in srgb, var(--muted) 55%, transparent); } .ebar i.beat { background: var(--up); } .ebar i.miss { background: var(--down); } .ebar i.flat { background: var(--ink); }
+  .ereact { font-size: 13.5px; color: var(--muted); } .ereact b { font-variant-numeric: tabular-nums; }
+  .eexp { font-size: 14px; line-height: 1.45; } .eexp b { font-weight: 600; }
+  .elinks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+  .ebtn { display: flex; flex-direction: column; justify-content: center; gap: 1px; min-height: 52px; padding: 8px 14px; border-radius: 10px; background: var(--ink); color: var(--bg); font-size: 14.5px; font-weight: 700; line-height: 1.2; text-decoration: none; min-width: 0; }
+  .ebtn small { font-size: 11.5px; font-weight: 500; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ebtn.alt { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+  .ebtn:hover { opacity: .88; }
+  .emore { font-size: 12.5px; color: var(--muted); } .emore a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+  .enews { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; font-size: 14px; line-height: 1.35; }
+  .enews a:hover { color: var(--link); text-decoration: underline; text-underline-offset: 3px; } .enews small { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
+  .emorebtn { margin: 18px 0 4px; }
+  @media (max-width: 560px) { .ecard { padding: 14px 14px 12px; } .ename { font-size: 19px; } .eday h3 { font-size: 20px; } .efilter .seg { flex-basis: 100%; } }
   .wwarn { border-left: 4px solid #e0a100; background: var(--soft); padding: 8px 10px; margin: 6px 0; font-size: 13.5px; }
   .wwarn.l3, .wwarn.l4 { border-color: #b3261e; } .wwarn small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.35; }
   .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
@@ -404,10 +440,10 @@ let CURRENT = "heute";
 
 // Sechs Hauptbereiche; alles Weitere liegt in Unterreitern (Archiv, Wahlen & Termine, Wetten, Depot, Deutschland)
 const TABS = [["heute", "Heute"], ["region", "Wuppertal"], ["welt", "Welt"], ["markets", "Märkte"], ["globe", "Globus"], ["live", "Live"]];
-const SUBS = { heute: ["Heute", "Archiv"], welt: ["Meldungen", "Wahlen & Termine", "Wetten"], markets: ["Übersicht", "Depot"] };
+const SUBS = { heute: ["Heute", "Archiv"], welt: ["Meldungen", "Wahlen & Termine", "Wetten"], markets: ["Übersicht", "Quartalszahlen", "Depot"] };
 // Alte Kurznamen (Lesezeichen, Verweise) führen in den passenden Unterreiter
 const ROUTES = { depot: ["markets", "Depot"], wahlen: ["welt", "Wahlen & Termine"], pm: ["welt", "Wetten"], world: ["welt", "Meldungen"],
-                 germany: ["region", "Deutschland"], verlauf: ["heute", "Archiv"], watch: ["markets", "Übersicht"] };
+                 germany: ["region", "Deutschland"], verlauf: ["heute", "Archiv"], watch: ["markets", "Übersicht"], zahlen: ["markets", "Quartalszahlen"] };
 const ICONS = {
   heute: '<path d="M4 5h12v14H6a2 2 0 0 1-2-2V5z"/><path d="M16 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 12h6M7 15h3"/>',
   region: '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
@@ -737,6 +773,14 @@ function glance() {
   if (soon.length) rows.push(["Heute & morgen", soon.map((t, i) => (i ? "  ·  " : "") + t.title)]);
   const ts = DATA.briefings.find(b => b.name === "tagesschau 20 Uhr");
   if (ts && ts.topics.length) rows.push(["tagesschau 20 Uhr", [ts.topics.slice(0, 3).join("  ·  "), " ", h("a", { href: "#germany", onclick: (e) => { e.preventDefault(); show("germany"); } }, "alle Themen"), ts.youtube && [" · ", h("a", { href: ts.youtube.url, target: "_blank", rel: "noopener" }, "▶ YouTube")]]]);
+  const E = DATA.earnings;
+  if (E && E.items && E.items.length) {
+    const t = berlinDay(), y = berlinDay(-1);
+    const names = (day) => E.items.filter(i => i.date === day && earnBig(i)).sort((a, b) => b.cap_b - a.cap_b).slice(0, 4).map(i => i.name.replace(/ \(Google\)/, ""));
+    const nt = names(t), ny = names(y);
+    if (nt.length || ny.length) rows.push(["Quartalszahlen", [nt.length > 0 && `Heute: ${nt.join(", ")}`, nt.length > 0 && ny.length > 0 && "  ·  ", ny.length > 0 && `Gestern: ${ny.join(", ")}`, "  ",
+      h("a", { href: "#zahlen", onclick: (ev) => { ev.preventDefault(); show("zahlen"); } }, "alle Quartalszahlen")]]);
+  }
   const mb = DATA.briefings.find(b => b.name.includes("Morning Briefing"));
   if (mb) rows.push(["Morning Briefing", h("a", { href: mb.url }, mb.title.replace(/^Morning Briefing:\s*/, ""))]);
   let move = null;
@@ -869,7 +913,112 @@ function lockCard() {
     pw, h("label", {}, keep, " Auf diesem Gerät merken"), h("button", { class: "btn primary", onclick: go }, "Entsperren"), err);
 }
 
+// ------------------------------------------------------------------ Quartalszahlen
+const WHEN = { pre: "vor US-Börsenöffnung", after: "nach US-Börsenschluss" };
+const MONTH = { Jan: "Jan.", Feb: "Feb.", Mar: "März", Apr: "Apr.", May: "Mai", Jun: "Juni", Jul: "Juli", Aug: "Aug.", Sep: "Sep.", Oct: "Okt.", Nov: "Nov.", Dec: "Dez." };
+const usd = (n) => n == null ? "–" : n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " $";
+const berlinDay = (offset = 0) => new Date(Date.now() + offset * 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+function dayLabel(iso) {
+  const base = new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  return iso === berlinDay() ? "Heute, " + base : iso === berlinDay(-1) ? "Gestern, " + base : iso === berlinDay(1) ? "Morgen, " + base : base;
+}
+const earnBig = (it) => it.watch || it.cap_b >= 200;
+
+function epsBars(r) {
+  const vals = [r.est, r.eps].filter(v => v != null);
+  const max = Math.max(...vals.map(Math.abs), 0.01);
+  const cls = r.verdict === "übertroffen" ? "beat" : r.verdict === "verfehlt" ? "miss" : "flat";
+  const row = (label, v, c) => h("div", { class: "eb" }, h("span", {}, label),
+    h("div", { class: "ebar" }, h("i", { class: c, style: `width:${Math.max(3, Math.abs(v) / max * 100)}%` })), h("b", {}, usd(v)));
+  return h("div", { class: "ebars", title: "Gewinn je Aktie (EPS): Erwartung der Analysten und tatsächliches Ergebnis" },
+    r.est != null && row("Erwartet", r.est, "est"), row("Ergebnis", r.eps, cls));
+}
+
+function earnCard(it) {
+  const r = it.result, L = it.links, upcoming = it.status === "upcoming" || it.status === "pending";
+  const cls = r ? (r.verdict === "übertroffen" ? "beat" : r.verdict === "verfehlt" ? "miss" : "") : "";
+  const q = (it.quarter || "").replace("/", " ").split(" "), quarter = q.length === 2 ? `${MONTH[q[0]] || q[0]} ${q[1]}` : it.quarter;
+  const orig = L.ir ? { url: L.ir, label: "Investor Relations" } : { url: L.sec, label: "SEC-Einreichungen" };
+  const best = it.news && it.news[0];
+  const analysis = best ? { url: best.url, label: best.source || "Bericht lesen" } : { url: L.search, label: "Berichte in Google News" };
+  let body;
+  if (r) {
+    const s = r.surprise;
+    const text = r.verdict === "übertroffen" ? `▲ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % über der Erwartung`
+      : r.verdict === "verfehlt" ? `▼ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % unter der Erwartung` : "≈ im Rahmen der Erwartung";
+    body = h("div", { class: "eres" }, h("span", { class: "everdict " + cls }, text), epsBars(r),
+      it.reaction && h("div", { class: "ereact" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+  } else if (upcoming) {
+    const parts = [it.est != null && ["Erwartet: ", h("b", {}, usd(it.est)), " je Aktie", it.est_n ? ` (${it.est_n} Analysten)` : ""],
+      it.prev_eps != null && [it.est != null ? " · " : "", "Vorjahr: ", h("b", {}, usd(it.prev_eps))]].filter(Boolean);
+    body = h("div", { class: "eexp" }, parts.length ? parts : "Noch keine Erwartung veröffentlicht.",
+      it.status === "pending" && h("div", { class: "note", style: "margin:4px 0 0" }, "Heute erwartet. Die Kennzahlen erscheinen, sobald die Datenquelle sie hat."),
+      it.reaction && h("div", { class: "ereact", style: "margin-top:4px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+  } else {
+    body = h("div", { class: "eexp" }, h("span", { class: "note", style: "margin:0" }, "Zahlen sind veröffentlicht. Die genauen Kennzahlen liefert die Datenquelle meist erst mit etwas Verzögerung nach."),
+      it.reaction && h("div", { class: "ereact", style: "margin-top:6px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+  }
+  const cap = it.cap_b >= 1000 ? (it.cap_b / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Bio. $" : it.cap_b + " Mrd. $";
+  return h("article", { class: "ecard " + cls },
+    h("div", { class: "ehead" },
+      h("h4", { class: "ename" }, it.name, h("span", { class: "esym" }, it.symbol)),
+      it.cap_b > 0 && h("div", { class: "ecap" }, "Börsenwert", h("b", {}, cap))),
+    h("div", { class: "ewhen" }, [quarter && `Quartal bis ${quarter}`, WHEN[it.when] || (upcoming ? "Zeitpunkt noch offen" : null)].filter(Boolean).join("  ·  ")),
+    body,
+    h("div", { class: "elinks" },
+      h("a", { class: "ebtn", href: orig.url, target: "_blank", rel: "noopener", title: `Originalquelle: ${orig.label} von ${it.name}` }, "Originalquelle ↗", h("small", {}, orig.label)),
+      h("a", { class: "ebtn alt", href: analysis.url, target: "_blank", rel: "noopener", title: best ? best.title : "Berichte und Analysen zu den Zahlen" }, (upcoming ? "Vorschau" : "Analyse") + " ↗", h("small", {}, analysis.label))),
+    (L.ir || it.news.length > 1) && h("div", { class: "emore" }, L.ir && [h("a", { href: L.sec, target: "_blank", rel: "noopener" }, "SEC-Einreichungen"), "  ·  "],
+      h("a", { href: L.search, target: "_blank", rel: "noopener" }, "Alle Berichte in Google News")),
+    it.news.length > 0 && h("ul", { class: "enews" }, it.news.slice(0, 3).map(n => h("li", {},
+      h("a", { href: n.url, target: "_blank", rel: "noopener" }, n.title_de || n.title),
+      h("small", {}, [n.source, n.src_lang && "übersetzt aus dem Englischen", ago(n.time)].filter(Boolean).join("  ·  "))))));
+}
+
 const views = {
+  earnings: () => {
+    const E = DATA.earnings;
+    if (!E || !E.items || !E.items.length) return h("div", { class: "empty" }, E && E.error ? E.error : "Noch keine Quartalszahlen vorhanden.");
+    const today = berlinDay();
+    const done = E.items.filter(i => i.date <= today && i.status !== "upcoming" && !(i.status === "pending" && i.date === today));
+    const next = E.items.filter(i => !done.includes(i));
+    const state = { f: store.get("earnf") || "Gemeldet", big: store.get("earnbig") === "1", more: 0 };
+    const box = h("div"), bar = h("div", { class: "seg" }), chip = h("button", { class: "echip" }, "Nur große Namen");
+    const PAGE = 24;
+    const render = () => {
+      const src = (state.f === "Gemeldet" ? done : next).filter(i => !state.big || earnBig(i));
+      const rows = state.f === "Gemeldet" ? src.slice().sort((a, b) => b.date.localeCompare(a.date) || b.cap_b - a.cap_b) : src.slice().sort((a, b) => a.date.localeCompare(b.date) || b.cap_b - a.cap_b);
+      const shown = rows.slice(0, PAGE * (state.more + 1));
+      const kids = [];
+      let cur = null, grid = null;
+      for (const it of shown) {
+        if (it.date !== cur) {
+          cur = it.date;
+          const n = rows.filter(x => x.date === cur).length;
+          kids.push(h("div", { class: "eday" }, h("h3", {}, dayLabel(cur)), h("span", {}, `${n} Unternehmen`)));
+          grid = h("div", { class: "egrid" }); kids.push(grid);
+        }
+        grid.append(earnCard(it));
+      }
+      if (!shown.length) kids.push(h("div", { class: "empty" }, state.f === "Gemeldet" ? "Keine gemeldeten Zahlen in diesem Filter." : "Keine anstehenden Termine in diesem Filter."));
+      if (rows.length > shown.length) kids.push(h("button", { class: "btn emorebtn", onclick: () => { state.more++; render(); } }, `Weitere ${rows.length - shown.length} anzeigen`));
+      box.replaceChildren(...kids);
+      bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === state.f)));
+      chip.setAttribute("aria-pressed", String(state.big));
+      store.set("earnf", state.f); store.set("earnbig", state.big ? "1" : "0");
+    };
+    for (const [f, list] of [["Gemeldet", done], ["Demnächst", next]]) bar.append(h("button", { "data-f": f, onclick: () => { state.f = f; state.more = 0; render(); } }, `${f} (${list.length})`));
+    chip.addEventListener("click", () => { state.big = !state.big; state.more = 0; render(); });
+    render();
+    return h("div", {},
+      sec("Quartalszahlen", `Stand ${ago(E.checked)}`),
+      h("p", { class: "note", style: "margin-top:0" }, "Große börsennotierte Unternehmen: gemeldete Ergebnisse mit Erwartung der Analysten, Kursreaktion und Berichten sowie die nächsten Termine. Zu jeder Firma führt „Originalquelle“ zur Investor-Relations-Seite des Unternehmens und „Analyse“ zu einem aktuellen Bericht über die Zahlen."),
+      E.stale && h("p", { class: "note bad" }, "Die Datenquelle war beim letzten Abruf nicht erreichbar, gezeigt wird der letzte bekannte Stand."),
+      h("div", { class: "efilter" }, bar, chip),
+      box,
+      h("p", { class: "note", style: "margin-top:22px" }, "Termine und Ergebnisse je Aktie (EPS) von Nasdaq, Kursbewegungen von Yahoo Finance, Berichte über Google News. Ergebnisse erscheinen in der Quelle teils erst Stunden nach der Veröffentlichung. Erwartung und Ergebnis beziehen sich auf den Gewinn je Aktie, nicht auf den Umsatz. Keine Anlageberatung."));
+  },
+
   heute: () => h("div", { class: "layout" },
     h("div", {}, glance(), sec("Top-Meldungen", "letzte 36 Stunden"), items(DATA.heute, { lead: true })),
     sidebar()),
@@ -1155,7 +1304,7 @@ const BUILD = {
   heute: (s) => s === "Archiv" ? views.verlauf() : views.heute(),
   region: () => views.region(),
   welt: (s) => (s === "Wahlen & Termine" ? views.wahlen : s === "Wetten" ? views.pm : views.world)(),
-  markets: (s) => s === "Depot" ? views.depot() : views.markets(),
+  markets: (s) => s === "Depot" ? views.depot() : s === "Quartalszahlen" ? views.earnings() : views.markets(),
   globe: () => views.globe(),
   live: () => views.live(),
 };

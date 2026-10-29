@@ -50,7 +50,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add archive cache/geo.json cache/elections.json
+          git add archive cache/geo.json cache/elections.json cache/earnings.json
           if ! git diff --cached --quiet; then
             git commit -m "Archiv $(date -u +%F)"
             for i in 1 2 3; do
@@ -58,13 +58,23 @@ jobs:
               git rebase --abort 2>/dev/null || true
             done
           fi
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      # Fertige Seite für Cloudflare Pages bereitstellen (der Job "cloudflare" holt sie ab)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs
+          retention-days: 1
+      # GitHub Pages: abschaltbar über die Repository-Variable PAGES_OFF=true (nach dem Umzug zu Cloudflare)
+      - if: ${{ vars.PAGES_OFF != 'true' }}
+        uses: actions/configure-pages@v5
+      - if: ${{ vars.PAGES_OFF != 'true' }}
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs
 
   deploy:
     needs: build
+    if: ${{ vars.PAGES_OFF != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: pages
@@ -76,12 +86,34 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
+  # Cloudflare Pages: läuft nur, wenn die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID gesetzt sind
+  # (Anleitung: Anleitung_Cloudflare.md). Ohne Secrets bleibt der Job wirkungslos.
+  cloudflare:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Seite holen
+        if: ${{ env.CF_TOKEN != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: docs
+      - name: Zu Cloudflare Pages hochladen
+        if: ${{ env.CF_TOKEN != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy docs --project-name=${{ vars.CF_PROJECT || 'mego-news' }} --branch=main --commit-dirty=true
+
   # Kette ohne Token: Der Lauf wartet knapp eine Stunde und startet dann den nächsten.
   # Das darf der eingebaute GITHUB_TOKEN (workflow_dispatch löst als einzige Ausnahme neue Läufe aus).
   # Es wartet immer nur ein Lauf: Ein neuer Warte-Job ersetzt den alten (cancel-in-progress),
   # so verdoppeln sich Ketten auch bei mehreren manuellen Starts nicht.
   naechster:
-    needs: [build, deploy]
+    needs: [build, deploy, cloudflare]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 70

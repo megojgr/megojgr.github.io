@@ -17,6 +17,7 @@ from pathlib import Path
 import archive
 import briefings
 import depot
+import earnings
 import elections
 import geo
 import live
@@ -302,6 +303,7 @@ def main():
         elect_f = ex.submit(elections.build, cfg, today)
         live_f = ex.submit(live.build, cfg)
         local_f = ex.submit(localinfo.build, cfg)
+        earn_f = ex.submit(earnings.build, cfg, NOW.date())
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
         pm_top, pm_window, pm_error = pm_f.result()
@@ -310,6 +312,7 @@ def main():
         election_list, election_note = elect_f.result()
         live_data = live_f.result()
         local_data = local_f.result()
+        earn_data = earn_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
@@ -324,6 +327,9 @@ def main():
         shown += [s for s in stories if s["topic"] == topic][:40]
     shown += [s for s in stories if s["watch"] or s["alert"]]
     shown += sorted((s for s, _ in private), key=lambda s: s["score"], reverse=True)[:80]
+    if earn_data:
+        for it in earn_data["items"]:
+            shown += it["news"]
     translation_note = translate.apply(list({id(s): s for s in shown}.values()))
     geo_data = geo.build(cfg, stories, election_list, NOW.date())
 
@@ -345,6 +351,7 @@ def main():
         "geo": geo_data,
         "live": live_data,
         "local": local_data,
+        "earnings": earn_data,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -388,6 +395,11 @@ def main():
     print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW; "
           f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
           f"{len(local_data['warnings'])} DWD-Warnungen" + (f"; Fehler: {local_data['errors']}" if local_data["errors"] else ""))
+    if earn_data:
+        its = earn_data["items"]
+        print(f"Quartalszahlen: {len(its)} Termine, {sum(i['status'] == 'reported' for i in its)} mit Ergebnis, "
+              f"{sum(1 for i in its if i['reaction'])} mit Kursreaktion" + (f"; {earn_data['error']}" if earn_data.get("error") else "")
+              + (" (alter Stand)" if earn_data.get("stale") else ""))
     print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))
     lv = live_data["channels"]
     for c in lv:

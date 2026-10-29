@@ -1,0 +1,212 @@
+{
+ "date": "2026-10-29",
+ "generated": "2026-10-29T04:36:10.701388+00:00",
+ "quotes": [
+  {
+   "name": "DAX",
+   "group": "index",
+   "price": 25704.02,
+   "pct": 0.443,
+   "alert": null
+  },
+  {
+   "name": "S&P 500",
+   "group": "index",
+   "price": 7743.98,
+   "pct": 0.277,
+   "alert": null
+  },
+  {
+   "name": "Nasdaq",
+   "group": "index",
+   "price": 26549.852,
+   "pct": 0.272,
+   "alert": null
+  },
+  {
+   "name": "Dow Jones",
+   "group": "index",
+   "price": 52475.1,
+   "pct": 0.186,
+   "alert": null
+  },
+  {
+   "name": "Euro Stoxx 50",
+   "group": "index",
+   "price": 6167.81,
+   "pct": 0.051,
+   "alert": null
+  },
+  {
+   "name": "Nikkei 225",
+   "group": "index",
+   "price": 64295.85,
+   "pct": 0.534,
+   "alert": null
+  },
+  {
+   "name": "Hang Seng",
+   "group": "index",
+   "price": 23106.71,
+   "pct": 0.051,
+   "alert": null
+  },
+  {
+   "name": "VIX (Angstindex)",
+   "group": "index",
+   "price": 16.91,
+   "pct": -3.482,
+   "alert": null
+  },
+  {
+   "name": "EUR/USD",
+   "group": "index",
+   "price": 1.1148,
+   "pct": -0.078,
+   "alert": null
+  },
+  {
+   "name": "Gold",
+   "group": "index",
+   "price": 4048.0,
+   "pct": -0.089,
+   "alert": null
+  },
+  {
+   "name": "Öl (Brent)",
+   "group": "index",
+   "price": 110.22,
+   "pct": -1.272,
+   "alert": null
+  },
+  {
+   "name": "Bitcoin (EUR)",
+   "group": "index",
+   "price": 71683.25,
+   "pct": -1.406,
+   "alert": null
+  }
+ ],
+ "heute": [
+  {
+   "title": "Aktuelles zum Krieg in der Ukraine",
+   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "topic": "world",
+   "n": 22,
+   "alert": false
+  },
+  {
+   "title": "Bolsonaro in Miami gelandet: Was zur Flucht bekannt ist",
+   "url": "https://www.zdfheute.de/politik/ausland/brasilien-wahl-bolsonaro-ermittlungen-geldwaesche-ausreiseverbot-100.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Flucht nach Florida: Bolsonaro erklärt sich zum gewählten Präsidenten – und rudert dann ein Stück zurück",
+   "url": "https://www.faz.net/aktuell/politik/ausland/flavio-bolsonaro-erklaert-sich-zum-praesidenten-brasiliens-201630574.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Liveblog zur Israel-Wahl: ++ Likud wirft arabischen Parteien Wahlbetrug vor ++",
+   "url": "https://www.tagesschau.de/newsticker/liveblog-israel-wahl-100.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Kanada und die Europäische Union: Kanada wird vorerst wohl kein »assoziiertes« EU-Mitglied",
+   "url": "https://www.zeit.de/politik/ausland/2026-10/kanada-eu-assoziierte-mitgliedschaft-gipfel-ursula-von-der-leyen-friedrich-merz",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Quartalszahlen der Tech-Riesen: Zwei Seiten der KI-Medaille: Google zahlt, Microsoft kassiert",
+   "url": "https://www.n-tv.de/wirtschaft/Zwei-Seiten-der-KI-Medaille-Google-zahlt-Microsoft-kassiert-id31470084.html",
+   "topic": "markets",
+   "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Zugunglück in Spanien: Mindestens 68 Tote – brisante Tonaufnahmen aufgetaucht",
+   "url": "https://www.derwesten.de/aktuelles/spanien-zuege-tote-unfall-toledo-aufnahmen-id302188820.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "US-Börsen: US-Börsen schließen leicht im Plus – Anleger halten sich trotz Fed-Zinsentscheid zurück",
+   "url": "https://www.handelsblatt.com/finanzen/maerkte/marktberichte/dow-jones-sp-500-nasdaq-us-boersen-schliessen-leicht-im-plus-anleger-halten-sich-zurueck/100265527.html",
+   "topic": "markets",
+   "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Anthropic-Börsengang: Wie Amazon und Google am Aufstieg von Anthropic mitverdienen",
+   "url": "https://www.wiwo.de/finanzen/boerse/anthropic-boersengang-wie-amazon-und-google-am-aufstieg-von-anthropic-mitverdienen/100265547.html",
+   "topic": "markets",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Deutsche Börse startet 24/7-Handel für 40 Dax-Aktien über 360X",
+   "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOWlJPTkNDc1hfYkc3MklZQTNLR3ZjSnk2VV85RUVLLVFBZDNkMEQwZzlZZDZaSGJSZE0ybVhJTWFtTjBUVVIzZklhYUxJbFRjYUotVGsxUUtDWkpHbjJWOEhwWmhfdzhpX0dWUllnc084YmM4TVFyVWZNSFJ2VURUdGJHMmNld2tzVlhtdThn?oc=5",
+   "topic": "markets",
+   "n": 5,
+   "alert": false
+  }
+ ],
+ "pm": [
+  {
+   "title": "Prime Minister of Israel after the next election?",
+   "url": "https://polymarket.com/event/who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
+   "source": "Polymarket",
+   "lead": "Benjamin Netanyahu",
+   "p": 0.455,
+   "d1": -0.05
+  },
+  {
+   "title": "Which party will win the House in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.925,
+   "d1": 0.01
+  },
+  {
+   "title": "Fed Decision in December?",
+   "url": "https://polymarket.com/event/fed-decision-in-december-20260729232808632",
+   "source": "Polymarket",
+   "lead": "25 bps increase",
+   "p": 0.775,
+   "d1": 0.01
+  },
+  {
+   "title": "Israel Election: Likud # of seats?",
+   "url": "https://polymarket.com/event/israel-election-likud-of-seats",
+   "source": "Polymarket",
+   "lead": "25-29",
+   "p": 0.9835,
+   "d1": 0.0435
+  },
+  {
+   "title": "Israeli Legislative Election Winner",
+   "url": "https://polymarket.com/event/israeli-legislative-election-winner",
+   "source": "Polymarket",
+   "lead": "Likud",
+   "p": 0.9935,
+   "d1": 0.0025
+  },
+  {
+   "title": "Balance of Power: 2026 Midterms",
+   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
+   "source": "Polymarket",
+   "lead": "Democrats Sweep",
+   "p": 0.665,
+   "d1": 0.01
+  }
+ ]
+}

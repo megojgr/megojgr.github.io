@@ -587,9 +587,41 @@
   "date": "2026-11-03",
   "end": "2026-11-03",
   "approx": false,
+  "country_en": "American Samoa",
+  "what_en": "House of Representatives",
+  "url": "https://en.wikipedia.org/wiki/2026_American_Samoa_elections"
+ },
+ {
+  "date": "2026-11-03",
+  "end": "2026-11-03",
+  "approx": false,
+  "country_en": "Guam",
+  "what_en": "Governor and Legislature",
+  "url": "https://en.wikipedia.org/wiki/2026_Guam_gubernatorial_election"
+ },
+ {
+  "date": "2026-11-03",
+  "end": "2026-11-03",
+  "approx": false,
+  "country_en": "Northern Mariana Islands",
+  "what_en": "Governor, Senate and House of Representatives",
+  "url": "https://en.wikipedia.org/wiki/2026_Northern_Mariana_Islands_gubernatorial_election"
+ },
+ {
+  "date": "2026-11-03",
+  "end": "2026-11-03",
+  "approx": false,
   "country_en": "United States",
   "what_en": "Senate and House of Representatives",
   "url": "https://en.wikipedia.org/wiki/2026_United_States_Senate_elections"
+ },
+ {
+  "date": "2026-11-03",
+  "end": "2026-11-03",
+  "approx": false,
+  "country_en": "United States Virgin Islands",
+  "what_en": "Governor and Legislature",
+  "url": "https://en.wikipedia.org/wiki/2026_United_States_Virgin_Islands_gubernatorial_election"
  },
  {
   "date": "2026-11-05",

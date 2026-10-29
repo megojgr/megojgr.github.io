@@ -1,40 +1,40 @@
 {
  "date": "2026-10-29",
- "generated": "2026-10-29T16:03:32.638247+00:00",
+ "generated": "2026-10-29T16:05:40.739972+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 26078.75,
-   "pct": 1.458,
+   "price": 26066.48,
+   "pct": 1.41,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7722.23,
-   "pct": -0.281,
+   "price": 7722.39,
+   "pct": -0.279,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 26240.02,
-   "pct": -1.167,
+   "price": 26227.484,
+   "pct": -1.214,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52313.88,
-   "pct": -0.307,
+   "price": 52343.54,
+   "pct": -0.251,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6217.16,
-   "pct": 0.8,
+   "price": 6215.35,
+   "pct": 0.771,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 16.41,
-   "pct": -2.953,
+   "price": 16.46,
+   "pct": -2.66,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1164,
-   "pct": 0.067,
+   "price": 1.1162,
+   "pct": 0.0446,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4036.3,
-   "pct": -0.378,
+   "price": 4035.0,
+   "pct": -0.41,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 109.74,
-   "pct": -1.702,
+   "price": 109.75,
+   "pct": -1.693,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 73116.12,
-   "pct": 1.258,
+   "price": 73220.26,
+   "pct": 1.402,
    "alert": null
   }
  ],
@@ -110,6 +110,13 @@
    "alert": false
   },
   {
+   "title": "Blaulicht: Unfallflucht am Klingelholl in Wuppertal: Polizei sucht Zeugen",
+   "url": "https://www.wz.de/nrw/wuppertal/unfallflucht-am-klingelholl-in-wuppertal-polizei-sucht-zeugen_aid-157456101",
+   "topic": "germany",
+   "n": 7,
+   "alert": false
+  },
+  {
    "title": "Wirtschaft - US-Zentralbank Fed lässt Leitzins kurz vor den Midterms unverändert",
    "url": "https://www.deutschlandfunk.de/us-zentralbank-fed-laesst-leitzins-kurz-vor-den-midterms-unveraendert-100.html",
    "topic": "markets",
@@ -120,13 +127,6 @@
    "title": "Nach Flucht in die USA - Bolsonaro erklärt sich zum \"Anführer\" von Brasilien",
    "url": "https://www.deutschlandfunk.de/bolsonaro-erklaert-sich-zum-anfuehrer-von-brasilien-100.html",
    "topic": "world",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "Blaulicht: Unfallflucht am Klingelholl in Wuppertal: Polizei sucht Zeugen",
-   "url": "https://www.wz.de/nrw/wuppertal/unfallflucht-am-klingelholl-in-wuppertal-polizei-sucht-zeugen_aid-157456101",
-   "topic": "germany",
    "n": 6,
    "alert": false
   },

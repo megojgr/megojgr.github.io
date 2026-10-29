@@ -86,7 +86,7 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # Cloudflare Pages: läuft nur, wenn die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID gesetzt sind
+  # Cloudflare: läuft nur, wenn die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID gesetzt sind
   # (Anleitung: Anleitung_Cloudflare.md). Ohne Secrets bleibt der Job wirkungslos.
   cloudflare:
     needs: build
@@ -100,13 +100,15 @@ jobs:
         with:
           name: site
           path: docs
-      - name: Zu Cloudflare Pages hochladen
+      # Cloudflare empfiehlt für neue Seiten Workers mit statischen Dateien: Der Worker wird beim ersten Lauf angelegt
+      - name: Zu Cloudflare hochladen
         if: ${{ env.CF_TOKEN != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
+          wranglerVersion: "4"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy docs --project-name=${{ vars.CF_PROJECT || 'mego-news' }} --branch=main --commit-dirty=true
+          command: deploy --assets=docs --name=${{ vars.CF_PROJECT || 'mego-news' }} --compatibility-date=2026-10-01
 
   # Kette ohne Token: Der Lauf wartet knapp eine Stunde und startet dann den nächsten.
   # Das darf der eingebaute GITHUB_TOKEN (workflow_dispatch löst als einzige Ausnahme neue Läufe aus).

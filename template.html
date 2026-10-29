@@ -322,6 +322,22 @@
   .enews { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; font-size: 14px; line-height: 1.35; }
   .enews a:hover { color: var(--link); text-decoration: underline; text-underline-offset: 3px; } .enews small { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
   .emorebtn { margin: 18px 0 4px; }
+  .elink { font: inherit; letter-spacing: inherit; background: none; border: 0; padding: 0; margin: 0; color: inherit; text-align: left; cursor: pointer; }
+  .elink::after { content: " ›"; color: var(--muted); font-weight: 400; }
+  .elink:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .echg { font-size: 13.5px; color: var(--muted); } .echg b { font-variant-numeric: tabular-nums; }
+  .ekpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0 4px; }
+  .ekpi > div { border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 4px; padding: 10px 14px 11px; }
+  .ekpi > div.beat { border-top-color: var(--up); } .ekpi > div.miss { border-top-color: var(--down); }
+  .ekpi .l { display: block; font: 700 11px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .ekpi b { display: block; font: 700 32px/1.15 var(--serif); font-variant-numeric: tabular-nums; margin: 3px 0 1px; }
+  .ekpi .s { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+  .ehist { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .ehist th { font: 700 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  .ehist td { text-align: right; padding: 7px 4px; border-bottom: 1px solid var(--line); } .ehist th:first-child, .ehist td:first-child { text-align: left; }
+  .ehist tr.now td { font-weight: 700; }
+  .elegend { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; } .elegend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--ink); margin-right: 6px; vertical-align: -1px; }
+  @media (max-width: 560px) { .ekpi b { font-size: 28px; } }
   @media (max-width: 560px) { .ecard { padding: 14px 14px 12px; } .ename { font-size: 19px; } .eday h3 { font-size: 20px; } .efilter .seg { flex-basis: 100%; } }
   .wwarn { border-left: 4px solid #e0a100; background: var(--soft); padding: 8px 10px; margin: 6px 0; font-size: 13.5px; }
   .wwarn.l3, .wwarn.l4 { border-color: #b3261e; } .wwarn small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.35; }
@@ -946,7 +962,7 @@ function earnCard(it) {
     const s = r.surprise;
     const text = r.verdict === "übertroffen" ? `▲ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % über der Erwartung`
       : r.verdict === "verfehlt" ? `▼ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % unter der Erwartung` : "≈ im Rahmen der Erwartung";
-    body = h("div", { class: "eres" }, h("span", { class: "everdict " + cls }, text), epsBars(r),
+    body = h("div", { class: "eres" }, h("span", { class: "everdict " + cls }, text), epsBars(r), earnChange(it, false),
       it.reaction && h("div", { class: "ereact" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
   } else if (upcoming) {
     const parts = [it.est != null && ["Erwartet: ", h("b", {}, usd(it.est)), " je Aktie", it.est_n ? ` (${it.est_n} Analysten)` : ""],
@@ -961,7 +977,7 @@ function earnCard(it) {
   const cap = it.cap_b >= 1000 ? (it.cap_b / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Bio. $" : it.cap_b + " Mrd. $";
   return h("article", { class: "ecard " + cls },
     h("div", { class: "ehead" },
-      h("h4", { class: "ename" }, it.name, h("span", { class: "esym" }, it.symbol)),
+      h("h4", { class: "ename" }, h("button", { class: "elink", title: "Kurs, Verlauf und Veränderung ansehen", onclick: () => openEarnings(it) }, it.name), h("span", { class: "esym" }, it.symbol)),
       it.cap_b > 0 && h("div", { class: "ecap" }, "Börsenwert", h("b", {}, cap))),
     h("div", { class: "ewhen" }, [quarter && `Quartal bis ${quarter}`, WHEN[it.when] || (upcoming ? "Zeitpunkt noch offen" : null)].filter(Boolean).join("  ·  ")),
     body,
@@ -970,9 +986,162 @@ function earnCard(it) {
       h("a", { class: "ebtn alt", href: analysis.url, target: "_blank", rel: "noopener", title: best ? best.title : "Berichte und Analysen zu den Zahlen" }, (upcoming ? "Vorschau" : "Analyse") + " ↗", h("small", {}, analysis.label))),
     (L.ir || it.news.length > 1) && h("div", { class: "emore" }, L.ir && [h("a", { href: L.sec, target: "_blank", rel: "noopener" }, "SEC-Einreichungen"), "  ·  "],
       h("a", { href: L.search, target: "_blank", rel: "noopener" }, "Alle Berichte in Google News")),
-    it.news.length > 0 && h("ul", { class: "enews" }, it.news.slice(0, 3).map(n => h("li", {},
-      h("a", { href: n.url, target: "_blank", rel: "noopener" }, n.title_de || n.title),
-      h("small", {}, [n.source, n.src_lang && "übersetzt aus dem Englischen", ago(n.time)].filter(Boolean).join("  ·  "))))));
+    earnNews(it, 3));
+}
+
+// Kleine Textzeile: Veränderung des Gewinns je Aktie zum Vorjahresquartal (sonst zum Vorquartal)
+function earnChange(it, big) {
+  const c = it.change, r = it.result;
+  if (!c || c.pct == null) return null;
+  const up = c.pct >= 0, sign = up ? "▲ +" : "▼ −", txt = sign + Math.abs(c.pct).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %";
+  const odd = Math.abs(c.pct) >= 60 ? "  Bei so großen Abweichungen lohnt ein Blick auf Aktiensplits und Sonderposten, die Vergleichswerte sind nicht bereinigt." : "";
+  if (big) return [h("b", { class: up ? "up" : "down" }, txt), h("span", { class: "s" }, `Gewinn je Aktie zum ${c.vs}: ${usd(c.prev)} → ${usd(r.eps)}.${odd}`)];
+  return h("div", { class: "echg", title: odd.trim() || null }, `Zum ${c.vs}: `, h("b", { class: up ? "up" : "down" }, txt), ` (${usd(c.prev)} → ${usd(r.eps)})`);
+}
+
+function earnNews(it, n) {
+  return it.news && it.news.length > 0 && h("ul", { class: "enews" }, it.news.slice(0, n).map(x => h("li", {},
+    h("a", { href: x.url, target: "_blank", rel: "noopener" }, x.title_de || x.title),
+    h("small", {}, [x.source, x.src_lang && "übersetzt aus dem Englischen", ago(x.time)].filter(Boolean).join("  ·  ")))));
+}
+
+// Kurs rund um die Zahlen: Linie, Punkt und senkrechte Marke beim Zeitpunkt der Veröffentlichung
+function earnChart(S, ref, key, info, width, when) {
+  const n0 = S.c.length;
+  const a = key === "Zahlen" && ref != null ? Math.max(0, ref - 15) : key === "1M" ? Math.max(0, n0 - 22) : 0;
+  const ys = S.c.slice(a), ts = S.t.slice(a), n = ys.length, r = ref != null && ref - a >= 0 && ref - a < n ? ref - a : null;
+  const W = Math.max(280, Math.round(width || 640)), H = Math.round(Math.min(300, Math.max(210, W * 0.45)));
+  const L = 8, R = 62, T = 22, B = 22;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart" });
+  if (n < 2) { const t = svgEl("text", { x: 10, y: 30, fill: "currentColor" }); t.textContent = "Zu wenig Kursdaten."; svg.append(t); return svg; }
+  const lo = Math.min(...ys), hi = Math.max(...ys), pad = (hi - lo) * .06 || 1, min = lo - pad, max = hi + pad;
+  const X = (i) => L + (i / (n - 1)) * (W - L - R), Y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
+  const base = r != null ? ys[r] : ys[0];
+  const color = ys[n - 1] >= base ? "var(--up)" : "var(--down)";
+  for (let g = 0; g <= 3; g++) {
+    const v = min + ((max - min) * g) / 3, y = Y(v);
+    svg.append(svgEl("line", { x1: L, x2: W - R, y1: y, y2: y, stroke: "var(--line)", "stroke-width": 1 }));
+    const t = svgEl("text", { x: W - R + 6, y: y + 4, fill: "var(--muted)", "font-size": 11 });
+    t.textContent = de.format(Math.round(v * 100) / 100);
+    svg.append(t);
+  }
+  const pts = (from, to) => ys.slice(from, to + 1).map((v, k) => `${X(from + k).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  if (r != null) {
+    if (r > 0) svg.append(svgEl("polyline", { points: pts(0, r), fill: "none", stroke: "var(--muted)", "stroke-width": 2, "stroke-linejoin": "round" }));
+    if (r < n - 1) {
+      svg.append(svgEl("polygon", { points: `${X(r)},${H - B} ${pts(r, n - 1)} ${X(n - 1)},${H - B}`, fill: color, opacity: .12 }));
+      svg.append(svgEl("polyline", { points: pts(r, n - 1), fill: "none", stroke: color, "stroke-width": 2.4, "stroke-linejoin": "round" }));
+    }
+    svg.append(svgEl("line", { x1: X(r), x2: W - R, y1: Y(base), y2: Y(base), stroke: "var(--muted)", "stroke-width": 1, "stroke-dasharray": "3 4", opacity: .7 }));
+    svg.append(svgEl("line", { x1: X(r), x2: X(r), y1: T - 6, y2: H - B, stroke: "var(--ink)", "stroke-width": 1.5, "stroke-dasharray": "5 4" }));
+    const lab = svgEl("text", { x: X(r) + (X(r) > W * 0.6 ? -6 : 6), y: T - 9, fill: "var(--ink)", "font-size": 11.5, "font-weight": 700, "text-anchor": X(r) > W * 0.6 ? "end" : "start" });
+    lab.textContent = "Zahlen";
+    svg.append(lab);
+    svg.append(svgEl("circle", { cx: X(r), cy: Y(base), r: 6, fill: "var(--ink)", stroke: "var(--paper)", "stroke-width": 2.5 }));
+  } else {
+    const line = pts(0, n - 1);
+    svg.append(svgEl("polygon", { points: `${X(0)},${H - B} ${line} ${X(n - 1)},${H - B}`, fill: color, opacity: .1 }));
+    svg.append(svgEl("polyline", { points: line, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+  }
+  const fmtT = (t) => new Date(t * dayMs).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "UTC" });
+  for (const [i, anchor] of [[0, "start"], [n - 1, "end"]]) {
+    const t = svgEl("text", { x: X(i), y: H - 5, fill: "var(--muted)", "font-size": 11, "text-anchor": anchor });
+    t.textContent = fmtT(ts[i]);
+    svg.append(t);
+  }
+  const vline = svgEl("line", { y1: T, y2: H - B, stroke: "var(--ink)", "stroke-width": 1, opacity: 0 });
+  const dot = svgEl("circle", { r: 4.5, fill: color, stroke: "var(--paper)", "stroke-width": 2, opacity: 0 });
+  svg.append(vline, dot);
+  const show = (i, active) => {
+    const rel = r != null && i >= r ? [pctSpan((ys[i] / base - 1) * 100), " seit den Zahlen"]
+      : r != null ? [pctSpan((ys[i] / base - 1) * 100), " gegenüber dem Kurs bei den Zahlen"] : [pctSpan((ys[i] / ys[0] - 1) * 100), " seit ", fmtT(ts[0])];
+    info.replaceChildren(`${fmtT(ts[i])}  ·  ${de.format(ys[i])} $  ·  `, ...rel);
+    vline.setAttribute("opacity", active ? .5 : 0); dot.setAttribute("opacity", active ? 1 : 0);
+    vline.setAttribute("x1", X(i)); vline.setAttribute("x2", X(i)); dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(ys[i]));
+  };
+  const hit = svgEl("rect", { x: L, y: 0, width: W - L - R, height: H, fill: "transparent" });
+  const move = (e) => {
+    const rc = svg.getBoundingClientRect(), x = ((e.clientX - rc.left) / rc.width) * W;
+    show(Math.max(0, Math.min(n - 1, Math.round(((x - L) / (W - L - R)) * (n - 1)))), true);
+  };
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => show(n - 1, false));
+  svg.append(hit);
+  show(n - 1, false);
+  return svg;
+}
+
+// Detailansicht einer Firma: Zahlen in Groß, Kurs mit Marke beim Zeitpunkt der Veröffentlichung
+function openEarnings(it) {
+  const dlg = $("detail"), r = it.result, S = it.series && it.series.c && it.series.c.length > 2 ? it.series : null;
+  const dayNum = Math.round(Date.parse(it.date + "T00:00:00Z") / dayMs);
+  let idx = S ? S.t.findIndex(t => t >= dayNum) : -1;
+  if (S && idx < 0 && dayNum > S.t[S.t.length - 1]) idx = -1;
+  const known = S && idx >= 0 && (it.status === "reported" || it.status === "missing");
+  let ref = null;
+  if (known) { ref = it.when === "pre" ? idx - 1 : idx; if (ref < 0) ref = null; }
+  const body = h("div", { class: "dlg" }), info = h("div", { class: "info" }), chartBox = h("div"), rangeBar = h("div", { class: "ranges" });
+  let range = ref != null ? "Zahlen" : "3M";
+  const ranges = ref != null ? [["Zahlen", "Rund um die Zahlen"], ["1M", "1 Monat"], ["3M", "3 Monate"]] : [["1M", "1 Monat"], ["3M", "3 Monate"]];
+  const draw = () => {
+    chartBox.replaceChildren(earnChart(S, ref, range, info, chartBox.clientWidth, it.when));
+    rangeBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === range)));
+  };
+  for (const [k, label] of ranges) rangeBar.append(h("button", { "data-k": k, onclick: () => { range = k; draw(); } }, label));
+
+  const q = (it.quarter || "").replace("/", " ").split(" "), quarter = q.length === 2 ? `${MONTH[q[0]] || q[0]} ${q[1]}` : it.quarter;
+  const cls = r ? (r.verdict === "übertroffen" ? "beat" : r.verdict === "verfehlt" ? "miss" : "") : "";
+  const L = it.links, orig = L.ir ? { url: L.ir, label: "Investor Relations" } : { url: L.sec, label: "SEC-Einreichungen" };
+  const best = it.news && it.news[0], upcoming = it.status === "upcoming" || it.status === "pending";
+  const analysis = best ? { url: best.url, label: best.source || "Bericht lesen" } : { url: L.search, label: "Berichte in Google News" };
+  const tile = (c, label, big, sub) => h("div", { class: c || "" }, h("span", { class: "l" }, label), big, sub);
+  const tiles = [];
+  if (r) {
+    const chg = earnChange(it, true);
+    tiles.push(tile(cls, "Gewinn je Aktie", chg ? chg[0] : h("b", {}, usd(r.eps)), chg ? chg[1] : h("span", { class: "s" }, `Ergebnis ${usd(r.eps)}`)));
+    tiles.push(tile(cls, "Gegenüber Erwartung", h("b", { class: r.surprise >= 0 ? "up" : "down" }, (r.surprise >= 0 ? "▲ +" : "▼ −") + Math.abs(r.surprise).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %"),
+      h("span", { class: "s" }, `Ergebnis ${usd(r.eps)}, erwartet ${usd(r.est)}`)));
+  } else if (upcoming) {
+    tiles.push(tile("", "Erwartung", h("b", {}, usd(it.est)), h("span", { class: "s" }, [it.est_n ? `${it.est_n} Analysten` : "Schätzung der Analysten", it.prev_eps != null ? ` · Vorjahr ${usd(it.prev_eps)}` : ""].join(""))));
+  } else tiles.push(tile("", "Kennzahlen", h("b", {}, "folgen"), h("span", { class: "s" }, "Die Datenquelle liefert sie meist erst einen Tag nach der Veröffentlichung.")));
+  if (ref != null && S.c.length > ref + 1) {
+    const since = (S.c[S.c.length - 1] / S.c[ref] - 1) * 100;
+    tiles.push(tile("", "Kurs seit den Zahlen", h("b", { class: since >= 0 ? "up" : "down" }, (since >= 0 ? "▲ +" : "▼ −") + Math.abs(since).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %"),
+      h("span", { class: "s" }, it.reaction ? `${it.reaction.label}: ${pct(it.reaction.pct)}` : `Basis: Schlusskurs ${S.c[ref].toLocaleString("de-DE")} $`)));
+  }
+
+  const hist = r && r.hist && r.hist.length ? r.hist : [];
+  const histTable = hist.length > 0 && [h("h3", { class: "sec2" }, "Gewinn je Aktie der letzten Quartale"),
+    h("table", { class: "ehist" }, h("thead", {}, h("tr", {}, h("th", {}, "Quartal"), h("th", {}, "Ergebnis"), h("th", {}, "Erwartet"), h("th", {}, "Abweichung"))),
+      h("tbody", {}, hist.map(x => { const [m, y] = (x.quarter || "").split(" ");
+        return h("tr", { class: x.quarter === r.quarter ? "now" : "" }, h("td", {}, `${MONTH[m] || m} ${y || ""}`), h("td", {}, usd(x.eps)), h("td", {}, usd(x.est)),
+          h("td", { class: x.surprise >= 0 ? "up" : "down" }, x.surprise == null ? "–" : (x.surprise >= 0 ? "+" : "−") + Math.abs(x.surprise).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %")); })))];
+
+  const when = it.when === "pre" ? "vor US-Börsenöffnung" : it.when === "after" ? "nach US-Börsenschluss" : null;
+  const add = (...kids) => body.append(...kids.flat(Infinity).filter(k => k != null && k !== false));
+  add(
+    h("div", { class: "top" },
+      h("div", {}, h("div", { class: "sub" }, `Quartalszahlen${quarter ? " · Quartal bis " + quarter : ""}`), h("h2", {}, it.name, h("span", { class: "esym" }, it.symbol))),
+      h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
+    h("div", { class: "sub", style: "margin-top:4px" }, `${dayLabel(it.date)}${when ? ", " + when : ""}`),
+    h("div", { class: "ekpi" }, tiles),
+    S ? [h("h3", { class: "sec2" }, "Kurs rund um die Zahlen"), rangeBar, info, chartBox,
+      ref != null ? h("p", { class: "elegend" }, h("i"), `Zahlen veröffentlicht am ${new Date(it.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "long" })}${when ? ", " + when : ""}. Graue Linie: Kurs davor, farbige Linie: Kurs danach, gestrichelt: Kurs zum Zeitpunkt der Zahlen.`)
+        : h("p", { class: "elegend" }, upcoming ? `Die Zahlen kommen am ${new Date(it.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "long" })}${when ? ", " + when : ""}.` : "Zeitpunkt der Zahlen nicht im Kursverlauf erkennbar.")]
+      : h("p", { class: "note" }, "Für diese Firma liegt gerade kein Kursverlauf vor."),
+    histTable,
+    h("div", { class: "elinks", style: "margin-top:18px" },
+      h("a", { class: "ebtn", href: orig.url, target: "_blank", rel: "noopener" }, "Originalquelle ↗", h("small", {}, orig.label)),
+      h("a", { class: "ebtn alt", href: analysis.url, target: "_blank", rel: "noopener" }, (upcoming ? "Vorschau" : "Analyse") + " ↗", h("small", {}, analysis.label))),
+    h("div", { class: "links" },
+      h("a", { href: "https://finance.yahoo.com/quote/" + encodeURIComponent(it.symbol) }, "Yahoo Finance"),
+      h("a", { href: L.sec }, "SEC-Einreichungen"), h("a", { href: L.search }, "Google News")),
+    it.news && it.news.length > 0 && [h("h3", { class: "sec2" }, "Berichte zu den Zahlen"), earnNews(it, 4)],
+    h("p", { class: "note" }, "Gewinn je Aktie (EPS) laut Nasdaq, Kurse von Yahoo Finance, Schlusskurse in US-Dollar. Vergleichswerte sind nicht um Aktiensplits bereinigt. Keine Anlageberatung."));
+  dlg.replaceChildren(body);
+  if (!dlg.open) dlg.showModal();
+  if (S) draw();
+  dlg.scrollTop = 0;
 }
 
 const views = {

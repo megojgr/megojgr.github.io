@@ -64,25 +64,60 @@ def surprise(symbol):
     return out
 
 
-def reaction(symbol, day, when):
+EPOCH = dt.date(1970, 1, 1)
+
+
+def bars(symbol):
+    """Tagesschlusskurse der letzten drei Monate als Liste (Datum, Kurs)."""
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol.replace('.', '-'))}?interval=1d&range=3mo"
+    res = json.loads(fetch(url, 20))["chart"]["result"][0]
+    off = res["meta"].get("gmtoffset", 0)
+    return [(dt.datetime.fromtimestamp(t + off, dt.timezone.utc).date(), c)
+            for t, c in zip(res["timestamp"], res["indicators"]["quote"][0]["close"]) if c]
+
+
+def series_of(rows):
+    """Kursverlauf für die Seite: Tage seit 1970 (wie bei den Kursen) und Schlusskurse."""
+    return {"t": [(d - EPOCH).days for d, _ in rows], "c": [round(c, 2) for _, c in rows]}
+
+
+def reaction(rows, day, when):
     """Kursbewegung rund um die Zahlen: vor Börsenöffnung Berichtstag gegen Vortag, nach Börsenschluss Folgetag gegen Berichtstag."""
     if when not in ("pre", "after"):
         return None
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol.replace('.', '-'))}?interval=1d&range=2mo"
-    res = json.loads(fetch(url, 20))["chart"]["result"][0]
-    off = res["meta"].get("gmtoffset", 0)
-    bars = [(dt.datetime.fromtimestamp(t + off, dt.timezone.utc).date(), c) for t, c in zip(res["timestamp"], res["indicators"]["quote"][0]["close"]) if c]
     if when == "pre":
-        before = [c for d, c in bars if d < day]
-        after = [c for d, c in bars if d == day]
+        before = [c for d, c in rows if d < day]
+        after = [c for d, c in rows if d == day]
         label = "Kurs am Berichtstag"
     else:
-        before = [c for d, c in bars if d == day]
-        after = [c for d, c in bars if d > day]
+        before = [c for d, c in rows if d == day]
+        after = [c for d, c in rows if d > day]
         label = "Kurs am Tag danach"
     if not before or not after:
         return None
     return {"pct": round((after[0] / before[-1] - 1) * 100, 2), "label": label}
+
+
+def change(i):
+    """Veränderung des Gewinns je Aktie: bevorzugt zum Vorjahresquartal, sonst zum Vorquartal."""
+    r = i["result"]
+    eps, prev, label = r["eps"], None, None
+    if i.get("prev_eps") is not None:
+        prev, label = i["prev_eps"], "Vorjahresquartal"
+    else:
+        hist = [h for h in r.get("hist") or [] if h["quarter"] != r.get("quarter") and h["eps"] is not None]
+        m = re.match(r"([A-Za-z]{3})\w*\s+(\d{4})", r.get("quarter") or "")
+        if m:
+            year_ago = f"{m.group(1)} {int(m.group(2)) - 1}"
+            hit = next((h for h in hist if h["quarter"] == year_ago), None)
+            if hit:
+                prev, label = hit["eps"], "Vorjahresquartal"
+        if prev is None and hist:
+            prev, label = hist[0]["eps"], "Vorquartal"
+    if eps is None or prev is None:
+        return None
+    pct = None if prev == 0 else round((eps - prev) / abs(prev) * 100, 1)
+    return {"vs": label, "prev": prev, "pct": pct}
 
 
 def headlines(query, hours):
@@ -169,49 +204,94 @@ def build(cfg, today):
         items.append({
             "symbol": sym, "watch": sym in companies, "name": name, "date": day.isoformat(), "when": when, "cap_b": round(parse_cap(r.get("marketCap")) / 1e9),
             "quarter": r.get("fiscalQuarterEnding") or "", "est": number(r.get("epsForecast")), "est_n": number(r.get("noOfEsts")),
-            "prev_eps": number(r.get("lastYearEPS")), "status": "upcoming" if day > today else "pending", "result": None, "reaction": None,
-            "news": [], "query": query,
+            "prev_eps": number(r.get("lastYearEPS")), "cal_eps": number(r.get("eps")), "cal_surprise": number(r.get("surprise")), "status": "upcoming" if day > today else "pending", "result": None, "reaction": None,
+            "news": [], "series": None, "query": query,
             "links": {"ir": conf.get("ir"),
                       "sec": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={urllib.parse.quote(sym)}&type=&dateb=&owner=include&count=10",
                       "search": "https://news.google.com/search?q=" + urllib.parse.quote(query.replace("|", " ") + " Quartalszahlen") + "&hl=de&gl=DE&ceid=DE:de"}})
 
     done = [i for i in items if i["date"] <= today.isoformat()]
 
+    # Gewinn je Aktie des Vorjahresquartals: aus dem Kalender des Vorjahres (dort steht das Ergebnis je Firma)
+    last_year = {}
+    span = sorted({dt.date.fromisoformat(i["date"]) - dt.timedelta(days=364 + k) for i in done for k in range(-5, 6)})
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for res in ex.map(lambda d: _safe(calendar_day, str(d)), [d for d in span if d.weekday() < 5]):
+            if isinstance(res, Exception):
+                continue
+            for r in res[1]:
+                e = number(r.get("eps"))
+                if e is not None:
+                    last_year.setdefault(r.get("symbol", "").strip(), []).append((dt.date.fromisoformat(res[0]), e))
+
+    def year_ago(sym, day):
+        target = day - dt.timedelta(days=364)
+        best = min(last_year.get(sym, []), key=lambda x: abs((x[0] - target).days), default=None)
+        return best[1] if best and abs((best[0] - target).days) <= 14 else None
+
+    def attach_chart(i, day):
+        try:
+            rows = bars(i["symbol"])
+            i["series"] = series_of(rows)
+            i["reaction"] = reaction(rows, day, i["when"]) or i.get("reaction")
+        except Exception:
+            pass
+
     def enrich(i):
         day = dt.date.fromisoformat(i["date"])
         old = prev.get(f"{i['symbol']}|{i['date']}")
-        if old and old["status"] == "reported" and day < today - dt.timedelta(days=2):
+        reuse = old and old["status"] == "reported" and day < today - dt.timedelta(days=2)
+        if reuse:  # Ergebnis steht fest, nur der Kursverlauf wird frisch geholt
             i.update(status="reported", result=old["result"], reaction=old["reaction"], when=i["when"] or old.get("when", ""))
-            return i  # schon abgeschlossen, nicht erneut abfragen
         try:
-            for r in surprise(i["symbol"]):
+            if reuse:
+                raise StopIteration
+            rows = surprise(i["symbol"])
+            for r in rows:
                 if abs((r["date"] - day).days) <= 1:
                     s = r["surprise"]
                     verdict = None if s is None else "übertroffen" if s >= 1 else "verfehlt" if s <= -1 else "im Rahmen"
-                    i["result"] = {"eps": r["eps"], "est": r["est"], "surprise": s, "verdict": verdict, "quarter": r["quarter"]}
+                    i["result"] = {"eps": r["eps"], "est": r["est"], "surprise": s, "verdict": verdict, "quarter": r["quarter"],
+                                   "hist": [{"quarter": h["quarter"], "date": h["date"].isoformat(), "eps": h["eps"], "est": h["est"],
+                                             "surprise": h["surprise"]} for h in rows[:5]]}
                     i["status"] = "reported"
                     break
+        except StopIteration:
+            pass
         except Exception as e:
             i["error"] = type(e).__name__
-        try:
-            i["reaction"] = reaction(i["symbol"], day, i["when"])
-        except Exception:
-            pass
-        if (today - day).days <= ec.get("news_days", 3):
+        if i["status"] != "reported" and i["cal_eps"] is not None:
+            sp = i["cal_surprise"]
+            i["result"] = {"eps": i["cal_eps"], "est": i["est"], "surprise": sp, "quarter": i["quarter"].replace("/", " "), "hist": [],
+                           "verdict": None if sp is None else "übertroffen" if sp >= 1 else "verfehlt" if sp <= -1 else "im Rahmen"}
+            i["status"] = "reported"
+        if old and i["prev_eps"] is None:
+            i["prev_eps"] = old.get("prev_eps")   # vom Vortermin gemerkt, die Kalenderzeile verliert den Wert nach dem Termin
+        if i["prev_eps"] is None and i["result"]:
+            i["prev_eps"] = year_ago(i["symbol"], day)
+        if i["result"]:
+            i["change"] = change(i)
+        attach_chart(i, day)
+        if not reuse and (today - day).days <= ec.get("news_days", 3):
             i["news"] = headlines(i["query"], ec.get("news_hours", 96))
         return i
 
+    coming = [i for i in items if i not in done and (i["watch"] or i["cap_b"] >= 200)]
     with ThreadPoolExecutor(max_workers=6) as ex:
         list(ex.map(enrich, done))
+        list(ex.map(lambda i: attach_chart(i, dt.date.fromisoformat(i["date"])), coming))
     for i in items:
         if i["status"] == "pending" and i["date"] < today.isoformat():
             i["status"] = "missing"      # Termin vorbei, aber noch kein Ergebnis in der Quelle
+    for i in items:
+        i.pop("cal_eps", None)
+        i.pop("cal_surprise", None)
     items.sort(key=lambda i: (i["date"], -i["cap_b"]))
 
     out = {"items": items, "checked": _now(), "stale": False, "error": None if not errors else f"{len(errors)} Kalendertage fehlen"}
     keep = {k: v for k, v in times.items() if k.split("|")[1] >= str(today - dt.timedelta(days=60))}
     # Die Zwischenspeicherdatei landet im Repository: nur schreiben, wenn sich Inhalte (nicht nur der Zeitstempel) geändert haben
-    snapshot = {"times": keep, "last": {**out, "checked": None, "items": [{**i, "news": []} for i in items]}}
+    snapshot = {"times": keep, "last": {**out, "checked": None, "items": [{**i, "news": [], "series": None} for i in items]}}
     if json.dumps(snapshot, sort_keys=True) != json.dumps({"times": cache.get("times"), "last": {**(cache.get("last") or {}), "checked": None}}, sort_keys=True):
         try:
             CACHE.parent.mkdir(exist_ok=True)

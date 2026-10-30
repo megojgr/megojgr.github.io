@@ -343,6 +343,19 @@
   .wwarn.l3, .wwarn.l4 { border-color: #b3261e; } .wwarn small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.35; }
   .chk { display: flex; gap: 8px; align-items: center; font-size: 14.5px; padding: 6px 0; cursor: pointer; }
 
+  /* Podcasts im Live-Reiter */
+  .pods { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); margin: 4px 0 10px; }
+  .pod { display: flex; gap: 14px; background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 2px; padding: 14px 16px; min-width: 0; }
+  .pod img { flex: none; width: 88px; height: 88px; border-radius: 8px; object-fit: cover; background: var(--soft); }
+  .pod > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .pod .pname { font: 700 11px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .pod .ptit { font: 700 18px/1.25 var(--serif); }
+  .pod .pwhen { font-size: 12.5px; color: var(--muted); }
+  .pod .pwhen b { color: var(--up); font-weight: 700; }
+  .pod .pgo { align-self: flex-start; margin-top: 8px; padding: 9px 15px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13.5px; font-weight: 700; text-decoration: none; }
+  .pod .pgo:hover { opacity: .88; }
+  @media (max-width: 560px) { .pod { padding: 12px 13px; gap: 12px; } .pod img { width: 72px; height: 72px; } .pod .ptit { font-size: 16.5px; } }
+
   /* Live */
   .live-wrap { display: grid; gap: 20px 32px; grid-template-columns: minmax(0, 1fr); padding-top: 16px; }
   @media (min-width: 980px) { .live-wrap { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } .lpanel { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow-y: auto; padding-right: 4px; } }
@@ -1430,6 +1443,27 @@ function startText(epoch) {
   return `${when} Uhr (${rel})`;
 }
 
+// Oben im Live-Reiter: die neueste Folge der Lieblings-Podcasts mit Link zu Spotify
+function podcastBlock() {
+  const list = DATA.podcasts || [];
+  if (!list.length) return null;
+  const when = (iso) => {
+    const d = new Date(iso), day = d.toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+    const time = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }) + " Uhr";
+    if (day === berlinDay()) return [h("b", {}, "Heute"), `, ${time}`];
+    if (day === berlinDay(-1)) return `Gestern, ${time}`;
+    return d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Berlin" });
+  };
+  return [sec("Zum Hören", "neueste Folgen"), h("div", { class: "pods" }, list.map(p => h("article", { class: "pod" },
+    p.image && h("img", { src: p.image, alt: "", loading: "lazy", referrerpolicy: "no-referrer" }),
+    h("div", {},
+      h("span", { class: "pname" }, p.name),
+      h("span", { class: "ptit" }, p.title || "Neueste Folge auf Spotify"),
+      p.time && h("span", { class: "pwhen" }, when(p.time), p.minutes ? `  ·  ${p.minutes} Min.` : ""),
+      h("a", { class: "pgo", href: p.url, target: "_blank", rel: "noopener" }, p.exact ? "▶ Auf Spotify anhören" : "▶ Zur Sendung auf Spotify"),
+      !p.exact && p.title && h("span", { class: "pwhen", style: "margin-top:4px" }, "Die Folge ist bei Spotify noch nicht gelistet."))))) ];
+}
+
 // Zeit bis zur nächsten tagesschau um 20:00 Uhr (Berliner Zeit)
 function tagesschauCountdown() {
   const berlin = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
@@ -1475,7 +1509,7 @@ const BUILD = {
   welt: (s) => (s === "Wahlen & Termine" ? views.wahlen : s === "Wetten" ? views.pm : views.world)(),
   markets: (s) => s === "Depot" ? views.depot() : s === "Quartalszahlen" ? views.earnings() : views.markets(),
   globe: () => views.globe(),
-  live: () => views.live(),
+  live: () => [podcastBlock(), views.live()],
 };
 
 // Zeichnet den Inhalt des aktuellen Bereichs samt Unterreitern

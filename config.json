@@ -232,6 +232,10 @@
     "include_tags": ["politics", "geopolitics", "elections", "world", "middle-east", "economy", "finance", "business", "crypto", "tech", "fed", "global-elections", "ukraine", "china", "russia"],
     "exclude_tags": ["sports", "nba", "nfl", "soccer", "football", "mlb", "nhl", "tennis", "esports", "culture", "pop-culture", "music", "movies", "celebrities"]
   },
+  "podcasts": [
+    {"name": "Handelsblatt Morning Briefing", "by": "Handelsblatt", "feed": "https://handelsblatt-morningbriefing.podigee.io/feed/mp3", "spotify_show": "1QZr5NinuorbELLt2SwLJU", "skip_re": "^(Podcast-Tipp|Neu:|Trailer)"},
+    {"name": "Marktgeflüster", "by": "Finanzfluss", "feed": "https://feeds.megaphone.fm/FGH8365603623", "spotify_show": "3y9LP87SHF5b3hciAsZDBh"}
+  ],
   "earnings": {
     "back_days": 7, "ahead_days": 14, "min_cap_b": 60, "news_hours": 96,
     "skip": ["GOOG", "BRK/A", "FOXA", "NWSA", "LBTYB", "LBTYK"],

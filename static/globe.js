@@ -131,7 +131,7 @@
     const controls = h("div", { class: "gctl" },
       h("h3", {}, "Ebenen"),
       sw("conflict", "Kriege", `${warCountries.length} Länder, Kämpfe vom ${cDays || "keine Daten"}${stale(conflict)}`),
-      sw("unrest", "Konflikte, Unruhen & Spannungen", `${unrestCountries.length} Länder unterhalb der Kriegsschwelle`),
+      sw("unrest", "Konflikte, Unruhen & Spannungen", `${unrestCountries.length} Länder, die nicht als Krieg gelten`),
       sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
@@ -493,8 +493,8 @@
           c && c.level === "war" ? [h("div", { class: "gtag bad" }, "Krieg"),
             (c.listed || []).map(r => h("p", {}, h("b", {}, r.name), h("br"), `Kampftote im gesamten Konflikt: ${deathText(r)}`)),
             h("p", {}, `${c.n} gemeldete Kampfereignisse in den letzten 2 Tagen, davon ${c.heavy} schwere Gefechte (Schusswaffen, Artillerie, Luftangriffe).`),
-            h("p", { class: "note" }, "Krieg heißt hier: mindestens 1.000 Kampftote im laufenden oder letzten Jahr laut Wikipedia-Konfliktliste, und das Land ist Hauptschauplatz oder die Meldungen bestätigen dort Kämpfe.")]
-            : c ? [h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, (c.listed || []).length ? "Bewaffneter Konflikt" : c.tension ? "Spannungen" : "Unruhen & Spannungen"),
+            h("p", { class: "note" }, "Krieg heißt hier: mindestens 1.000 Kampftote im laufenden oder letzten Jahr laut Wikipedia-Konfliktliste, und das Land ist Hauptschauplatz oder die Meldungen bestätigen dort Kämpfe. Drogen- und Bandenkonflikte zählen nicht als Krieg.")]
+            : c ? [h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, (c.listed || []).some(r => r.crime) ? "Drogen- und Bandenkonflikt" : (c.listed || []).length ? "Bewaffneter Konflikt" : c.tension ? "Spannungen" : "Unruhen & Spannungen"),
               (c.listed || []).map(r => h("p", {}, h("b", {}, r.name), h("br"), `Kampftote im gesamten Konflikt: ${deathText(r)}`)),
               c.tension && h("p", {}, "Viele Meldungen zu Militär und Zwischenfällen, aber das Land steht nicht in der Liste aktiver Kriege. Deshalb nicht als Krieg eingestuft."),
               !c.tension && !(c.listed || []).length && h("p", {}, `${c.share} % der Ereignisse sind Gewalt oder Zwang${c.protests ? `, ${c.protests} Proteste` : ""}${c.riots ? `, ${c.riots} Krawalle` : ""} in den letzten 2 Tagen.`)]

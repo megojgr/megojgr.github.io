@@ -186,15 +186,22 @@ def wars_list(world):
     return {"rows": rows, "years": years[:2]}
 
 
-def war_status(wars, parties, world):
-    """Je Land: In welchen gelisteten Konflikten ist es Hauptschauplatz, in welchen nur am Rand erwähnt?"""
+def war_status(wars, parties, world, crime=()):
+    """Je Land: In welchen gelisteten Konflikten ist es Hauptschauplatz, in welchen nur am Rand erwähnt?
+    Drogen- und Bandenkonflikte (crime) zählen unabhängig von den Totenzahlen nicht als Krieg."""
     status = {}
     for row in wars["rows"]:
+        is_crime = any(c.lower() in row["name"].lower() for c in crime)
         rule = next((p for p in parties if p["match"].lower() in row["name"].lower()), None)
         core = [find_country(n, world)[0] for n in rule["countries"]] if rule else row["places"][:1]
         for ne in row["places"]:
-            s = status.setdefault(ne, {"war_core": [], "war_edge": [], "armed_core": []})
-            big = row["tier"] != "conflict"
+            s = status.setdefault(ne, {"war_core": [], "war_edge": [], "armed_core": [], "crime": False})
+            big = row["tier"] != "conflict" and not is_crime
+            if is_crime and ne not in core:
+                continue
+            if is_crime:
+                s["crime"] = True
+                row = {**row, "crime": True}
             if ne in core:
                 s["war_core" if big else "armed_core"].append(row)
             elif big:
@@ -206,7 +213,7 @@ def war_level(s, gdelt):
     """Krieg heißt: mindestens 1.000 Kampftote im laufenden oder letzten Jahr laut Konfliktliste, und das Land ist Hauptschauplatz
     oder die Meldungen bestätigen dort Kämpfe. Viele Meldungen ohne Listeneintrag ergeben höchstens "Spannungen"."""
     s = s or {}
-    if s.get("war_core") or (s.get("war_edge") and gdelt == "war"):
+    if s.get("war_core") or (s.get("war_edge") and gdelt == "war" and not s.get("crime")):
         return "war"
     if s.get("armed_core") or gdelt:
         return "unrest"
@@ -238,7 +245,7 @@ def cell_points(cells, level_of, world, level, limit):
     return out
 
 
-def conflicts(today, days, max_points, world, reason_countries=20, wars=None, parties=()):
+def conflicts(today, days, max_points, world, reason_countries=20, wars=None, parties=(), crime=()):
     stats, war_cells, unrest_cells, used = collections.defaultdict(collections.Counter), {}, {}, []
     for back in range(1, days + 3):
         if len(used) >= days:
@@ -261,7 +268,7 @@ def conflicts(today, days, max_points, world, reason_countries=20, wars=None, pa
         ne, _ = find_country(name, world)
         if ne:
             merged[ne].update(counter)
-    status = war_status(wars, parties, world) if wars else None
+    status = war_status(wars, parties, world, crime) if wars else None
     countries = []
     for ne in set(merged) | set(status or ()):
         c = merged[ne]
@@ -276,7 +283,7 @@ def conflicts(today, days, max_points, world, reason_countries=20, wars=None, pa
             countries.append({"id": world[ne], "name": ne, "name_de": de_name(ne), "level": level, "w": c["war_w"], "n": c["war_n"],
                               "heavy": c["heavy_n"], "share": round(100 * c["q4_n"] / n, 1), "events": c["all_n"],
                               "protests": c["prot_n"], "riots": c["riot_n"],
-                              "listed": [{"name": r["name"], "deaths": r["deaths"]} for r in top],
+                              "listed": [{"name": r["name"], "deaths": r["deaths"], "crime": r.get("crime", False)} for r in top],
                               "tension": level == "unrest" and gdelt == "war" and not s.get("armed_core")})
     best = lambda c: max((max(r["deaths"]) for r in c["listed"]), default=0)
     countries.sort(key=lambda c: (c["level"] != "war", -best(c) if c["level"] == "war" else -c["share"]))
@@ -288,7 +295,7 @@ def conflicts(today, days, max_points, world, reason_countries=20, wars=None, pa
     return result
 
 
-SCHEMA = {"conflict": 3, "chokepoints": 3}  # Version der Datenstruktur im Zwischenspeicher
+SCHEMA = {"conflict": 4, "chokepoints": 3}  # Version der Datenstruktur im Zwischenspeicher
 REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
 
 
@@ -582,7 +589,7 @@ def build(cfg, stories, election_list, today):
 
     wars = part("wars", lambda: wars_list(world))
     with ThreadPoolExecutor(max_workers=5) as ex:
-        f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"], wars, g.get("war_parties", ())))
+        f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"], wars, g.get("war_parties", ()), g.get("crime_conflicts", ())))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
         f_eq = ex.submit(part, "quakes", quakes_data)

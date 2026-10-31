@@ -82,6 +82,7 @@
   "geo": {
     "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5, "wars": 6},
     "crime_conflicts": ["Mexican drug war", "Colombian conflict", "Ecuadorian conflict", "Haitian conflict"],
+    "not_war_conflicts": ["Venezuelan conflict"],
     "war_parties": [
       {"match": "Russo-Ukrainian", "countries": ["Ukraine", "Russia"]},
       {"match": "Arab–Israeli", "countries": ["Israel", "Palestine", "Lebanon"]},

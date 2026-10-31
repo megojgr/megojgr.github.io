@@ -204,7 +204,7 @@ def conflicts(today, days, max_points, world, reason_countries=20):
     return result
 
 
-SCHEMA = {"conflict": 2, "chokepoints": 2}  # Version der Datenstruktur im Zwischenspeicher
+SCHEMA = {"conflict": 2, "chokepoints": 3}  # Version der Datenstruktur im Zwischenspeicher
 REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
 
 
@@ -255,10 +255,10 @@ def portwatch_query(url, tries=8):
 
 def portwatch_one(cp):
     where = urllib.parse.quote(f"portid='{cp['id']}'")
-    url = (f"{PORTWATCH}/Daily_Chokepoints_Data/FeatureServer/0/query?where={where}&outFields=date,n_total,n_tanker"
+    url = (f"{PORTWATCH}/Daily_Chokepoints_Data/FeatureServer/0/query?where={where}&outFields=date,n_total,n_tanker,capacity_tanker"
            "&orderByFields=date%20DESC&resultRecordCount=420&returnGeometry=false&f=json")
     rows = [f["attributes"] for f in portwatch_query(url)]
-    return [(r["date"], r["n_total"], r.get("n_tanker") or 0) for r in rows if r.get("date") and r.get("n_total") is not None]
+    return [(r["date"], r["n_total"], r.get("n_tanker") or 0, r.get("capacity_tanker") or 0) for r in rows if r.get("date") and r.get("n_total") is not None]
 
 
 def mean(xs):
@@ -280,23 +280,30 @@ def chokepoints_data(cfg_cps):
         tankers = [r[2] for r in rows]
         last7 = mean(counts[:7])
         tanker7 = mean(tankers[:7])
+        caps = [r[3] for r in rows]
+        cap7 = mean(caps[:7])
         last_date = dt.date.fromisoformat(rows[0][0])
         year_ago = [r for r in rows if abs((dt.date.fromisoformat(r[0]) - (last_date - dt.timedelta(days=365))).days) <= 10]
         if len(year_ago) >= 10:
             base, label = mean([r[1] for r in year_ago]), "Vorjahr"
             tanker_base = mean([r[2] for r in year_ago])
+            cap_base = mean([r[3] for r in year_ago])
         else:
             base, label = mean(counts[30:120]), "90-Tage-Schnitt"
             tanker_base = mean(tankers[30:120])
+            cap_base = mean(caps[30:120])
         pct = (last7 / base - 1) * 100 if base and base >= 5 else None
         tanker_pct = (tanker7 / tanker_base - 1) * 100 if tanker_base and tanker_base >= 2 else None
+        cap_pct = (cap7 / cap_base - 1) * 100 if cap_base and cap_base >= 10000 else None
         out.append({"id": cp["id"], "name": cp["name"], "lat": round(m["lat"], 3), "lon": round(m["lon"], 3),
                     "last7": round(last7, 1), "base": round(base, 1) if base else None, "base_label": label,
                     "pct": None if pct is None else round(pct, 1), "date": rows[0][0],
                     "history": list(reversed(counts[:60])), "tanker7": round(tanker7, 1),
                     "tanker_base": round(tanker_base, 1) if tanker_base else None,
                     "tanker_pct": None if tanker_pct is None else round(tanker_pct, 1),
-                    "tanker_history": list(reversed(tankers[:60]))})
+                    "tanker_history": list(reversed(tankers[:60])), "tanker_cap7": round(cap7),
+                    "tanker_cap_base": round(cap_base) if cap_base else None,
+                    "tanker_cap_pct": None if cap_pct is None else round(cap_pct, 1)})
     return out
 
 

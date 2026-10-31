@@ -22,6 +22,12 @@
   "archive_hours": [4, 16],
   "source_blocklist": ["tixio", "njuuz", "openpr", "nachrichten-heute", "nachrichten heute", "presseportal-nachrichten"],
   "regions": {
+    "europe": ["eu$", "eu-", "europa$", "europäisch", "european", "europaparlament", "brüssel", "brussels", "von der leyen",
+               "frankreich", "france$", "macron", "italien", "italy$", "meloni", "spanien", "spain$", "polen$", "poland$", "polnisch",
+               "österreich", "schweiz", "niederlande", "belgien", "griechenland", "portugal$", "ungarn", "hungary$", "orbán", "orban$",
+               "tschechien", "rumänien", "bulgarien", "schweden", "dänemark", "finnland", "norwegen", "großbritannien", "britain$",
+               "britisch", "starmer", "irland", "estland", "lettland", "litauen", "baltikum"],
+    "europe_block": ["europa league", "conference league", "champions league", "europameister", "eurovision", "europacup", "bundesliga"],
     "wuppertal": ["wuppertal", "schwebebahn", "wsw$", "barmen", "elberfeld", "vohwinkel", "cronenberg", "ronsdorf", "langerfeld",
                   "oberbarmen", "uellendahl", "bergische universität", "bergische uni", "von der heydt", "pina bausch",
                   "utopiastadt", "nordbahntrasse", "bergische"],
@@ -35,7 +41,13 @@
     "links": [
       {"name": "Stadt Wuppertal", "url": "https://www.wuppertal.de/"},
       {"name": "WSW Schwebebahn & Bus", "url": "https://www.wsw-online.de/"},
-      {"name": "WZ Wuppertal", "url": "https://www.wz.de/nrw/wuppertal"},
+      {"name": "Tagesschau Europa", "url": "https://www.tagesschau.de/ausland/europa/index~rss2.xml", "hint": "europe", "lang": "de", "max_age_hours": 48},
+    {"name": "Euractiv", "url": "https://www.euractiv.de/feed/", "hint": "europe", "lang": "de", "max_age_hours": 48},
+    {"name": "Euronews", "url": "https://de.euronews.com/rss?format=mrss&level=theme&name=news", "hint": "general", "lang": "de"},
+    {"name": "Politico Europe", "url": "https://www.politico.eu/feed/", "hint": "europe", "lang": "en", "max_age_hours": 48},
+    {"name": "Guardian Europa", "url": "https://www.theguardian.com/world/europe-news/rss", "hint": "europe", "lang": "en", "max_age_hours": 48},
+    {"name": "BBC Europa", "url": "https://feeds.bbci.co.uk/news/world/europe/rss.xml", "hint": "europe", "lang": "en", "max_age_hours": 48},
+    {"name": "WZ Wuppertal", "url": "https://www.wz.de/nrw/wuppertal"},
       {"name": "Wuppertaler Rundschau", "url": "https://www.wuppertaler-rundschau.de/"},
       {"name": "Wuppertal Total", "url": "https://www.wuppertal-total.de/"},
       {"name": "WDR Lokalzeit Bergisches Land", "url": "https://www1.wdr.de/fernsehen/lokalzeit/bergisches-land/index.html"}
@@ -68,7 +80,7 @@
     ]
   },
   "geo": {
-    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5},
+    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5},
     "reason_countries": 20,
     "conflict_days": 2,
     "conflict_max_points": 150,

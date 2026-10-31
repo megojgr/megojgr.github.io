@@ -371,6 +371,7 @@
   .tonight a { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
   .seg.scroll { overflow-x: auto; scrollbar-width: none; max-width: none; margin-top: 0; } .seg.scroll::-webkit-scrollbar { display: none; }
   .seg.scroll button { flex: 0 0 auto; padding: 9px 13px; font-size: 13px; }
+  .seg.scroll.fit { gap: 2px; } .seg.scroll.fit button { flex: 1 1 auto; padding: 9px 6px; }
   .lsec { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 4px; font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .lsec em { font-style: normal; font-weight: 600; background: var(--soft); border-radius: 999px; padding: 1px 8px; }
   .lgrp { margin: 14px 0 2px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
@@ -468,11 +469,11 @@ let DEPOT = null;          // entschlüsseltes Depot (nur im Speicher)
 let CURRENT = "heute";
 
 // Sechs Hauptbereiche; alles Weitere liegt in Unterreitern (Archiv, Wahlen & Termine, Wetten, Depot, Deutschland)
-const TABS = [["heute", "Heute"], ["region", "Wuppertal"], ["welt", "Welt"], ["markets", "Märkte"], ["globe", "Globus"], ["live", "Live"]];
+const TABS = [["heute", "Heute"], ["region", "Deutschland"], ["welt", "Welt"], ["markets", "Märkte"], ["globe", "Globus"], ["live", "Live"]];
 const SUBS = { heute: ["Heute", "Archiv"], welt: ["Meldungen", "Wahlen & Termine", "Wetten"], markets: ["Übersicht", "Quartalszahlen", "Depot"] };
 // Alte Kurznamen (Lesezeichen, Verweise) führen in den passenden Unterreiter
 const ROUTES = { depot: ["markets", "Depot"], wahlen: ["welt", "Wahlen & Termine"], pm: ["welt", "Wetten"], world: ["welt", "Meldungen"],
-                 germany: ["region", "Deutschland"], verlauf: ["heute", "Archiv"], watch: ["markets", "Übersicht"], zahlen: ["markets", "Quartalszahlen"] };
+                 germany: ["region", "Deutschland"], europa: ["region", "Europa"], verlauf: ["heute", "Archiv"], watch: ["markets", "Übersicht"], zahlen: ["markets", "Quartalszahlen"] };
 const ICONS = {
   heute: '<path d="M4 5h12v14H6a2 2 0 0 1-2-2V5z"/><path d="M16 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 12h6M7 15h3"/>',
   region: '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
@@ -1250,33 +1251,36 @@ const views = {
     const wup = DATA.stories.filter(s => s.region === "wuppertal").sort(byTime);
     const nrw = DATA.stories.filter(s => s.region === "nrw").sort(byTime);
     const de = DATA.stories.filter(s => s.topic === "germany" && !s.region);
+    const eu = DATA.stories.filter(s => s.europe).sort(byTime);
+    const LABEL = { wuppertal: "Wuppertal", nrw: "NRW", de: "Deutschland", eu: "Europa" };
     const sections = [
       ["Wuppertal", "wuppertal", wup, "Stadt, Schwebebahn, Polizei, Politik und Kultur aus dem Tal"],
       ["Nordrhein-Westfalen", "nrw", nrw, "Land und Region, neueste zuerst"],
       ["Deutschland", "de", de, "Politik und Gesellschaft bundesweit"],
+      ["Europa", "eu", eu, "EU, Brüssel und die Nachbarländer, neueste zuerst"],
     ];
     const state = { f: store.get("regionf") || "Alles" };
     const box = h("div", { class: "narrow" });
-    const bar = h("div", { class: "seg", style: "margin-top:14px" });
+    const bar = h("div", { class: "seg scroll fit", style: "margin-top:14px;max-width:760px" });
     const wside = h("div");
     const render = () => {
       wside.replaceChildren(...[state.f === "Alles" ? null : weatherBlock(L, false)].filter(Boolean));
       const kids = [];
       if (state.f === "Alles") kids.push(weatherPanel(L));
-      const want = { Wuppertal: "wuppertal", NRW: "nrw", Deutschland: "de" }[state.f];
+      const want = { Wuppertal: "wuppertal", NRW: "nrw", Deutschland: "de", Europa: "eu" }[state.f];
       for (const [title, key, list, sub] of sections) {
-        const pick = state.f === "Alles" ? list.slice(0, key === "de" ? 6 : 8) : want === key ? list.slice(0, 40) : null;
+        const pick = state.f === "Alles" ? list.slice(0, key === "de" || key === "eu" ? 6 : 8) : want === key ? list.slice(0, 40) : null;
         if (!pick) continue;
         if (key === "de" && state.f === "Deutschland") kids.push(briefingsBlock());
         kids.push(sec(title, sub), pick.length ? items(pick, { hideTopic: true }) : h("div", { class: "empty" }, "Gerade keine Meldungen."));
         if (state.f === "Alles" && list.length > pick.length)
-          kids.push(h("button", { class: "btn", style: "margin:12px 0", onclick: () => { state.f = key === "de" ? "Deutschland" : key === "nrw" ? "NRW" : "Wuppertal"; render(); scrollTo(0, 0); } }, `Alle ${list.length} Meldungen zu ${title}`));
+          kids.push(h("button", { class: "btn", style: "margin:12px 0", onclick: () => { state.f = LABEL[key]; render(); scrollTo(0, 0); } }, `Alle ${list.length} Meldungen zu ${title}`));
       }
       box.replaceChildren(...kids.flat(Infinity).filter(Boolean));
       bar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.textContent === state.f));
       store.set("regionf", state.f);
     };
-    for (const f of ["Alles", "Wuppertal", "NRW", "Deutschland"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
+    for (const f of ["Alles", "Wuppertal", "NRW", "Deutschland", "Europa"]) bar.append(h("button", { onclick: () => { state.f = f; render(); } }, f));
     render();
     return h("div", { class: "layout" }, h("div", {}, bar, box), h("aside", { class: "side" }, wside, linkBlock(L)));
   },

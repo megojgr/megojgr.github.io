@@ -4,6 +4,7 @@ Alles kostenlos und ohne Schlüssel. Fällt eine Quelle aus, wird der letzte gut
 """
 import collections
 import datetime as dt
+import gzip
 import html
 import io
 import json
@@ -11,6 +12,7 @@ import math
 import os
 import re
 import sys
+import time
 import urllib.parse
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -202,7 +204,7 @@ def conflicts(today, days, max_points, world, reason_countries=20):
     return result
 
 
-SCHEMA = {"conflict": 2}  # Version der Datenstruktur im Zwischenspeicher
+SCHEMA = {"conflict": 2, "chokepoints": 2}  # Version der Datenstruktur im Zwischenspeicher
 REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
 
 
@@ -240,12 +242,23 @@ def reasons(countries, how_many):
 
 # ---------------------------------------------------------------- Meerengen (IMF PortWatch)
 
+def portwatch_query(url, tries=8):
+    """Der Dienst lehnt gültige Anfragen zeitweise mit einem Fehler 400 ab: dann mit Pause mehrmals versuchen."""
+    data = {}
+    for attempt in range(tries):
+        data = json.loads(fetch(url, 40))
+        if "features" in data:
+            return data["features"]
+        time.sleep(2 + attempt)
+    raise RuntimeError(f"PortWatch: {(data.get('error') or {}).get('message', 'keine Daten')}")
+
+
 def portwatch_one(cp):
     where = urllib.parse.quote(f"portid='{cp['id']}'")
-    url = (f"{PORTWATCH}/Daily_Chokepoints_Data/FeatureServer/0/query?where={where}&outFields=date,n_total"
+    url = (f"{PORTWATCH}/Daily_Chokepoints_Data/FeatureServer/0/query?where={where}&outFields=date,n_total,n_tanker"
            "&orderByFields=date%20DESC&resultRecordCount=420&returnGeometry=false&f=json")
-    rows = [f["attributes"] for f in json.loads(fetch(url, 40))["features"]]
-    return [(r["date"], r["n_total"]) for r in rows if r.get("date") and r.get("n_total") is not None]
+    rows = [f["attributes"] for f in portwatch_query(url)]
+    return [(r["date"], r["n_total"], r.get("n_tanker") or 0) for r in rows if r.get("date") and r.get("n_total") is not None]
 
 
 def mean(xs):
@@ -255,28 +268,66 @@ def mean(xs):
 def chokepoints_data(cfg_cps):
     meta_url = (f"{PORTWATCH}/PortWatch_chokepoints_database/FeatureServer/0/query?where=1%3D1"
                 "&outFields=portid,portname,lat,lon&returnGeometry=false&f=json&resultRecordCount=60")
-    meta = {f["attributes"]["portid"]: f["attributes"] for f in json.loads(fetch(meta_url, 40))["features"]}
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    meta = {f["attributes"]["portid"]: f["attributes"] for f in portwatch_query(meta_url)}
+    with ThreadPoolExecutor(max_workers=3) as ex:
         series = list(ex.map(lambda cp: portwatch_one(cp) if cp["id"] in meta else [], cfg_cps))
     out = []
     for cp, rows in zip(cfg_cps, series):
         m = meta.get(cp["id"])
         if not m or len(rows) < 30:
             continue
-        counts = [n for _, n in rows]
+        counts = [r[1] for r in rows]
+        tankers = [r[2] for r in rows]
         last7 = mean(counts[:7])
+        tanker7 = mean(tankers[:7])
         last_date = dt.date.fromisoformat(rows[0][0])
-        year_ago = [n for d, n in rows if abs((dt.date.fromisoformat(d) - (last_date - dt.timedelta(days=365))).days) <= 10]
+        year_ago = [r for r in rows if abs((dt.date.fromisoformat(r[0]) - (last_date - dt.timedelta(days=365))).days) <= 10]
         if len(year_ago) >= 10:
-            base, label = mean(year_ago), "Vorjahr"
+            base, label = mean([r[1] for r in year_ago]), "Vorjahr"
+            tanker_base = mean([r[2] for r in year_ago])
         else:
             base, label = mean(counts[30:120]), "90-Tage-Schnitt"
+            tanker_base = mean(tankers[30:120])
         pct = (last7 / base - 1) * 100 if base and base >= 5 else None
+        tanker_pct = (tanker7 / tanker_base - 1) * 100 if tanker_base and tanker_base >= 2 else None
         out.append({"id": cp["id"], "name": cp["name"], "lat": round(m["lat"], 3), "lon": round(m["lon"], 3),
                     "last7": round(last7, 1), "base": round(base, 1) if base else None, "base_label": label,
                     "pct": None if pct is None else round(pct, 1), "date": rows[0][0],
-                    "history": list(reversed(counts[:60]))})
+                    "history": list(reversed(counts[:60])), "tanker7": round(tanker7, 1),
+                    "tanker_base": round(tanker_base, 1) if tanker_base else None,
+                    "tanker_pct": None if tanker_pct is None else round(tanker_pct, 1),
+                    "tanker_history": list(reversed(tankers[:60]))})
     return out
+
+
+# ---------------------------------------------------------------- Tanker-Positionen (AIS, Digitraffic)
+
+NAV_STATUS = {0: "in Fahrt", 1: "vor Anker", 2: "manövrierunfähig", 3: "eingeschränkt manövrierfähig", 5: "am Liegeplatz", 8: "unter Segel"}
+
+
+def ais_get(path):
+    """Offener AIS-Dienst der finnischen Verkehrsbehörde: ohne Schlüssel, bittet um einen Absenderhinweis und erwartet gzip."""
+    raw = fetch(f"https://meri.digitraffic.fi/api/ais/v1/{path}", 60, headers={"Digitraffic-User": "MegoNews/privat", "Accept-Encoding": "gzip"})
+    return json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+
+
+def tankers_data():
+    """Tanker (AIS-Schiffstyp 80 bis 89) mit aktueller Position. Der Dienst deckt nur die nördliche Ostsee ab."""
+    vessels = {v["mmsi"]: v for v in ais_get("vessels") if 80 <= (v.get("shipType") or 0) <= 89}
+    oldest = time.time() - 12 * 3600
+    ships = []
+    for f in ais_get("locations")["features"]:
+        v = vessels.get(f["mmsi"])
+        p = f["properties"]
+        lon, lat = f["geometry"]["coordinates"][:2]
+        seen = (p.get("timestampExternal") or 0) / 1000
+        if not v or seen < oldest or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            continue
+        speed = p.get("sog")
+        ships.append({"name": (v.get("name") or "").strip() or f"MMSI {f['mmsi']}", "mmsi": f["mmsi"], "lat": round(lat, 3), "lon": round(lon, 3),
+                      "speed": round(speed, 1) if speed is not None and speed < 102 else None, "dest": (v.get("destination") or "").strip(),
+                      "status": NAV_STATUS.get(p.get("navStat"), ""), "t": int(seen)})
+    return {"ships": ships, "area": "nördliche Ostsee und Finnischer Meerbusen"}
 
 
 def attach_news(cps, cfg_cps, stories, closure_words):
@@ -438,12 +489,13 @@ def build(cfg, stories, election_list, today):
                 value["stale"] = True
         return value
 
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    with ThreadPoolExecutor(max_workers=5) as ex:
         f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"]))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
         f_eq = ex.submit(part, "quakes", quakes_data)
-        conflict, cps, carriers, quakes = f_conf.result(), f_cp.result(), f_car.result(), f_eq.result()
+        f_tank = ex.submit(part, "tankers", tankers_data)
+        conflict, cps, carriers, quakes, tankers = f_conf.result(), f_cp.result(), f_car.result(), f_eq.result(), f_tank.result()
     try:
         headlines = carrier_headlines()
     except Exception:
@@ -457,6 +509,7 @@ def build(cfg, stories, election_list, today):
     if carriers:
         carriers = dict(carriers, headlines=headlines)
     return {
+        "tankers": tankers,
         "names": {cid: de_name(name) for name, cid in world.items()},
         "conflict": conflict, "chokepoints": items, "carriers": carriers, "quakes": quakes,
         "elections": elections_layer(election_list, world, g["election_days"], today), "notes": notes,

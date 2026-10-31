@@ -65,7 +65,7 @@
       return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
     }
 
-    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
+    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, tankers: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
@@ -87,6 +87,7 @@
     const magText = (m) => m.toFixed(1).replace(".", ",");
     const strongest = quakeData.reduce((a, q) => (!a || q.mag > a.mag ? q : a), null);
     const carriers = (geo.carriers && geo.carriers.ships || []).filter(s => s.lat != null);
+    const tankers = (geo.tankers && geo.tankers.ships) || [];
     const elections = (geo.elections || []).slice().sort((a, b) => a.date.localeCompare(b.date));
     const confShown = () => conflict.points.filter(p => p.w >= maxW * (S.minConf / 100) ** 2);
     const elShown = () => elections.filter(e => e.days <= S.elDays);
@@ -97,7 +98,7 @@
     const g2 = canvas.getContext("2d");
     const tip = h("div", { class: "gtip" });
     const legend = h("div", { class: "glegend" },
-      [["255,77,61", "Krieg / bewaffneter Konflikt"], ["176,124,255", "Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"]]
+      [["255,77,61", "Krieg / bewaffneter Konflikt"], ["176,124,255", "Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"]]
         .map(([c, t]) => h("span", {}, h("i", { style: `background:rgb(${c})` }), t)));
     const stage = h("div", { class: "gstage" }, canvas, tip, legend,
       h("div", { class: "gbtns" },
@@ -129,6 +130,7 @@
       sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
+      sw("tankers", "Tanker (nur nördliche Ostsee)", tankers.length ? `${tankers.length} Schiffe, ${tankers.filter(t => t.status === "in Fahrt").length} in Fahrt${stale(geo.tankers)}` : "keine Daten"),
       sw("quakes", "Erdbeben", quakeData.length ? `${quakeData.length} ab Stärke 4,5 in 7 Tagen${strongest ? ", stärkstes M " + magText(strongest.mag) : ""}${stale(geo.quakes)}` : "keine Daten"),
       sw("borders", "Ländergrenzen"),
       sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
@@ -294,6 +296,20 @@
           hits.push({ x, y, r: 16, type: "chokepoint", item: c });
         }
       }
+      // Tanker: Punkte, in Fahrt kräftig, sonst blass
+      if (S.tankers) {
+        const r = Math.min(4.5, 1.8 + zoom * 0.35);
+        for (const t of tankers) {
+          if (!vis(t.lon, t.lat)) continue;
+          const [x, y] = proj([t.lon, t.lat]), moving = t.status === "in Fahrt";
+          g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI);
+          g2.fillStyle = moving ? "rgb(54,224,192)" : "rgba(54,224,192,.45)"; g2.fill();
+          g2.strokeStyle = "#0a1420"; g2.lineWidth = 0.8; g2.stroke();
+          if (isSel("tanker", t)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r + 5, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && zoom > 6) halo(t.name, x + r + 4, y + 4, "#b8f5e8", 10.5);
+          hits.push({ x, y, r: Math.max(7, r), type: "tanker", item: t });
+        }
+      }
       // Flugzeugträger
       if (S.carriers) {
         for (const s of carriers) {
@@ -358,7 +374,7 @@
       canvas.style.cursor = hit ? "pointer" : "grab";
       if (hit) {
         tip.textContent = hit.type === "unrest" ? `Unruhen: ${hit.item.name}` : hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
-          : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.item.name;
+          : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.type === "tanker" ? "Tanker " + hit.item.name : hit.item.name;
         tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
       } else tip.classList.remove("on");
     }
@@ -432,6 +448,9 @@
           h("p", {}, `Schiffe pro Tag (Schnitt der letzten 7 Tage): ${num.format(item.last7)}`, h("br"),
             item.base != null ? `${item.base_label}: ${num.format(item.base)} (${pct(item.pct)})` : "Kein Vergleichswert"),
           h("div", { class: "gsp", style: `color:${col}` }, spark(item.history), h("small", {}, "letzte 60 Tage, Stand " + new Date(item.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" }))),
+          item.tanker7 != null && [h("p", {}, h("b", {}, "Davon Tanker: "), `${num.format(item.tanker7)} pro Tag`, h("br"),
+            item.tanker_base != null ? `${item.base_label}: ${num.format(item.tanker_base)}${item.tanker_pct != null ? ` (${pct(item.tanker_pct)})` : ""}` : "Kein Vergleichswert"),
+            h("div", { class: "gsp", style: "color:rgb(54,224,192)" }, spark(item.tanker_history), h("small", {}, "Tanker, letzte 60 Tage"))],
           item.news.length ? h("div", {}, h("h4", {}, "Meldungen"), item.news.map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : h("p", { class: "note" }, "Keine aktuelle Meldung in den gesammelten Nachrichten."),
           h("p", { class: "note" }, "Zahlen: IMF PortWatch (Satelliten-Schiffsortung), Verzögerung etwa 3 Tage. Die Einstufung ist eine Schätzung aus dem Verkehr und den Nachrichten, keine amtliche Sperrung."));
       } else if (type === "quake") {
@@ -446,6 +465,14 @@
           item.tsunami ? h("p", { class: "note" }, "Das Flag „Meeresgebiet“ bedeutet nur, dass die Tsunami-Warnzentren informiert werden. Ein Tsunami ist damit nicht bestätigt.") : null,
           h("p", {}, link("Details bei der USGS", item.url)),
           h("p", { class: "note" }, "Quelle: USGS, alle Beben ab Stärke 4,5 der letzten 7 Tage. Stärke und Ort sind anfangs vorläufig und werden oft korrigiert."));
+      } else if (type === "tanker") {
+        lon = item.lon; lat = item.lat;
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag", style: "background:rgb(54,224,192);color:#04201b" }, "Tanker"),
+          h("p", {}, item.status ? `Status: ${item.status}` : "Status nicht gemeldet", item.speed != null ? `, ${num.format(item.speed)} Knoten` : "", h("br"),
+            item.dest ? `Ziel laut Schiff: ${item.dest}` : "Kein Ziel gemeldet", h("br"),
+            `Position von ${new Date(item.t * 1000).toLocaleString("de-DE", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })} Uhr`),
+          h("p", {}, link("Schiff bei MarineTraffic ansehen", `https://www.marinetraffic.com/en/ais/details/ships/mmsi:${item.mmsi}`)),
+          h("p", { class: "note" }, "Quelle: Digitraffic (finnische Verkehrsbehörde). Gezeigt wird der letzte Empfang an den Küstenstationen, er kann einige Stunden alt sein. Das AIS-Signal meldet nur „Tanker“: Öl, Chemie und Gas lassen sich nicht unterscheiden. Name, Ziel und Status gibt die Besatzung selbst ein, Schiffe können das Signal auch abschalten."));
       } else if (type === "carrier") {
         lon = item.lon; lat = item.lat;
         const c = geo.carriers;
@@ -491,6 +518,9 @@
         S.quakes && h("div", {}, h("h3", {}, "Erdbeben"),
           qs.length ? qs.map(q => row(`M ${magText(q.mag)} · ${q.place}`, `vor ${Math.round((nowSec() - q.t) / 3600) < 48 ? Math.round((nowSec() - q.t) / 3600) + " Std." : Math.round((nowSec() - q.t) / 86400) + " Tagen"}, ${q.depth} km tief`, "#ffb020", () => select("quake", q)))
             : h("p", { class: "note" }, "Keine Beben mit diesen Einstellungen.")),
+        S.tankers && tankers.length > 0 && h("div", {}, h("h3", {}, "Tanker"),
+          row(`${tankers.length} Tanker in der nördlichen Ostsee`, `${tankers.filter(t => t.status === "in Fahrt").length} in Fahrt, zum Gebiet springen`, "rgb(54,224,192)", () => { flyTo(25, 60, 5); stage.scrollIntoView({ block: "center", behavior: "smooth" }); }),
+          h("p", { class: "note" }, "Für Hormus, Rotes Meer und andere Engstellen stehen die täglichen Tanker-Zahlen bei den Meerengen. Weltweite Einzelpositionen gibt es nicht ohne Zugangsschlüssel.")),
         S.carriers && geo.carriers && h("div", {}, h("h3", {}, "Flugzeugträger"),
           carriers.map(s => row(`${s.name} (${s.hull})`, s.where, "#fff", () => select("carrier", s))),
           (geo.carriers.headlines || []).length ? h("div", {}, h("h4", {}, "Aktuelle Meldungen"), geo.carriers.headlines.slice(0, 4).map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : null));
@@ -499,7 +529,7 @@
 
     const notes = Object.entries(geo.notes || {}).map(([k, v]) => `${k}: ${v}`).join("; ");
     const foot = h("p", { class: "note gfoot" },
-      "Quellen: GDELT (Konflikte, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
+      "Quellen: GDELT (Konflikte, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Digitraffic/Fintraffic (Tanker-Positionen, CC BY 4.0), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
       + (notes ? " Hinweis: " + notes : ""));
 
     root.replaceChildren(h("div", { class: "globe-wrap" },

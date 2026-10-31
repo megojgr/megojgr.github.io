@@ -153,6 +153,8 @@ def build_stories(cfg, extra_feeds=(), match=None):
     elect = compile_keywords(cfg["election_keywords"])
     wuppertal = compile_keywords(cfg["regions"]["wuppertal"])
     nrw = compile_keywords(cfg["regions"]["nrw"])
+    europe = compile_keywords(cfg["regions"]["europe"])
+    europe_block = compile_keywords(cfg["regions"]["europe_block"])
 
     items = []
     for _, its, _ in results:
@@ -184,9 +186,13 @@ def build_stories(cfg, extra_feeds=(), match=None):
         trusted = {m["hint"] for m in members if not m["google"] and m["hint"] in ("wuppertal", "nrw")}
         region = ("wuppertal" if "wuppertal" in trusted or any(p.search(blob) for p in wuppertal)
                   else "nrw" if "nrw" in trusted or any(p.search(blob) for p in nrw) else None)
-        if region and top < 3:
-            topic = "regional"  # taucht nur im Regional-Reiter auf, nicht unter Märkte oder Welt
-        public_ok = bool(public_members) and (top >= 3 or bool(hits) or bool(region))
+        # Europa: Europa-Rubrik einer Quelle oder Stichwort in der Überschrift; der Text allein reicht nicht, zu viele Randbezüge
+        titles = " ".join(m["title"] for m in members)
+        is_europe = (not region and not any(p.search(titles) for p in europe_block)
+                     and (any(m["hint"] == "europe" and not m["google"] for m in members) or any(p.search(titles) for p in europe)))
+        if (region or is_europe) and top < 3:
+            topic = "regional"  # taucht nur im Reiter Deutschland auf, nicht unter Märkte oder Welt
+        public_ok = bool(public_members) and (top >= 3 or bool(hits) or bool(region) or is_europe)
         if not public_ok and not depot_match:
             continue
         # Leitmeldung: bevorzugt Original-Feed mit Teaser, dann die neueste
@@ -206,7 +212,7 @@ def build_stories(cfg, extra_feeds=(), match=None):
         story = {
             "title": lead["title"], "summary": lead["summary"], "url": lead["url"], "lang": lead["lang"],
             "topic": topic, "score": round(score, 2), "time": newest.isoformat(),
-            "sources": sources, "watch": hits, "alert": is_alert, "election": is_election, "region": region,
+            "sources": sources, "watch": hits, "alert": is_alert, "election": is_election, "region": region, "europe": is_europe,
             "titles": list(dict.fromkeys(m["title"] for m in members))[:5],
         }
         if public_ok:
@@ -329,6 +335,7 @@ def main():
     for topic in cfg["topics"]:
         shown += [s for s in stories if s["topic"] == topic][:40]
     shown += [s for s in stories if s["watch"] or s["alert"]]
+    shown += sorted((s for s in stories if s["europe"]), key=lambda s: s["time"], reverse=True)[:40]
     shown += sorted((s for s, _ in private), key=lambda s: s["score"], reverse=True)[:80]
     if earn_data:
         for it in earn_data["items"]:
@@ -394,9 +401,9 @@ def main():
     print(f"Globus: {len(c['points']) if c else 0} Konfliktorte ({', '.join(c['days']) if c else 'keine Daten'}), "
           f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
-          f"{len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+          f"{len(geo_data['tankers']['ships']) if geo_data['tankers'] else 0} Tanker, {len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
     wx = local_data["weather"]
-    print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW; "
+    print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW, {sum(s['europe'] for s in stories)} Europa; "
           f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
           f"{len(local_data['warnings'])} DWD-Warnungen" + (f"; Fehler: {local_data['errors']}" if local_data["errors"] else ""))
     if earn_data:

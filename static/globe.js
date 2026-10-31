@@ -79,6 +79,10 @@
     const maxU = Math.max(1, ...unrestPoints.map(p => p.w));
     const confCountry = new Map(conflict.countries.map(c => [c.id, c]));
     const maxCW = Math.max(1, ...warCountries.map(c => c.w));
+    const warDeaths = (c) => Math.max(0, ...(c.listed || []).flatMap(r => r.deaths));
+    const maxDeaths = Math.max(1, ...warCountries.map(warDeaths));
+    const warYears = conflict.war_years || [];
+    const deathText = (r) => r.deaths.map((d, i) => `${d.toLocaleString("de-DE")} (${warYears[i] || ""})`).join(", ");
     const unrestShown = () => unrestPoints.filter(p => p.w >= maxU * (S.minUnrest / 100) ** 2);
     const cps = geo.chokepoints || [];
     const quakeData = (geo.quakes && geo.quakes.items) || [];
@@ -99,7 +103,7 @@
     const g2 = canvas.getContext("2d");
     const tip = h("div", { class: "gtip" });
     const legend = h("div", { class: "glegend" },
-      [["255,77,61", "Krieg / bewaffneter Konflikt"], ["176,124,255", "Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"]]
+      [["255,77,61", "Krieg (ab 1.000 Tote im Jahr)"], ["176,124,255", "Konflikte, Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"]]
         .map(([c, t]) => h("span", {}, h("i", { style: `background:rgb(${c})` }), t)));
     const stage = h("div", { class: "gstage" }, canvas, tip, legend,
       h("div", { class: "gbtns" },
@@ -126,8 +130,8 @@
     const stale = (x) => x && x.stale ? " (alter Stand)" : "";
     const controls = h("div", { class: "gctl" },
       h("h3", {}, "Ebenen"),
-      sw("conflict", "Kriege & Kampfhandlungen", `${warCountries.length} Länder, ${cDays || "keine Daten"}${stale(conflict)}`),
-      sw("unrest", "Unruhen & Spannungen", `${unrestCountries.length} Länder: Proteste, Krawalle, Gewalt`),
+      sw("conflict", "Kriege", `${warCountries.length} Länder, Kämpfe vom ${cDays || "keine Daten"}${stale(conflict)}`),
+      sw("unrest", "Konflikte, Unruhen & Spannungen", `${unrestCountries.length} Länder unterhalb der Kriegsschwelle`),
       sw("chokes", "Meerengen & Seewege", `${cps.length} Engstellen, Daten bis ${cpDate}`),
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
@@ -181,13 +185,13 @@
 
       // Land, Konflikt- und Wahlländer
       g2.beginPath(); path(allLand); g2.fillStyle = COL.land; g2.fill();
-      // Einfärbung: Rot nur für Krieg und bewaffnete Konflikte, Violett für Unruhen und Spannungen
+      // Einfärbung: Rot nur für Krieg, Violett für kleinere Konflikte, Unruhen und Spannungen
       for (const c of conflict.countries) {
         const war = c.level === "war";
         if (!(war ? S.conflict : S.unrest)) continue;
         const f = featById.get(c.id); if (!f) continue;
         g2.beginPath(); path(f);
-        g2.fillStyle = war ? `rgba(${COL.conflict},${(0.2 + 0.4 * Math.sqrt(c.w / maxCW)).toFixed(3)})` : `rgba(${COL.unrest},0.24)`;
+        g2.fillStyle = war ? `rgba(${COL.conflict},${(0.26 + 0.34 * Math.sqrt(warDeaths(c) / maxDeaths)).toFixed(3)})` : `rgba(${COL.unrest},0.24)`;
         g2.fill();
       }
       const elMap = elByCountry();
@@ -486,10 +490,14 @@
         const f = item, c = confCountry.get(f.id), e = elByCountry().get(f.id) || elections.find(x => x.id === f.id);
         const ll = centroid.get(f.id); lon = ll[0]; lat = ll[1];
         node = h("div", {}, h("h3", {}, nameOf(f)),
-          c && c.level === "war" ? [h("div", { class: "gtag bad" }, "Krieg / bewaffneter Konflikt"),
-            h("p", {}, `${c.n} Kampfereignisse mit ${c.w} Medienmeldungen in den letzten 2 Tagen, davon ${c.heavy} schwere Gefechte (Schusswaffen, Artillerie, Luftangriffe).`)]
-            : c ? [h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, "Unruhen & Spannungen"),
-              h("p", {}, `${c.share} % der Ereignisse sind Gewalt oder Zwang${c.protests ? `, ${c.protests} Proteste` : ""}${c.riots ? `, ${c.riots} Krawalle` : ""} in den letzten 2 Tagen.`)]
+          c && c.level === "war" ? [h("div", { class: "gtag bad" }, "Krieg"),
+            (c.listed || []).map(r => h("p", {}, h("b", {}, r.name), h("br"), `Kampftote im gesamten Konflikt: ${deathText(r)}`)),
+            h("p", {}, `${c.n} gemeldete Kampfereignisse in den letzten 2 Tagen, davon ${c.heavy} schwere Gefechte (Schusswaffen, Artillerie, Luftangriffe).`),
+            h("p", { class: "note" }, "Krieg heißt hier: mindestens 1.000 Kampftote im laufenden oder letzten Jahr laut Wikipedia-Konfliktliste, und das Land ist Hauptschauplatz oder die Meldungen bestätigen dort Kämpfe.")]
+            : c ? [h("div", { class: "gtag", style: `background:rgb(${COL.unrest});color:#14061f` }, (c.listed || []).length ? "Bewaffneter Konflikt" : c.tension ? "Spannungen" : "Unruhen & Spannungen"),
+              (c.listed || []).map(r => h("p", {}, h("b", {}, r.name), h("br"), `Kampftote im gesamten Konflikt: ${deathText(r)}`)),
+              c.tension && h("p", {}, "Viele Meldungen zu Militär und Zwischenfällen, aber das Land steht nicht in der Liste aktiver Kriege. Deshalb nicht als Krieg eingestuft."),
+              !c.tension && !(c.listed || []).length && h("p", {}, `${c.share} % der Ereignisse sind Gewalt oder Zwang${c.protests ? `, ${c.protests} Proteste` : ""}${c.riots ? `, ${c.riots} Krawalle` : ""} in den letzten 2 Tagen.`)]
             : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen oder Unruhen in den Daten."),
           newsBlock(c && c.news && c.news.length ? c.news : null, storiesFor(f), c ? (c.level === "war" ? "Anlass: aktuelle Meldungen zum Konflikt" : "Hintergrund: aktuelle Meldungen") : "Meldungen zu diesem Land"),
           e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."));
@@ -504,16 +512,16 @@
     function renderLists() {
       const row = (label, sub, color, onclick) => h("button", { class: "grow", onclick },
         color && h("i", { style: `background:${color}` }), h("span", {}, label, sub && h("small", {}, sub)));
-      const warList = warCountries.filter(c => c.w >= maxCW * (S.minConf / 100) ** 2).slice(0, 8);
-      const unrestList = unrestCountries.slice(0, 8);
+      const warList = warCountries.slice(0, 12);
+      const unrestList = unrestCountries.slice(0, 20);
       const sorted = cps.slice().sort((a, b) => b.level - a.level || (a.pct ?? 0) - (b.pct ?? 0));
       const els = elShown().slice(0, 10);
       const qs = quakesShown().sort((a, b) => b.mag - a.mag).slice(0, 8);
       lists.replaceChildren(
-        S.conflict && h("div", {}, h("h3", {}, "Kriege & Kampfhandlungen"),
-          warList.length ? warList.map(c => row(c.name_de, `${c.n} Kampfereignisse, ${c.w} Meldungen`, `rgb(${COL.conflict})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
-        S.unrest && h("div", {}, h("h3", {}, "Unruhen & Spannungen"),
-          unrestList.length ? unrestList.map(c => row(c.name_de, c.protests ? `${c.protests} Proteste, ${c.share} % Gewaltanteil` : `${c.share} % Gewaltanteil`, `rgb(${COL.unrest})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts auffällig.")),
+        S.conflict && h("div", {}, h("h3", {}, `Kriege (${warCountries.length} Länder)`),
+          warList.length ? warList.map(c => row(c.name_de, (c.listed || [])[0] ? c.listed[0].name : `${c.n} Kampfereignisse`, `rgb(${COL.conflict})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts über der Schwelle.")),
+        S.unrest && h("div", {}, h("h3", {}, "Konflikte, Unruhen & Spannungen"),
+          unrestList.length ? unrestList.map(c => row(c.name_de, (c.listed || [])[0] ? c.listed[0].name : c.tension ? "Spannungen, kein Krieg" : c.protests ? `${c.protests} Proteste, ${c.share} % Gewaltanteil` : `${c.share} % Gewaltanteil`, `rgb(${COL.unrest})`, () => select("country", featById.get(c.id)))) : h("p", { class: "note" }, "Nichts auffällig.")),
         S.chokes && h("div", {}, h("h3", {}, "Meerengen"),
           sorted.map(c => row(c.name, c.pct == null ? "" : `Verkehr ${pct(c.pct)} ggü. ${c.base_label}`, LEVEL[c.level][1], () => select("chokepoint", c)))),
         S.elections && h("div", {}, h("h3", {}, "Wahlen"),
@@ -536,7 +544,7 @@
 
     const notes = Object.entries(geo.notes || {}).map(([k, v]) => `${k}: ${v}`).join("; ");
     const foot = h("p", { class: "note gfoot" },
-      "Quellen: GDELT (Konflikte, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Digitraffic/Fintraffic (Tanker-Positionen, CC BY 4.0), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
+      "Quellen: Wikipedia-Liste laufender bewaffneter Konflikte (Einstufung als Krieg), GDELT (Orte der Kämpfe, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Digitraffic/Fintraffic (Tanker-Positionen, CC BY 4.0), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
       + (notes ? " Hinweis: " + notes : ""));
 
     root.replaceChildren(h("div", { class: "globe-wrap" },

@@ -80,7 +80,13 @@
     ]
   },
   "geo": {
-    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5},
+    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5, "wars": 6},
+    "war_parties": [
+      {"match": "Russo-Ukrainian", "countries": ["Ukraine", "Russia"]},
+      {"match": "Arab–Israeli", "countries": ["Israel", "Palestine", "Lebanon"]},
+      {"match": "Sudanese", "countries": ["Sudan", "South Sudan"]},
+      {"match": "Maghreb", "countries": ["Burkina Faso", "Mali", "Niger", "Nigeria"]}
+    ],
     "reason_countries": 20,
     "conflict_days": 2,
     "conflict_max_points": 150,

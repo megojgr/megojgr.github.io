@@ -1,0 +1,212 @@
+{
+ "date": "2026-10-31",
+ "generated": "2026-10-31T04:22:12.498999+00:00",
+ "quotes": [
+  {
+   "name": "DAX",
+   "group": "index",
+   "price": 25818.21,
+   "pct": -0.851,
+   "alert": null
+  },
+  {
+   "name": "S&P 500",
+   "group": "index",
+   "price": 7580.07,
+   "pct": -1.818,
+   "alert": null
+  },
+  {
+   "name": "Nasdaq",
+   "group": "index",
+   "price": 25436.998,
+   "pct": -2.856,
+   "alert": "day"
+  },
+  {
+   "name": "Dow Jones",
+   "group": "index",
+   "price": 51770.31,
+   "pct": -1.093,
+   "alert": null
+  },
+  {
+   "name": "Euro Stoxx 50",
+   "group": "index",
+   "price": 6131.31,
+   "pct": -1.221,
+   "alert": null
+  },
+  {
+   "name": "Nikkei 225",
+   "group": "index",
+   "price": 63290.11,
+   "pct": -2.118,
+   "alert": "day"
+  },
+  {
+   "name": "Hang Seng",
+   "group": "index",
+   "price": 23294.42,
+   "pct": 1.462,
+   "alert": null
+  },
+  {
+   "name": "VIX (Angstindex)",
+   "group": "index",
+   "price": 19.42,
+   "pct": 12.907,
+   "alert": "day"
+  },
+  {
+   "name": "EUR/USD",
+   "group": "index",
+   "price": 1.1166,
+   "pct": -0.134,
+   "alert": null
+  },
+  {
+   "name": "Gold",
+   "group": "index",
+   "price": 3884.9,
+   "pct": -3.634,
+   "alert": "day"
+  },
+  {
+   "name": "Öl (Brent)",
+   "group": "index",
+   "price": 112.33,
+   "pct": 1.381,
+   "alert": null
+  },
+  {
+   "name": "Bitcoin (EUR)",
+   "group": "index",
+   "price": 69208.39,
+   "pct": -0.878,
+   "alert": null
+  }
+ ],
+ "heute": [
+  {
+   "title": "Ukraine-Krieg - Menschen verlassen russisch besetzte Stadt Oleschky",
+   "url": "https://www.deutschlandfunk.de/menschen-verlassen-russisch-besetzte-stadt-oleschky-106.html",
+   "topic": "world",
+   "n": 12,
+   "alert": false
+  },
+  {
+   "title": "NRW lehnt Evonik-Übernahme ab",
+   "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1kVWozNHU3R1VoM0dQMXZ5dlZRc0pjTWsybWtUc1dVdWJheEtSTUM3ZEFURVVaMW9CenVYa205U3JyUkFCMDd6UVQ3dlBxQ3FSS0I3MDZUWVd1b1lRSng2SnFzYzZuOXlZZkE?oc=5",
+   "topic": "markets",
+   "n": 10,
+   "alert": false
+  },
+  {
+   "title": "VW-Tochter: Audi-Gewinn bricht drastisch um 87 Prozent ein",
+   "url": "https://www.wiwo.de/unternehmen/auto/audi-gewinn-bricht-um-87-prozent-ein-chef-gernot-doellner-unter-druck/100265993.html",
+   "topic": "markets",
+   "n": 9,
+   "alert": false
+  },
+  {
+   "title": "Gipfel in Montreal - EU und Kanada verabreden \"Allianz für die Zukunft\" - Von der Leyen spricht mit Carney auch über Mitgliedschaft",
+   "url": "https://www.deutschlandfunk.de/eu-und-kanada-verabreden-allianz-fuer-die-zukunft-von-der-leyen-spricht-mit-carney-auch-ueber-mitgli-102.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Plattform Binance - Reaktionen auf Krypto-Hackerangriff: \"Entsetzen an der Börse\", \"3,3 Milliarden Dollar sind nicht mehr zurückzuholen\"",
+   "url": "https://www.deutschlandfunk.de/reaktionen-auf-krypto-hackerangriff-entsetzen-an-der-boerse-3-3-milliarden-dollar-sind-nicht-mehr-zu-102.html",
+   "topic": "markets",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Binance Lost Over $6 Billion in Crypto Hack. Here’s What to Know.",
+   "url": "https://www.nytimes.com/2026/10/30/business/binance-hack-crypto-price-what.html",
+   "topic": "markets",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Konjunktur: Deutsche Wirtschaft wächst überraschend – Inflation sinkt deutlich",
+   "url": "https://www.wiwo.de/politik/konjunktur/konjunktur-deutsche-wirtschaft-waechst-ueberraschend-inflation-sinkt-deutlich/100266192.html",
+   "topic": "markets",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Weitgehend friedlich - Landesweite Massenproteste in Italien für bessere Bildung und gegen hohe Preise",
+   "url": "https://www.deutschlandfunk.de/landesweite-massenproteste-in-italien-fuer-bessere-bildung-und-gegen-hohe-preise-102.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "USA liefern Patriot-Raketen an Kiew",
+   "url": "https://www.zdfheute.de/politik/ausland/usa-patriot-lieferung-ukraine-krieg-russland-100.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Polen: Streit um Verfassungsgericht eskaliert",
+   "url": "https://www.zdfheute.de/politik/ausland/polen-verfassungsgericht-krise-polizei-100.html",
+   "topic": "germany",
+   "n": 6,
+   "alert": false
+  }
+ ],
+ "pm": [
+  {
+   "title": "Which Senate Swing States will Republicans win?",
+   "url": "https://polymarket.com/event/which-tossup-senate-states-will-republicans-win-ak-ia-ks-me-mi-oh-tx",
+   "source": "Polymarket",
+   "lead": "None",
+   "p": 0.245,
+   "d1": -0.01
+  },
+  {
+   "title": "Balance of Power: 2026 Midterms",
+   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
+   "source": "Polymarket",
+   "lead": "Democrats Sweep",
+   "p": 0.705,
+   "d1": 0.02
+  },
+  {
+   "title": "Which party will win the House in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.935,
+   "d1": null
+  },
+  {
+   "title": "Next French Presidential Election",
+   "url": "https://polymarket.com/event/next-french-presidential-election",
+   "source": "Polymarket",
+   "lead": "Marine Le Pen",
+   "p": 0.4085,
+   "d1": -0.013
+  },
+  {
+   "title": "Which party will win the Senate in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-senate-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.705,
+   "d1": 0.02
+  },
+  {
+   "title": "What price will Bitcoin hit in October?",
+   "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
+   "source": "Polymarket",
+   "lead": "↓ 75,000",
+   "p": 0.0695,
+   "d1": -0.104
+  }
+ ]
+}

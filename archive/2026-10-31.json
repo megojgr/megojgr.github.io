@@ -1,6 +1,6 @@
 {
  "date": "2026-10-31",
- "generated": "2026-10-31T04:22:12.498999+00:00",
+ "generated": "2026-10-31T16:08:26.224331+00:00",
  "quotes": [
   {
    "name": "DAX",
@@ -68,94 +68,94 @@
   {
    "name": "Gold",
    "group": "index",
-   "price": 3884.9,
-   "pct": -3.634,
+   "price": 3898.9,
+   "pct": -3.287,
    "alert": "day"
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 112.33,
-   "pct": 1.381,
+   "price": 113.43,
+   "pct": 2.374,
    "alert": null
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 69208.39,
-   "pct": -0.878,
+   "price": 69494.85,
+   "pct": 0.406,
    "alert": null
   }
  ],
  "heute": [
   {
-   "title": "Ukraine-Krieg - Menschen verlassen russisch besetzte Stadt Oleschky",
-   "url": "https://www.deutschlandfunk.de/menschen-verlassen-russisch-besetzte-stadt-oleschky-106.html",
+   "title": "Ukrainekrieg - Aus russisch besetzter Stadt Oleschky Gerettete wieder in der Ukraine",
+   "url": "https://www.deutschlandfunk.de/aus-russisch-besetzter-stadt-oleschky-gerettete-wieder-in-der-ukraine-100.html",
    "topic": "world",
-   "n": 12,
+   "n": 19,
    "alert": false
   },
   {
-   "title": "NRW lehnt Evonik-Übernahme ab",
-   "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1kVWozNHU3R1VoM0dQMXZ5dlZRc0pjTWsybWtUc1dVdWJheEtSTUM3ZEFURVVaMW9CenVYa205U3JyUkFCMDd6UVQ3dlBxQ3FSS0I3MDZUWVd1b1lRSng2SnFzYzZuOXlZZkE?oc=5",
-   "topic": "markets",
-   "n": 10,
+   "title": "Koalitionsverhandlungen: Berliner Linke stimmt für Aufnahme von Koalitionsverhandlungen",
+   "url": "https://www.zeit.de/politik/deutschland/2026-10/berliner-linke-stimmt-fuer-aufnahme-von-koalitionsverhandlungen",
+   "topic": "germany",
+   "n": 8,
    "alert": false
   },
   {
-   "title": "VW-Tochter: Audi-Gewinn bricht drastisch um 87 Prozent ein",
-   "url": "https://www.wiwo.de/unternehmen/auto/audi-gewinn-bricht-um-87-prozent-ein-chef-gernot-doellner-unter-druck/100265993.html",
+   "title": "Krypto-Hackerangriff auf Binance - \"3,3 Milliarden Dollar sind nicht mehr zurückzuholen\"",
+   "url": "https://www.deutschlandfunk.de/3-3-milliarden-dollar-sind-nicht-mehr-zurueckzuholen-100.html",
    "topic": "markets",
-   "n": 9,
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Samstag in Wuppertal: „Gen Z“: Demozug von Barmen nach Elberfeld",
+   "url": "http://www.wuppertaler-rundschau.de/lokales/gen-z-demozug-vom-alten-markt-zum-hauptbahnhof_aid-157587507",
+   "topic": "germany",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Blaulicht: Unfallflucht am Klingelholl in Wuppertal: Polizei sucht Zeugen",
+   "url": "https://www.wz.de/nrw/wuppertal/unfallflucht-am-klingelholl-in-wuppertal-polizei-sucht-zeugen_aid-157456101",
+   "topic": "germany",
+   "n": 6,
    "alert": false
   },
   {
    "title": "Gipfel in Montreal - EU und Kanada verabreden \"Allianz für die Zukunft\" - Von der Leyen spricht mit Carney auch über Mitgliedschaft",
    "url": "https://www.deutschlandfunk.de/eu-und-kanada-verabreden-allianz-fuer-die-zukunft-von-der-leyen-spricht-mit-carney-auch-ueber-mitgli-102.html",
    "topic": "world",
-   "n": 7,
+   "n": 4,
    "alert": false
   },
   {
-   "title": "Plattform Binance - Reaktionen auf Krypto-Hackerangriff: \"Entsetzen an der Börse\", \"3,3 Milliarden Dollar sind nicht mehr zurückzuholen\"",
-   "url": "https://www.deutschlandfunk.de/reaktionen-auf-krypto-hackerangriff-entsetzen-an-der-boerse-3-3-milliarden-dollar-sind-nicht-mehr-zu-102.html",
-   "topic": "markets",
-   "n": 7,
-   "alert": false
-  },
-  {
-   "title": "Binance Lost Over $6 Billion in Crypto Hack. Here’s What to Know.",
-   "url": "https://www.nytimes.com/2026/10/30/business/binance-hack-crypto-price-what.html",
-   "topic": "markets",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "Konjunktur: Deutsche Wirtschaft wächst überraschend – Inflation sinkt deutlich",
-   "url": "https://www.wiwo.de/politik/konjunktur/konjunktur-deutsche-wirtschaft-waechst-ueberraschend-inflation-sinkt-deutlich/100266192.html",
-   "topic": "markets",
-   "n": 7,
-   "alert": false
-  },
-  {
-   "title": "Weitgehend friedlich - Landesweite Massenproteste in Italien für bessere Bildung und gegen hohe Preise",
-   "url": "https://www.deutschlandfunk.de/landesweite-massenproteste-in-italien-fuer-bessere-bildung-und-gegen-hohe-preise-102.html",
-   "topic": "world",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "USA liefern Patriot-Raketen an Kiew",
-   "url": "https://www.zdfheute.de/politik/ausland/usa-patriot-lieferung-ukraine-krieg-russland-100.html",
-   "topic": "world",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "Polen: Streit um Verfassungsgericht eskaliert",
-   "url": "https://www.zdfheute.de/politik/ausland/polen-verfassungsgericht-krise-polizei-100.html",
+   "title": "EU-Kanada-Gipfel: Ursula von der Leyen übergeht Wunsch von Friedrich Merz",
+   "url": "https://www.spiegel.de/politik/eu-kanada-gipfel-ursula-von-der-leyen-uebergeht-wunsch-von-friedrich-merz-a-cee7cf99-9197-46ff-8bf7-ce444313540f#ref=rss",
    "topic": "germany",
-   "n": 6,
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "USA genehmigen \"Patriot\"-Lieferungen an Ukraine",
+   "url": "https://www.tagesschau.de/video/video-1675598.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Audi: Quartalsgewinn bricht ein",
+   "url": "https://www.spiegel.de/wirtschaft/unternehmen/audi-quartalsgewinn-bricht-ein-a-edfe8bb4-0644-46b3-b428-044141fe70d3#ref=rss",
+   "topic": "markets",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Crypto giant Binance attempting to recover $6.3bn stolen in hack linked to North Korea",
+   "url": "https://www.bbc.co.uk/news/articles/cwe8lp7zy07zo?at_medium=RSS&at_campaign=rss",
+   "topic": "markets",
+   "n": 4,
    "alert": false
   }
  ],
@@ -165,8 +165,8 @@
    "url": "https://polymarket.com/event/which-tossup-senate-states-will-republicans-win-ak-ia-ks-me-mi-oh-tx",
    "source": "Polymarket",
    "lead": "None",
-   "p": 0.245,
-   "d1": -0.01
+   "p": 0.225,
+   "d1": -0.02
   },
   {
    "title": "Balance of Power: 2026 Midterms",
@@ -174,39 +174,39 @@
    "source": "Polymarket",
    "lead": "Democrats Sweep",
    "p": 0.705,
-   "d1": 0.02
+   "d1": -0.01
   },
   {
    "title": "Which party will win the House in 2026?",
    "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
    "source": "Polymarket",
    "lead": "Democratic Party",
-   "p": 0.935,
-   "d1": null
+   "p": 0.945,
+   "d1": 0.01
+  },
+  {
+   "title": "Michigan Senate Election Winner",
+   "url": "https://polymarket.com/event/michigan-senate-election-winner",
+   "source": "Polymarket",
+   "lead": "Abdul El-Sayed (D)",
+   "p": 0.815,
+   "d1": 0.04
   },
   {
    "title": "Next French Presidential Election",
    "url": "https://polymarket.com/event/next-french-presidential-election",
    "source": "Polymarket",
    "lead": "Marine Le Pen",
-   "p": 0.4085,
-   "d1": -0.013
+   "p": 0.4095,
+   "d1": -0.0135
   },
   {
-   "title": "Which party will win the Senate in 2026?",
-   "url": "https://polymarket.com/event/which-party-will-win-the-senate-in-2026",
+   "title": "Nebraska Senate Election Winner  ",
+   "url": "https://polymarket.com/event/nebraska-senate-election-winner",
    "source": "Polymarket",
-   "lead": "Democratic Party",
-   "p": 0.705,
-   "d1": 0.02
-  },
-  {
-   "title": "What price will Bitcoin hit in October?",
-   "url": "https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026",
-   "source": "Polymarket",
-   "lead": "↓ 75,000",
-   "p": 0.0695,
-   "d1": -0.104
+   "lead": "Pete Ricketts (R)",
+   "p": 0.755,
+   "d1": 0.08
   }
  ]
 }

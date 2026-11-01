@@ -1,6 +1,6 @@
 {
  "date": "2026-11-01",
- "generated": "2026-11-01T04:50:10.617743+00:00",
+ "generated": "2026-11-01T16:54:27.588659+00:00",
  "quotes": [
   {
    "name": "DAX",
@@ -82,80 +82,80 @@
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 69654.74,
-   "pct": 0.788,
+   "price": 69956.49,
+   "pct": 0.801,
    "alert": null
   }
  ],
  "heute": [
   {
-   "title": "Aktuelles zum Krieg in der Ukraine",
-   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "title": "+++ Ukraine-Krieg +++: Festnahme nach Terrorhinweis – russischer FSB dankt USA",
+   "url": "https://www.handelsblatt.com/politik/international/ukraine-festnahme-nach-terrorhinweis-russischer-fsb-dankt-usa/27982126.html",
    "topic": "world",
-   "n": 15,
+   "n": 14,
+   "alert": false
+  },
+  {
+   "title": "Tarife - Erste Warnstreiks der IG Metall",
+   "url": "https://www.deutschlandfunk.de/erste-warnstreiks-der-ig-metall-104.html",
+   "topic": "germany",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Trump: Bolsonaro kann in den USA bleiben",
+   "url": "https://www.dw.com/de/trump-bolsonaro-kann-in-den-usa-bleiben/a-79821509?maca=de-rss-de-all-1119-rdf",
+   "topic": "world",
+   "n": 8,
    "alert": false
   },
   {
    "title": "Berlin - Linke stimmt für Koalitionsverhandlungen mit Grünen und SPD",
    "url": "https://www.deutschlandfunk.de/linke-stimmt-fuer-koalitionsverhandlungen-mit-gruenen-und-spd-102.html",
    "topic": "germany",
-   "n": 8,
-   "alert": false
-  },
-  {
-   "title": "Machtkampf um Polens Verfassungsgericht",
-   "url": "https://www.tagesschau.de/tagesthemen/video-1675934.html",
-   "topic": "world",
-   "n": 8,
-   "alert": false
-  },
-  {
-   "title": "Oleschky-Flüchtlinge sind wieder in der Ukraine",
-   "url": "https://www.spiegel.de/ausland/oleschky-fluechtlinge-sind-wieder-in-der-ukraine-a-84c2759e-6b0b-419a-87e9-ab0b2e5ff5a7#ref=rss",
-   "topic": "world",
    "n": 6,
    "alert": false
   },
   {
-   "title": "Samstag in Wuppertal: Mit Bildern: „Gen Z“-Demozug von Barmen nach Elberfeld",
-   "url": "http://www.wuppertaler-rundschau.de/lokales/gen-z-demozug-vom-alten-markt-zum-hauptbahnhof_aid-157587507",
-   "topic": "germany",
-   "n": 6,
-   "alert": false
-  },
-  {
-   "title": "Polen: Tusk beklagt Angriff auf \"Demokratie und Rechtsstaat\"",
-   "url": "https://www.tagesschau.de/ausland/europa/polen-eskalation-verfassungsgericht-102.html",
-   "topic": "world",
-   "n": 5,
-   "alert": false
-  },
-  {
-   "title": "Warnstreiks der IG Metall kurz nach Mitternacht angelaufen",
-   "url": "https://www.tagesschau.de/wirtschaft/arbeitsmarkt/ig-metall-warnstreiks-108.html",
+   "title": "Halloween: Kinder entdecken Nadeln in Halloween-Süßigkeiten",
+   "url": "https://www.zeit.de/gesellschaft/zeitgeschehen/2026-11/halloween-suessigkeiten-nadeln-metall-gegenstaende-polizei-thueringen-gxe",
    "topic": "germany",
    "n": 4,
    "alert": false
   },
   {
-   "title": "Hackerangriff - FBI macht nordkoreanische Hacker für Angriff auf Kryptowährungsbörse Binance verantwortlich",
-   "url": "https://www.deutschlandfunk.de/fbi-macht-nordkoreanische-hacker-fuer-angriff-auf-kryptowaehrungsboerse-binance-verantwortlich-102.html",
+   "title": "Binance resumes withdrawals following $6.3 billion hack, says 90% of stolen user assets are covered",
+   "url": "https://www.cnbc.com/2026/10/31/binance-hack-asset-coverage-withdrawals.html",
+   "topic": "markets",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "+++ Iran-Krieg +++: Israelischer Oppositionspolitiker warnt vor neuem Krieg mit Iran unter Netanjahu",
+   "url": "https://www.handelsblatt.com/politik/international/iran-krieg-israelische-opposition-warnt-vor-neuem-krieg-mit-iran/100136895.html",
    "topic": "world",
    "n": 5,
    "alert": false
   },
   {
-   "title": "POL-DO: Vier Männer greifen 23-Jährigen an einem Kiosk an - Polizei sucht Zeugen",
-   "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE5oZ082WEdBTHdmbGs0ek8yeEdXU2ktTFZHdFhNeExYYXRiRkI1RGxEdjlRQ0pYZFZMNG56VmpLZS1HVEZPbUJuMG9sR3FPbEJ2NkNibDFDdG9nVnhNWjJOTWRhMA?oc=5",
-   "topic": "germany",
-   "n": 5,
-   "alert": false
-  },
-  {
-   "title": "Shops looted as German cost of living protests turn violent",
-   "url": "https://www.bbc.co.uk/news/articles/cqj34gnd3n30o?at_medium=RSS&at_campaign=rss",
+   "title": "FAQ: Was die neue Gebühr auf Sendungen aus Nicht-EU-Ländern bedeutet",
+   "url": "https://www.tagesschau.de/inland/neue-paketgebuehr-faq-100.html",
    "topic": "world",
    "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Interview - Kramp-Karrenbauer warnt vor Regierungen von AfD und Linken",
+   "url": "https://www.deutschlandfunk.de/kramp-karrenbauer-warnt-vor-regierungen-von-afd-und-linken-100.html",
+   "topic": "germany",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Tech-Aktien: „Die Ära der ‚Magnificent Seven‘ scheint vorbei“ – 700 Milliarden Dollar an Börsenwert vernichtet",
+   "url": "https://www.handelsblatt.com/finanzen/anlagestrategie/trends/tech-aktien-die-aera-der-magnificent-seven-scheint-vorbei/100266107.html",
+   "topic": "markets",
+   "n": 2,
    "alert": false
   }
  ],
@@ -165,16 +165,32 @@
    "url": "https://polymarket.com/event/which-tossup-senate-states-will-republicans-win-ak-ia-ks-me-mi-oh-tx",
    "source": "Polymarket",
    "lead": "None",
-   "p": 0.245,
-   "d1": null
+   "p": 0.255,
+   "d1": 0.03
   },
   {
    "title": "Democratic Presidential Nominee 2028",
    "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
    "source": "Polymarket",
    "lead": "Gavin Newsom",
-   "p": 0.161,
-   "d1": 0.0025
+   "p": 0.162,
+   "d1": 0.002
+  },
+  {
+   "title": "Will 1win launch a token by ___?",
+   "url": "https://polymarket.com/event/will-1win-launch-a-token-by",
+   "source": "Polymarket",
+   "lead": "October 31, 2026",
+   "p": 0.9985,
+   "d1": 0.1315
+  },
+  {
+   "title": "Balance of Power: 2026 Midterms",
+   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
+   "source": "Polymarket",
+   "lead": "Democrats Sweep",
+   "p": 0.715,
+   "d1": 0.01
   },
   {
    "title": "Which party will win the House in 2026?",
@@ -182,31 +198,15 @@
    "source": "Polymarket",
    "lead": "Democratic Party",
    "p": 0.945,
-   "d1": 0.01
-  },
-  {
-   "title": "Michigan Senate Election Winner",
-   "url": "https://polymarket.com/event/michigan-senate-election-winner",
-   "source": "Polymarket",
-   "lead": "Abdul El-Sayed (D)",
-   "p": 0.785,
-   "d1": 0.045
-  },
-  {
-   "title": "Will 1win launch a token by ___?",
-   "url": "https://polymarket.com/event/will-1win-launch-a-token-by",
-   "source": "Polymarket",
-   "lead": "October 31, 2026",
-   "p": 0.9995,
-   "d1": 0.8005
-  },
-  {
-   "title": "Balance of Power: 2026 Midterms",
-   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
-   "source": "Polymarket",
-   "lead": "Democrats Sweep",
-   "p": 0.705,
    "d1": null
+  },
+  {
+   "title": "Presidential Election Winner 2028",
+   "url": "https://polymarket.com/event/presidential-election-winner-2028",
+   "source": "Polymarket",
+   "lead": "JD Vance",
+   "p": 0.189,
+   "d1": 0.0045
   }
  ]
 }

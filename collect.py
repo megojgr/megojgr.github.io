@@ -23,6 +23,7 @@ import geo
 import live
 import localinfo
 import podcasts
+import etfs
 import translate
 import universe
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
@@ -324,7 +325,7 @@ def main():
         local_data = local_f.result()
         earn_data = earn_f.result()
         pod_data = pod_f.result()
-        uni_data = uni_f.result()
+        uni_data, etf_themes = uni_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
@@ -367,6 +368,7 @@ def main():
         "earnings": earn_data,
         "podcasts": pod_data,
         "universe": uni_data,
+        "etf_themes": etf_themes,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -383,6 +385,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     for asset in (ROOT / "static").glob("*"):  # Symbole und Manifest für die Handy-App
         shutil.copy2(asset, OUT / asset.name)
+    etf_info = etfs.build(cfg, OUT, int(os.environ.get("ETF_NAMES_PER_RUN", "600")))  # Suchliste und Verläufe als eigene Dateien
     blob =json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     page = (ROOT / "template.html").read_text(encoding="utf-8").replace("__DATA__", blob)
@@ -417,6 +420,8 @@ def main():
               + (" (alter Stand)" if earn_data.get("stale") else ""))
     print(f"Werteliste für eigene Depots: {sum(1 for u in uni_data if u['price'] is not None)}/{len(uni_data)} Kurse, "
           f"{sum(len(u['news']) for u in uni_data)} Meldungen")
+    print(f"ETF-Suche: {etf_info.get('count', 0)} ETFs/ETCs mit Kursen von {etf_info.get('listed', 0)} an Xetra, "
+          f"{etf_info.get('named', 0)} mit vollem Namen" + (f"; {etf_info['note']}" if etf_info.get("note") else ""))
     print("Podcasts: " + "; ".join(f"{p['name']}: {p['title'] or 'keine Folge'} ({'Folge' if p['exact'] else 'nur Sendung'})"
                                    + (f" [{p['error']}]" if p["error"] else "") for p in pod_data))
     print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))

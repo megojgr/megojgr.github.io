@@ -952,6 +952,49 @@ const MYKEY = "mydepot";
 let MY = null, MYPIN = null;   // entsperrtes eigenes Depot {items: [{id, qty, buy, added}]} und seine PIN (nur im Speicher)
 const uni = () => DATA.universe || [];
 const uniOf = (id) => uni().find(u => u.id === id);
+// Große ETF-Liste (alle Xetra-ETFs und ETCs): erst beim Suchen oder für gehaltene ETFs geladen, Verläufe einzeln je ETF
+let ETFIDX = null, ETFLOAD = null;
+const SERIES = {};
+function loadEtfIndex() {
+  if (ETFIDX) return Promise.resolve(ETFIDX);
+  ETFLOAD = ETFLOAD || fetch("etfs.json?v=" + encodeURIComponent(DATA.generated)).then(r => r.ok ? r.json() : null).then(j => {
+    if (!j) return null;
+    const c = Object.fromEntries(j.cols.map((k, i) => [k, i])), curated = new Set(uni().map(u => u.isin));
+    ETFIDX = j.rows.filter(r => !curated.has(r[c.isin])).map(r => ({ id: r[c.id], symbol: r[c.id], name: r[c.name], short: r[c.name],
+      isin: r[c.isin], wkn: r[c.wkn], type: r[c.kind] === "ETC" ? "ETC" : "ETF", theme: r[c.theme], price: r[c.price], pct: r[c.pct],
+      week: r[c.week], month: r[c.month], currency: "EUR", xname: r[c.xname], big: true, t: [], c: [], news: [], context: [] }));
+    return ETFIDX;
+  }).catch(() => { ETFLOAD = null; return null; });
+  return ETFLOAD;
+}
+async function loadSeries(id) {
+  if (!SERIES[id]) try {
+    const r = await fetch(`etf/${encodeURIComponent(id)}.json?v=${encodeURIComponent(DATA.generated)}`);
+    if (r.ok) SERIES[id] = await r.json();
+  } catch {}
+  return SERIES[id];
+}
+const bigOf = (id) => ETFIDX && ETFIDX.find(e => e.id === id);
+const instOf = (id) => uniOf(id) || bigOf(id);
+const themeLabel = (key) => ((DATA.etf_themes || {})[key] || {}).label || "";
+// Meldungen zu einem ETF: eigene, dazu das Thema (z. B. Weltaktien) und die größten Positionen (z. B. Apple beim MSCI World)
+function newsFor(p) {
+  if (p.type === "Aktie") return p.news || [];
+  const th = (DATA.etf_themes || {})[p.theme], out = [...(p.news || [])], seen = new Set(out.map(n => n.url));
+  const add = (n, tag) => { if (!seen.has(n.url)) { seen.add(n.url); out.push(tag ? { ...n, watch: [tag] } : n); } };
+  if (th) {
+    th.news.slice(0, 6).forEach(n => add(n, th.label));
+    for (const sym of th.holdings) { const s = uniOf(sym); if (s) s.news.slice(0, 2).forEach(n => add(n, s.short)); }
+  }
+  return out.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 16);
+}
+async function ensureMyData() {
+  const need = (MY ? MY.items : []).filter(i => !uniOf(i.id));
+  if (!need.length) return;
+  await loadEtfIndex();
+  await Promise.all(need.map(i => loadSeries(i.id)));
+  renderAll();
+}
 const euro = (x) => x == null ? "–" : x.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const euroSigned = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + euro(Math.abs(x));
 const toB64 = (bytes) => btoa(String.fromCharCode(...bytes));
@@ -959,7 +1002,17 @@ const toB64 = (bytes) => btoa(String.fromCharCode(...bytes));
 function myRaw() { try { return JSON.parse(store.get(MYKEY) || "null"); } catch { return null; } }
 function myInit() { const raw = myRaw(); if (raw && !raw.enc) MY = { v: 1, items: raw.items || [] }; }
 function myPositions() {
-  return (MY ? MY.items : []).map(it => { const u = uniOf(it.id); return u && { ...u, qty: it.qty, buy: it.buy, mine: true }; }).filter(Boolean);
+  return (MY ? MY.items : []).map(it => {
+    const u = instOf(it.id);
+    return u && { ...u, ...(u.big ? SERIES[it.id] || {} : {}), qty: it.qty, buy: it.buy, mine: true, news: newsFor(u) };
+  }).filter(Boolean);
+}
+// Antippen einer Position: Verlauf eines großen ETFs vorher nachladen
+async function openPosition(id) {
+  const u = instOf(id);
+  if (u && u.big) await loadSeries(id);
+  const p = myPositions().find(x => x.id === id);
+  if (p) openDetail(p, p);
 }
 // Zahl aus einem Eingabefeld, deutsch ("1.234,5") oder englisch ("1234.5")
 function parseNum(text) {
@@ -1015,26 +1068,38 @@ function showDlg(...kids) {
 // Wert suchen und auswählen
 function openPicker() {
   const q = h("input", { type: "text", placeholder: "Name, WKN oder ISIN, z. B. MSCI World", autocomplete: "off", enterkeyhint: "search" });
-  const list = h("div");
+  const list = h("div"), status = h("p", { class: "note" });
+  const hay = (u) => u._h || (u._h = [u.short, u.name, u.isin, u.wkn, u.symbol, u.xname, themeLabel(u.theme)].join(" ").toLowerCase());
+  const LIMIT = 60;
   const render = () => {
-    const t = q.value.trim().toLowerCase(), have = new Set((MY ? MY.items : []).map(i => i.id));
-    const res = uni().filter(u => !t || [u.short, u.name, u.isin, u.wkn, u.symbol].some(x => (x || "").toLowerCase().includes(t)));
-    list.replaceChildren(...(res.length ? [["ETF", "ETFs"], ["Aktie", "Aktien"]].flatMap(([type, label]) => {
-      const r = res.filter(u => u.type === type);
-      return r.length ? [h("h3", { class: "sec2" }, label), ...r.map(u => h("button", { class: "pickrow", onclick: () => openEditor(u.id) },
-        h("span", {}, h("b", {}, u.short), h("small", {}, `${u.name} · WKN ${u.wkn}`)),
-        h("span", { class: "pv" }, have.has(u.id) ? "im Depot ✓" : euro(u.price))))] : [];
-    }) : [h("p", { class: "note" }, "Nichts gefunden.")]));
+    const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean), have = new Set((MY ? MY.items : []).map(i => i.id));
+    const hit = (u) => words.every(w => hay(u).includes(w));
+    const top = uni().filter(u => !words.length || hit(u));
+    const more = words.length && ETFIDX ? ETFIDX.filter(hit).sort((a, b) => a.name.length - b.name.length) : [];
+    const row = (u) => h("button", { class: "pickrow", onclick: () => openEditor(u.id) },
+      h("span", {}, h("b", {}, u.short), h("small", {}, [u.short !== u.name && u.name, u.type, "WKN " + u.wkn, u.theme && themeLabel(u.theme)].filter(Boolean).join(" · "))),
+      h("span", { class: "pv" }, have.has(u.id) ? "im Depot ✓" : euro(u.price)));
+    const group = (label, rows) => rows.length ? [h("h3", { class: "sec2" }, label), rows.map(row)] : [];
+    list.replaceChildren(...[
+      group("Beliebte ETFs", top.filter(u => u.type === "ETF")),
+      group("Aktien", top.filter(u => u.type === "Aktie")),
+      group(`Alle ETFs und ETCs${more.length > LIMIT ? ` (die ersten ${LIMIT} von ${more.length})` : ""}`, more.slice(0, LIMIT)),
+      words.length && !top.length && !more.length && ETFIDX && h("p", { class: "note" }, "Nichts gefunden."),
+    ].flat(Infinity).filter(Boolean));
+    status.textContent = !ETFIDX ? "Lade alle ETFs …"
+      : words.length ? (more.length > LIMIT ? "Mehr Treffer, als angezeigt: gib mehr ein, zum Beispiel den Anbieter oder „Acc“/„Dist“." : "")
+      : `Gib einen Namen, eine WKN oder ISIN ein, um alle ${ETFIDX.length.toLocaleString("de-DE")} ETFs und ETCs an Xetra zu durchsuchen.`;
   };
   q.addEventListener("input", render);
   render();
-  showDlg(dlgTop("Wert hinzufügen"), q, list,
-    h("p", { class: "note", style: "margin-top:16px" }, "Dein Wert fehlt? Sag Milan Bescheid, dann kommt er in die Liste. Meist ist er innerhalb einer Stunde dabei."));
+  loadEtfIndex().then(() => { if (!ETFIDX) status.textContent = "Die große ETF-Liste ist gerade nicht erreichbar."; render(); });
+  showDlg(dlgTop("Wert hinzufügen"), q, status, list,
+    h("p", { class: "note", style: "margin-top:16px" }, "Alle an Xetra gehandelten ETFs und ETCs sind dabei, dazu ausgewählte Aktien. Deine Aktie fehlt? Sag Milan Bescheid, dann kommt sie in die Liste."));
 }
 
 // Stückzahl und Kaufpreis eintragen oder nur beobachten
 function openEditor(id) {
-  const u = uniOf(id), cur = MY && MY.items.find(i => i.id === id);
+  const u = instOf(id), cur = MY && MY.items.find(i => i.id === id);
   let mode = cur && !cur.qty ? "watch" : "own";
   const fmt = (x) => x == null ? "" : String(x).replace(".", ",");
   const qty = h("input", { type: "text", inputmode: "decimal", placeholder: "z. B. 12,5", value: fmt(cur && cur.qty) });
@@ -1051,7 +1116,7 @@ function openEditor(id) {
     seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === mode)));
     fields.hidden = mode !== "own"; hint.hidden = mode === "own";
   };
-  const done = async () => { await mySave(); $("detail").close(); renderAll(); show("depot"); };
+  const done = async () => { await mySave(); $("detail").close(); renderAll(); show("depot"); ensureMyData(); };
   const save = async () => {
     let n = null, b = null;
     if (mode === "own") {
@@ -1089,7 +1154,7 @@ function openTransfer() {
   const copy = async () => { try { await navigator.clipboard.writeText(link); msg.textContent = "  Kopiert."; } catch { out.select(); msg.textContent = "  Bitte markieren und kopieren."; } };
   const share = async () => { try { await navigator.share({ title: "Mein Depot", url: link }); } catch {} };
   const input = h("textarea", { class: "code", rows: 3, placeholder: "Link oder Code hier einfügen" });
-  const take = async () => { if (await importDepot(input.value)) { $("detail").close(); renderAll(); show("depot"); } };
+  const take = async () => { if (await importDepot(input.value)) { $("detail").close(); renderAll(); show("depot"); ensureMyData(); } };
   showDlg(dlgTop("Depot übertragen oder sichern"),
     has ? [h("h3", { class: "sec2" }, "Von diesem Gerät mitnehmen"),
       h("p", {}, "Öffne diesen Link auf dem anderen Gerät, dann ist dein Depot dort auch. Bewahre ihn außerdem als Sicherung auf, etwa in einer Notiz an dich selbst."),
@@ -1121,7 +1186,7 @@ function myPinCard(raw) {
   const pin = h("input", { type: "password", inputmode: "numeric", placeholder: "PIN", autocomplete: "current-password" });
   const err = h("div", { class: "note bad" });
   const go = async () => {
-    try { MY = await decryptDepot(raw.enc, pin.value); MYPIN = pin.value; renderAll(); } catch { err.textContent = "PIN falsch."; }
+    try { MY = await decryptDepot(raw.enc, pin.value); MYPIN = pin.value; renderAll(); ensureMyData(); } catch { err.textContent = "PIN falsch."; }
   };
   const reset = async () => {
     if (!confirm("Depot auf diesem Gerät löschen? Mit einem gesicherten Übertragungs-Link kannst du es danach wiederherstellen.")) return;
@@ -1147,8 +1212,8 @@ function myIntro() {
 function myRow(p) {
   const gain = p.qty && p.buy && p.price != null ? p.qty * (p.price - p.buy) : null;
   return h("div", { class: "myrow" },
-    h("button", { class: "prow", onclick: () => openDetail(p, p) },
-      h("span", { class: "nm" }, p.short, h("small", {}, [p.type, p.qty ? `${de.format(p.qty)} Stück` : "beobachtet", `${p.news.length} Meldungen`].join(" · "))),
+    h("button", { class: "prow", onclick: () => openPosition(p.id) },
+      h("span", { class: "nm" }, p.short, h("small", {}, [p.type, p.qty ? `${de.format(p.qty)} Stück` : "beobachtet", p.theme && themeLabel(p.theme), `${p.news.length} Meldungen`].filter(Boolean).join(" · "))),
       spark(lastN(p)),
       h("span", { class: "pv" }, euro(p.price), p.pct != null && h("small", { class: p.pct >= 0 ? "up" : "down" }, pct(p.pct) + " heute"),
         p.qty && p.price != null && h("small", {}, "Wert " + euro(p.qty * p.price)),
@@ -1160,7 +1225,8 @@ function myDepotView() {
   const raw = myRaw();
   if (raw && raw.enc && !MY) return myPinCard(raw);
   if (!MY || !MY.items.length) return myIntro();
-  const ps = myPositions(), lost = MY.items.filter(i => !uniOf(i.id));
+  const ps = myPositions(), lost = ETFIDX ? MY.items.filter(i => !instOf(i.id)) : [];
+  const loading = !ETFIDX && MY.items.some(i => !uniOf(i.id));
   const held = ps.filter(p => p.qty && p.price != null);
   const value = held.reduce((a, p) => a + p.qty * p.price, 0);
   const today = held.reduce((a, p) => a + (p.pct == null ? 0 : p.qty * (p.price - p.price / (1 + p.pct / 100))), 0);
@@ -1169,13 +1235,14 @@ function myDepotView() {
   const seen = new Set(), news = [];
   for (const p of ps) for (const n of p.news) if (!seen.has(n.url)) { seen.add(n.url); news.push(n); }
   news.sort((a, b) => b.time.localeCompare(a.time));
-  const etfs = ps.filter(p => p.type === "ETF"), stocks = ps.filter(p => p.type !== "ETF");
+  const etfs = ps.filter(p => p.type !== "Aktie"), stocks = ps.filter(p => p.type === "Aktie");
   return h("div", { class: "layout" },
     h("div", {},
       held.length > 0 && h("div", { class: "mysum" },
         h("div", {}, h("span", {}, "Depotwert"), h("b", {}, euro(value)), h("small", {}, `${held.length} von ${ps.length} Werten mit Stückzahl`)),
         h("div", {}, h("span", {}, "Heute"), h("b", { class: today >= 0 ? "up" : "down" }, euroSigned(today)), h("small", {}, pct(value - today ? today / (value - today) * 100 : null))),
         withBuy.length > 0 && h("div", {}, h("span", {}, "Seit Kauf"), h("b", { class: gain >= 0 ? "up" : "down" }, euroSigned(gain)), h("small", {}, `${pct(cost ? gain / cost * 100 : null)} auf ${euro(cost)} Einsatz`))),
+      loading && h("p", { class: "note" }, "Lade die übrigen ETFs …"),
       etfs.length > 0 && [sec("ETFs", "antippen für Verlauf und Meldungen"), etfs.map(myRow)],
       stocks.length > 0 && [sec("Aktien", "antippen für Verlauf und Meldungen"), stocks.map(myRow)],
       lost.length > 0 && h("p", { class: "note bad" }, `${lost.length} Wert(e) gibt es nicht mehr in der Liste der App: ${lost.map(i => i.id).join(", ")}.`),
@@ -1184,7 +1251,7 @@ function myDepotView() {
         h("button", { class: "btn", onclick: openTransfer }, "Übertragen / sichern"),
         h("button", { class: "btn", onclick: openPin }, MYPIN ? "PIN ändern" : "PIN festlegen")),
       h("p", { class: "note" }, "Kurse in Euro, umgerechnet zum Tageskurs, teils verzögert. Gespeichert nur auf diesem Gerät. Keine Anlageberatung."),
-      sec("Meldungen zu deinem Depot", "neueste zuerst"), items(news.slice(0, 24), { hideTopic: true })),
+      sec("Meldungen zu deinem Depot", "neueste zuerst, bei ETFs auch zu Thema und größten Positionen"), items(news.slice(0, 30), { hideTopic: true })),
     h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Heute"), quoteRows(ps.filter(p => p.price != null), (q) => q))));
 }
 
@@ -2063,6 +2130,7 @@ async function init() {
   await autoUnlock();
   renderAll();
   if (incoming && await importDepot(incoming)) show("depot");
+  ensureMyData();
   autoRefresh();
 }
 init();

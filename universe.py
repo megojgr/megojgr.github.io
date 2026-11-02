@@ -12,6 +12,7 @@ from pathlib import Path
 
 from briefings import _items as rss_items
 from depot import to_eur
+from etfs import theme_of
 from markets import fetch_quote
 from net import fetch
 
@@ -69,14 +70,18 @@ def build(cfg, alerts):
     news = cache.get("news", {})
     now = dt.datetime.now(dt.timezone.utc)
     fresh = cache.get("fetched") and (now - dt.datetime.fromisoformat(cache["fetched"])).total_seconds() < cfg.get("universe_news_hours", 3) * 3600
-    if not fresh or any(u["symbol"] not in news for u in items):
-        def one(u):
+    # Meldungen je Aktie und je ETF-Thema (z. B. "theme:world"); ETFs zeigen dazu Meldungen ihrer größten Positionen
+    themes = cfg.get("etf_themes", [])
+    searches = [(u["symbol"], u) for u in items] + [("theme:" + t["key"], {"terms": t["terms"], "type": "ETF", "q_extra": t.get("q_extra")}) for t in themes]
+    if not fresh or any(key not in news for key, _ in searches):
+        def one(job):
+            key, u = job
             try:
-                return u["symbol"], news_for(u)
+                return key, news_for(u)
             except Exception:
-                return u["symbol"], news.get(u["symbol"], [])  # Suche gestört: alten Stand behalten
+                return key, news.get(key, [])  # Suche gestört: alten Stand behalten
         with ThreadPoolExecutor(max_workers=4) as ex:
-            news = dict(ex.map(one, items))
+            news = dict(ex.map(one, searches))
         try:
             CACHE.parent.mkdir(exist_ok=True)
             CACHE.write_text(json.dumps({"fetched": now.isoformat(), "news": news}, ensure_ascii=False), encoding="utf-8")
@@ -89,7 +94,9 @@ def build(cfg, alerts):
     out = []
     for u, q in zip(items, quotes):
         q["c"] = compact(q.get("c") or [])
-        out.append({"id": u["symbol"], "note": u.get("note"), **{k: u[k] for k in ("name", "short", "type", "isin", "wkn", "symbol")},
+        out.append({"id": u["symbol"], "note": u.get("note"), "theme": theme_of(u["name"], themes) if u["type"] == "ETF" else None,
+                    **{k: u[k] for k in ("name", "short", "type", "isin", "wkn", "symbol")},
                     **{k: q.get(k) for k in ("price", "pct", "week", "month", "t", "c", "currency", "hi52", "lo52", "alert", "error", "local", "fx_error")},
                     "news": news.get(u["symbol"], []), "context": []})
-    return out
+    theme_data = {t["key"]: {"label": t["label"], "holdings": t["holdings"], "news": news.get("theme:" + t["key"], [])} for t in themes}
+    return out, theme_data

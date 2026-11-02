@@ -24,6 +24,7 @@ import live
 import localinfo
 import podcasts
 import translate
+import universe
 from markets import build_kalshi, build_polymarket, build_termine, fetch_quote
 from net import fetch
 from textutil import compile_keywords, count_hits
@@ -312,6 +313,7 @@ def main():
         local_f = ex.submit(localinfo.build, cfg)
         earn_f = ex.submit(earnings.build, cfg, NOW.date())
         pod_f = ex.submit(podcasts.build, cfg)
+        uni_f = ex.submit(universe.build, cfg, cfg["alerts"])
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
         pm_top, pm_window, pm_error = pm_f.result()
@@ -322,6 +324,7 @@ def main():
         local_data = local_f.result()
         earn_data = earn_f.result()
         pod_data = pod_f.result()
+        uni_data = uni_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
@@ -363,6 +366,7 @@ def main():
         "local": local_data,
         "earnings": earn_data,
         "podcasts": pod_data,
+        "universe": uni_data,
         "prediction": prediction,
         "termine": termine,
         "depot": depot_data,
@@ -411,6 +415,8 @@ def main():
         print(f"Quartalszahlen: {len(its)} Termine, {sum(i['status'] == 'reported' for i in its)} mit Ergebnis, "
               f"{sum(1 for i in its if i['reaction'])} mit Kursreaktion" + (f"; {earn_data['error']}" if earn_data.get("error") else "")
               + (" (alter Stand)" if earn_data.get("stale") else ""))
+    print(f"Werteliste für eigene Depots: {sum(1 for u in uni_data if u['price'] is not None)}/{len(uni_data)} Kurse, "
+          f"{sum(len(u['news']) for u in uni_data)} Meldungen")
     print("Podcasts: " + "; ".join(f"{p['name']}: {p['title'] or 'keine Folge'} ({'Folge' if p['exact'] else 'nur Sendung'})"
                                    + (f" [{p['error']}]" if p["error"] else "") for p in pod_data))
     print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))

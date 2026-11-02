@@ -50,7 +50,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add archive cache/geo.json cache/elections.json cache/earnings.json
+          git add archive cache/geo.json cache/elections.json cache/earnings.json cache/universe.json
           if ! git diff --cached --quiet; then
             git commit -m "Archiv $(date -u +%F)"
             for i in 1 2 3; do

@@ -164,6 +164,22 @@
   .prow .nm small { display: block; font: 400 12px/1.4 var(--sans); color: var(--muted); }
   .prow .pv { text-align: right; font-size: 15px; } .prow .pv small { display: block; font-size: 12px; color: var(--muted); }
   @media (max-width: 560px) { .prow { grid-template-columns: minmax(0, 1fr) auto; } .prow .spark { display: none; } }
+  /* Eigenes Depot */
+  .mysum { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0 6px; }
+  .mysum > div { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 4px; padding: 10px 14px; }
+  .mysum span { display: block; font: 700 11px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .mysum b { display: block; font: 700 24px/1.2 var(--serif); font-variant-numeric: tabular-nums; margin-top: 3px; }
+  .mysum small { font-size: 12.5px; color: var(--muted); }
+  .myrow { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); } .myrow .prow { border-bottom: 0; flex: 1; min-width: 0; }
+  .myedit { flex: none; width: 46px; border: 0; background: none; color: var(--muted); font-size: 18px; border-left: 1px solid var(--line); }
+  .myedit:hover { color: var(--ink); background: var(--soft); }
+  .myact { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 6px; }
+  .mycard { max-width: 560px; } .mycard p { font-size: 15px; line-height: 1.5; }
+  .pickrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 11px 4px; color: inherit; }
+  .pickrow:hover { background: var(--soft); } .pickrow b { display: block; font-weight: 600; } .pickrow small { display: block; color: var(--muted); font-size: 12px; }
+  .pickrow .pv { flex: none; font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .fl { display: block; font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .dlg textarea.code { width: 100%; box-sizing: border-box; font: 12px/1.4 ui-monospace, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); word-break: break-all; margin: 8px 0; }
   .lock { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 22px; max-width: 460px; margin: 24px 0; }
   .lock h2 { margin: 0 0 6px; font: 700 22px var(--serif); }
   .lock input[type=password], .dlg input[type=password], .dlg input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink); margin: 10px 0 8px; }
@@ -407,7 +423,7 @@
     .mast-bar { order: 2; padding: 0; }
     #today, .mast-bar .grow { display: none; }
     .statusline { order: 3; width: 100%; text-align: left; padding: 2px 0 8px; min-height: 0; }
-    .btn.primary .lb { display: none; } .btn.primary { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
+    #btn-refresh .lb { display: none; } #btn-refresh { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
     .btn.primary .ic { display: inline-block; }
     .btn.icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 17px; }
     .band .wrap { padding-top: 2px; padding-bottom: 2px; }
@@ -548,7 +564,7 @@ const sec = (title, note) => h("div", { class: "sec" }, title, note && h("span",
 
 const idxQuotes = () => DATA.quotes.filter(q => q.group === "index" && q.price != null);
 const stockQuotes = () => DATA.quotes.filter(q => q.group === "stock" && q.price != null);
-const depotPositions = () => (DEPOT ? DEPOT.positions.filter(p => p.price != null) : []);
+const depotPositions = () => (DEPOT ? DEPOT.positions : myPositions()).filter(p => p.price != null);
 
 // ------------------------------------------------------------------ Diagramme
 
@@ -672,6 +688,8 @@ function openDetail(q, extra) {
         h("h2", {}, extra ? extra.name : q.name)),
       h("button", { class: "btn", onclick: () => dlg.close() }, "Schließen")),
     extra && h("div", { class: "ids" }, "WKN ", copy(extra.wkn), "ISIN ", copy(extra.isin), h("span", {}, "Kurs: " + q.symbol)),
+    extra && extra.mine && h("div", { class: "sub", style: "margin-top:6px" }, extra.qty ? `${de.format(extra.qty)} Stück im Depot` : "Im Depot zum Beobachten", "  ",
+      h("button", { class: "btn", style: "margin-left:8px", onclick: () => openEditor(extra.id) }, "Bearbeiten")),
     h("div", { class: "big" }, price(q.price) + cur, q.pct != null && h("small", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct) + " heute")),
     q.local && h("div", { class: "sub", style: "margin-top:2px" }, `umgerechnet in Euro, Börsenkurs ${price(q.local.price)} ${q.local.currency}; die Verlaufswerte rechnen den jeweiligen Tageskurs ein`),
     rangeBar, info, chartBox,
@@ -918,13 +936,256 @@ function sidebar() {
       DATA.local && DATA.local.weather && h("div", { class: "mini" }, h("b", {}, `${DATA.local.weather.now.temp} °C, ${DATA.local.weather.now.text}`)),
       wup.map(s => h("div", { class: "mini" }, h("a", { href: s.url }, h("b", {}, s.title_de || s.title)), h("span", {}, `${ago(s.time)} · ${s.sources[0] ? s.sources[0].name : ""}`)))),
     dp.length > 0 && h("div", { class: "blk" }, sec("Dein Depot", h("a", { href: "#depot", onclick: (e) => { e.preventDefault(); show("depot"); } }, "alle ▸")), quoteRows(dp, (q) => q)),
-    locked && h("div", { class: "blk" }, sec("Dein Depot"), h("button", { class: "btn", onclick: () => show("depot") }, "Mit Passwort entsperren")),
+    locked && !dp.length && h("div", { class: "blk" }, sec("Dein Depot"), h("button", { class: "btn", onclick: () => show("depot") }, "Depot anlegen oder öffnen")),
     ne.length > 0 && h("div", { class: "blk" }, sec("Nächste Wahlen", h("a", { href: "#wahlen", onclick: (e) => { e.preventDefault(); show("wahlen"); } }, "Kalender ▸")),
       ne.map(e => h("div", { class: "mini" }, h("b", {}, e.country), h("span", {}, `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" })} · ${e.what}`)))),
     soon.length > 0 && h("div", { class: "blk" }, sec("Entscheidungen"), soon.map(t => h("div", { class: "mini" }, h("a", { href: t.url }, h("b", {}, t.title)), h("span", {}, `${dateDe(t.end)} · ${t.lead.label.slice(0, 24)} ${probText(t.lead.p)}`)))));
 }
 
 // ------------------------------------------------------------------ Ansichten
+
+// ------------------------------------------------------------------ Eigenes Depot (nur auf diesem Gerät)
+// Freunde legen ihr Depot selbst an. Es liegt nur im Speicher ihres Browsers, auf Wunsch mit einer PIN verschlüsselt.
+// Kurse, Verläufe und Meldungen kommen aus DATA.universe, der öffentlichen Liste der Werte, die die App anbietet.
+const MYKEY = "mydepot";
+let MY = null, MYPIN = null;   // entsperrtes eigenes Depot {items: [{id, qty, buy, added}]} und seine PIN (nur im Speicher)
+const uni = () => DATA.universe || [];
+const uniOf = (id) => uni().find(u => u.id === id);
+const euro = (x) => x == null ? "–" : x.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+const euroSigned = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + euro(Math.abs(x));
+const toB64 = (bytes) => btoa(String.fromCharCode(...bytes));
+
+function myRaw() { try { return JSON.parse(store.get(MYKEY) || "null"); } catch { return null; } }
+function myInit() { const raw = myRaw(); if (raw && !raw.enc) MY = { v: 1, items: raw.items || [] }; }
+function myPositions() {
+  return (MY ? MY.items : []).map(it => { const u = uniOf(it.id); return u && { ...u, qty: it.qty, buy: it.buy, mine: true }; }).filter(Boolean);
+}
+// Zahl aus einem Eingabefeld, deutsch ("1.234,5") oder englisch ("1234.5")
+function parseNum(text) {
+  let t = String(text || "").trim().replace(/\s|€/g, "");
+  if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+  return t === "" ? null : Number(t);
+}
+async function encryptJSON(obj, pw) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iter = 200000;
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj))));
+  return { v: 1, iter, salt: toB64(salt), iv: toB64(iv), ct: toB64(ct) };
+}
+async function mySave() {
+  if (!MY) return;
+  store.set(MYKEY, JSON.stringify(MYPIN ? { enc: await encryptJSON(MY, MYPIN) } : MY));
+}
+// Übertragen: kompakter Code im Link-Anker (#depot=...), der Anker wird nie an einen Server geschickt
+function encodeDepot(d) {
+  return btoa(JSON.stringify({ v: 1, i: d.items.map(i => [i.id, i.qty, i.buy]) })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function decodeDepot(text) {
+  const m = String(text || "").trim().match(/(?:#depot=)?([A-Za-z0-9_-]{8,})\s*$/);
+  if (!m) throw new Error("kein Code");
+  const b = m[1].replace(/-/g, "+").replace(/_/g, "/");
+  const obj = JSON.parse(atob(b + "===".slice((b.length + 3) % 4)));
+  if (!obj || !Array.isArray(obj.i)) throw new Error("kein Depot");
+  return { v: 1, items: obj.i.filter(x => Array.isArray(x) && typeof x[0] === "string")
+    .map(([id, qty, buy]) => ({ id, qty: qty > 0 ? qty : null, buy: buy > 0 ? buy : null, added: new Date().toISOString() })) };
+}
+async function importDepot(code) {
+  let d;
+  try { d = decodeDepot(code); } catch { alert("Der Code ist unvollständig oder ungültig."); return false; }
+  const had = (MY && MY.items.length) || (myRaw() && myRaw().enc);
+  if (had && !confirm(`Depot mit ${d.items.length} Werten übernehmen? Das bisherige Depot auf diesem Gerät wird ersetzt.`)) return false;
+  MY = d; MYPIN = null;
+  await mySave();
+  return true;
+}
+
+function dlgTop(title, sub) {
+  return h("div", { class: "top" }, h("div", {}, h("div", { class: "sub" }, sub || "Dein Depot"), h("h2", {}, title)),
+    h("button", { class: "btn", onclick: () => $("detail").close() }, "Schließen"));
+}
+function showDlg(...kids) {
+  const dlg = $("detail");
+  dlg.replaceChildren(h("div", { class: "dlg" }, ...kids));
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+}
+
+// Wert suchen und auswählen
+function openPicker() {
+  const q = h("input", { type: "text", placeholder: "Name, WKN oder ISIN, z. B. MSCI World", autocomplete: "off", enterkeyhint: "search" });
+  const list = h("div");
+  const render = () => {
+    const t = q.value.trim().toLowerCase(), have = new Set((MY ? MY.items : []).map(i => i.id));
+    const res = uni().filter(u => !t || [u.short, u.name, u.isin, u.wkn, u.symbol].some(x => (x || "").toLowerCase().includes(t)));
+    list.replaceChildren(...(res.length ? [["ETF", "ETFs"], ["Aktie", "Aktien"]].flatMap(([type, label]) => {
+      const r = res.filter(u => u.type === type);
+      return r.length ? [h("h3", { class: "sec2" }, label), ...r.map(u => h("button", { class: "pickrow", onclick: () => openEditor(u.id) },
+        h("span", {}, h("b", {}, u.short), h("small", {}, `${u.name} · WKN ${u.wkn}`)),
+        h("span", { class: "pv" }, have.has(u.id) ? "im Depot ✓" : euro(u.price))))] : [];
+    }) : [h("p", { class: "note" }, "Nichts gefunden.")]));
+  };
+  q.addEventListener("input", render);
+  render();
+  showDlg(dlgTop("Wert hinzufügen"), q, list,
+    h("p", { class: "note", style: "margin-top:16px" }, "Dein Wert fehlt? Sag Milan Bescheid, dann kommt er in die Liste. Meist ist er innerhalb einer Stunde dabei."));
+}
+
+// Stückzahl und Kaufpreis eintragen oder nur beobachten
+function openEditor(id) {
+  const u = uniOf(id), cur = MY && MY.items.find(i => i.id === id);
+  let mode = cur && !cur.qty ? "watch" : "own";
+  const fmt = (x) => x == null ? "" : String(x).replace(".", ",");
+  const qty = h("input", { type: "text", inputmode: "decimal", placeholder: "z. B. 12,5", value: fmt(cur && cur.qty) });
+  const buy = h("input", { type: "text", inputmode: "decimal", placeholder: u && u.price ? `z. B. ${de.format(u.price)}` : "", value: fmt(cur && cur.buy) });
+  const fields = h("div", {},
+    h("label", { class: "fl" }, "Stückzahl", qty),
+    h("label", { class: "fl" }, "Kaufpreis je Stück in Euro (freiwillig)", buy),
+    h("p", { class: "note" }, "Mit Kaufpreis siehst du Gewinn oder Verlust seit dem Kauf. Bei Sparplänen nimm den Durchschnittskaufpreis aus deiner Depot-App."));
+  const seg = h("div", { class: "seg" }, [["own", "Mit Stückzahl"], ["watch", "Nur beobachten"]].map(([k, l]) =>
+    h("button", { "data-k": k, onclick: () => { mode = k; paint(); } }, l)));
+  const hint = h("p", { class: "note" }, "Du bekommst Kurs, Verlauf und Meldungen, ohne Stückzahl einzutragen.");
+  const err = h("p", { class: "note bad" });
+  const paint = () => {
+    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === mode)));
+    fields.hidden = mode !== "own"; hint.hidden = mode === "own";
+  };
+  const done = async () => { await mySave(); $("detail").close(); renderAll(); show("depot"); };
+  const save = async () => {
+    let n = null, b = null;
+    if (mode === "own") {
+      n = parseNum(qty.value); b = parseNum(buy.value);
+      if (!(n > 0)) { err.textContent = "Bitte eine Stückzahl größer als 0 eingeben."; return; }
+      if (b !== null && !(b > 0)) { err.textContent = "Der Kaufpreis ist keine gültige Zahl."; return; }
+    }
+    MY = MY || { v: 1, items: [] };
+    const item = { id, qty: n, buy: b, added: cur ? cur.added : new Date().toISOString() };
+    MY.items = cur ? MY.items.map(i => i.id === id ? item : i) : MY.items.concat(item);
+    await done();
+  };
+  const remove = async () => {
+    if (!confirm(`${u ? u.short : id} aus deinem Depot entfernen?`)) return;
+    MY.items = MY.items.filter(i => i.id !== id);
+    await done();
+  };
+  paint();
+  showDlg(dlgTop(u ? u.short : id, cur ? "Im Depot bearbeiten" : "Zum Depot hinzufügen"),
+    u ? h("div", { class: "sub" }, `${u.name} · WKN ${u.wkn} · ISIN ${u.isin}`, h("br"), `Aktueller Kurs ${euro(u.price)}`, u.pct != null ? [" (", pctSpan(u.pct), " heute)"] : "")
+      : h("p", { class: "note bad" }, "Dieser Wert ist nicht mehr in der Liste der App."),
+    u && [seg, hint, fields], err,
+    h("div", { class: "myact" },
+      u && h("button", { class: "btn primary", onclick: save }, cur ? "Speichern" : "Zum Depot hinzufügen"),
+      cur && h("button", { class: "btn", onclick: remove }, "Entfernen"),
+      !cur && h("button", { class: "btn", onclick: openPicker }, "Zurück zur Liste")));
+}
+
+// Depot auf ein anderes Gerät bringen
+function openTransfer() {
+  const has = MY && MY.items.length;
+  const link = has ? location.origin + location.pathname + "#depot=" + encodeDepot(MY) : "";
+  const out = h("textarea", { class: "code", readonly: true, rows: 4 }, link);
+  const msg = h("span", { class: "note" });
+  const copy = async () => { try { await navigator.clipboard.writeText(link); msg.textContent = "  Kopiert."; } catch { out.select(); msg.textContent = "  Bitte markieren und kopieren."; } };
+  const share = async () => { try { await navigator.share({ title: "Mein Depot", url: link }); } catch {} };
+  const input = h("textarea", { class: "code", rows: 3, placeholder: "Link oder Code hier einfügen" });
+  const take = async () => { if (await importDepot(input.value)) { $("detail").close(); renderAll(); show("depot"); } };
+  showDlg(dlgTop("Depot übertragen oder sichern"),
+    has ? [h("h3", { class: "sec2" }, "Von diesem Gerät mitnehmen"),
+      h("p", {}, "Öffne diesen Link auf dem anderen Gerät, dann ist dein Depot dort auch. Bewahre ihn außerdem als Sicherung auf, etwa in einer Notiz an dich selbst."),
+      out, h("div", { class: "myact" }, navigator.share && h("button", { class: "btn primary", onclick: share }, "Teilen"), h("button", { class: "btn", onclick: copy }, "Kopieren"), msg),
+      h("p", { class: "note" }, "Wer den Link hat, sieht deine Werte und Stückzahlen. Schick ihn nur an dich selbst. Die PIN wird nicht mitgegeben. Spätere Änderungen musst du erneut übertragen.")] : [],
+    h("h3", { class: "sec2" }, "Auf dieses Gerät übernehmen"), input,
+    h("div", { class: "myact" }, h("button", { class: "btn primary", onclick: take }, "Übernehmen")));
+}
+
+// PIN festlegen, ändern oder entfernen
+function openPin() {
+  const a = h("input", { type: "password", inputmode: "numeric", placeholder: "Neue PIN, mindestens 4 Zeichen", autocomplete: "new-password" });
+  const b = h("input", { type: "password", inputmode: "numeric", placeholder: "PIN wiederholen", autocomplete: "new-password" });
+  const err = h("p", { class: "note bad" });
+  const set = async () => {
+    if (a.value.length < 4) { err.textContent = "Die PIN braucht mindestens 4 Zeichen."; return; }
+    if (a.value !== b.value) { err.textContent = "Die beiden Eingaben stimmen nicht überein."; return; }
+    MYPIN = a.value; await mySave(); $("detail").close(); renderAll();
+  };
+  const off = async () => { MYPIN = null; await mySave(); $("detail").close(); renderAll(); };
+  showDlg(dlgTop(MYPIN ? "PIN ändern" : "PIN festlegen"),
+    h("p", {}, "Mit PIN wird dein Depot auf diesem Gerät verschlüsselt gespeichert. Beim Öffnen der App fragt sie einmal nach der PIN."),
+    a, b, err,
+    h("div", { class: "myact" }, h("button", { class: "btn primary", onclick: set }, "PIN speichern"), MYPIN && h("button", { class: "btn", onclick: off }, "PIN entfernen")),
+    h("p", { class: "note" }, "Vergisst du die PIN, lässt sich das Depot nur über einen gesicherten Übertragungs-Link wiederherstellen."));
+}
+
+function myPinCard(raw) {
+  const pin = h("input", { type: "password", inputmode: "numeric", placeholder: "PIN", autocomplete: "current-password" });
+  const err = h("div", { class: "note bad" });
+  const go = async () => {
+    try { MY = await decryptDepot(raw.enc, pin.value); MYPIN = pin.value; renderAll(); } catch { err.textContent = "PIN falsch."; }
+  };
+  const reset = async () => {
+    if (!confirm("Depot auf diesem Gerät löschen? Mit einem gesicherten Übertragungs-Link kannst du es danach wiederherstellen.")) return;
+    store.del(MYKEY); MY = null; MYPIN = null; renderAll();
+  };
+  pin.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  return h("div", { class: "lock" }, h("h2", {}, "Dein Depot"), h("p", { class: "note" }, "Dein Depot ist mit einer PIN geschützt."),
+    pin, h("button", { class: "btn primary", onclick: go }, "Öffnen"), err,
+    h("p", { style: "margin-top:16px" }, h("button", { class: "btn", onclick: reset }, "PIN vergessen: Depot löschen")));
+}
+
+function myIntro() {
+  const hasPw = DATA.depot && DATA.depot.state === "enc";
+  return h("div", { class: "narrow" },
+    h("div", { class: "lock mycard" }, h("h2", {}, "Dein eigenes Depot"),
+      h("p", {}, "Lege deine ETFs und Aktien an, mit Stückzahl und Kaufpreis oder nur zum Beobachten. Du siehst dann den Kurs in Euro, den Verlauf und Meldungen zu jedem Wert."),
+      h("p", { class: "note" }, "Dein Depot wird nur auf diesem Gerät gespeichert. Niemand sonst kann es sehen, auch nicht der Betreiber der App."),
+      h("div", { class: "myact" }, h("button", { class: "btn primary", onclick: openPicker }, "+ Wert hinzufügen"),
+        h("button", { class: "btn", onclick: openTransfer }, "Von anderem Gerät übernehmen"))),
+    hasPw && h("details", { class: "lmore" }, h("summary", {}, "Depot mit Passwort öffnen"), lockCard()));
+}
+
+function myRow(p) {
+  const gain = p.qty && p.buy && p.price != null ? p.qty * (p.price - p.buy) : null;
+  return h("div", { class: "myrow" },
+    h("button", { class: "prow", onclick: () => openDetail(p, p) },
+      h("span", { class: "nm" }, p.short, h("small", {}, [p.type, p.qty ? `${de.format(p.qty)} Stück` : "beobachtet", `${p.news.length} Meldungen`].join(" · "))),
+      spark(lastN(p)),
+      h("span", { class: "pv" }, euro(p.price), p.pct != null && h("small", { class: p.pct >= 0 ? "up" : "down" }, pct(p.pct) + " heute"),
+        p.qty && p.price != null && h("small", {}, "Wert " + euro(p.qty * p.price)),
+        gain != null && h("small", { class: gain >= 0 ? "up" : "down" }, `${euroSigned(gain)} (${pct((p.price / p.buy - 1) * 100)})`))),
+    h("button", { class: "myedit", title: "Bearbeiten", "aria-label": p.short + " bearbeiten", onclick: () => openEditor(p.id) }, "✎"));
+}
+
+function myDepotView() {
+  const raw = myRaw();
+  if (raw && raw.enc && !MY) return myPinCard(raw);
+  if (!MY || !MY.items.length) return myIntro();
+  const ps = myPositions(), lost = MY.items.filter(i => !uniOf(i.id));
+  const held = ps.filter(p => p.qty && p.price != null);
+  const value = held.reduce((a, p) => a + p.qty * p.price, 0);
+  const today = held.reduce((a, p) => a + (p.pct == null ? 0 : p.qty * (p.price - p.price / (1 + p.pct / 100))), 0);
+  const withBuy = held.filter(p => p.buy), cost = withBuy.reduce((a, p) => a + p.qty * p.buy, 0);
+  const gain = withBuy.reduce((a, p) => a + p.qty * p.price, 0) - cost;
+  const seen = new Set(), news = [];
+  for (const p of ps) for (const n of p.news) if (!seen.has(n.url)) { seen.add(n.url); news.push(n); }
+  news.sort((a, b) => b.time.localeCompare(a.time));
+  const etfs = ps.filter(p => p.type === "ETF"), stocks = ps.filter(p => p.type !== "ETF");
+  return h("div", { class: "layout" },
+    h("div", {},
+      held.length > 0 && h("div", { class: "mysum" },
+        h("div", {}, h("span", {}, "Depotwert"), h("b", {}, euro(value)), h("small", {}, `${held.length} von ${ps.length} Werten mit Stückzahl`)),
+        h("div", {}, h("span", {}, "Heute"), h("b", { class: today >= 0 ? "up" : "down" }, euroSigned(today)), h("small", {}, pct(value - today ? today / (value - today) * 100 : null))),
+        withBuy.length > 0 && h("div", {}, h("span", {}, "Seit Kauf"), h("b", { class: gain >= 0 ? "up" : "down" }, euroSigned(gain)), h("small", {}, `${pct(cost ? gain / cost * 100 : null)} auf ${euro(cost)} Einsatz`))),
+      etfs.length > 0 && [sec("ETFs", "antippen für Verlauf und Meldungen"), etfs.map(myRow)],
+      stocks.length > 0 && [sec("Aktien", "antippen für Verlauf und Meldungen"), stocks.map(myRow)],
+      lost.length > 0 && h("p", { class: "note bad" }, `${lost.length} Wert(e) gibt es nicht mehr in der Liste der App: ${lost.map(i => i.id).join(", ")}.`),
+      h("div", { class: "myact" },
+        h("button", { class: "btn primary", onclick: openPicker }, "+ Wert hinzufügen"),
+        h("button", { class: "btn", onclick: openTransfer }, "Übertragen / sichern"),
+        h("button", { class: "btn", onclick: openPin }, MYPIN ? "PIN ändern" : "PIN festlegen")),
+      h("p", { class: "note" }, "Kurse in Euro, umgerechnet zum Tageskurs, teils verzögert. Gespeichert nur auf diesem Gerät. Keine Anlageberatung."),
+      sec("Meldungen zu deinem Depot", "neueste zuerst"), items(news.slice(0, 24), { hideTopic: true })),
+    h("aside", { class: "side" }, h("div", { class: "blk" }, sec("Heute"), quoteRows(ps.filter(p => p.price != null), (q) => q))));
+}
 
 function lockCard() {
   const st = DATA.depot ? DATA.depot.state : "none";
@@ -1231,7 +1492,7 @@ const views = {
   },
 
   depot: () => {
-    if (!DEPOT) return lockCard();
+    if (!DEPOT) return myDepotView();
     const ps = DEPOT.positions, etfs = ps.filter(p => p.type === "ETF"), stocks = ps.filter(p => p.type !== "ETF");
     const seen = new Set(), all = [];
     for (const p of ps) for (const s of p.news) if (!seen.has(s.url)) { seen.add(s.url); all.push(s); }
@@ -1557,7 +1818,7 @@ function renderChrome() {
   const tick = (q, extra) => h("button", { class: "tk", onclick: () => openDetail(q, extra) },
     h("b", {}, q.short || q.name), price(q.price), q.pct != null && h("em", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct)));
   $("ticker").replaceChildren(
-    h("button", { class: "tk depot", onclick: () => show("depot") }, DEPOT ? "Mein Depot ▸" : "Depot ▸"),
+    h("button", { class: "tk depot", onclick: () => show("depot") }, DEPOT || (MY && MY.items.length) ? "Mein Depot ▸" : "Depot ▸"),
     ...depotPositions().map(p => tick(p, p)), ...idxQuotes().map(q => tick(q)));
 
   const liveNow = ((DATA.live && DATA.live.channels) || []).some(c => c.state === "live");
@@ -1787,6 +2048,9 @@ $("btn-settings").addEventListener("click", openSettings);
 
 async function init() {
   DATA.history ||= [];
+  myInit();
+  let incoming = null;
+  if (location.hash.startsWith("#depot=")) { incoming = location.hash.slice(1); history.replaceState(null, "", location.pathname + "#depot"); }
   const known = (x) => x && (BUILD[x] || ROUTES[x]);
   let start = location.hash.slice(1);
   if (!known(start)) start = store.get("tab");
@@ -1797,6 +2061,7 @@ async function init() {
   renderAll();
   await autoUnlock();
   renderAll();
+  if (incoming && await importDepot(incoming)) show("depot");
   autoRefresh();
 }
 init();

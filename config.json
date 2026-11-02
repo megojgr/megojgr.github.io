@@ -238,7 +238,7 @@
     {"name": "Allianz", "symbol": "ALV.DE", "group": "stock"},
     {"name": "Rheinmetall", "symbol": "RHM.DE", "group": "stock"},
     {"name": "Volkswagen", "symbol": "VOW3.DE", "group": "stock"},
-    {"name": "Deutsche Bank", "symbol": "DBK.DE", "group": "stock"}
+    {"name": "Deutsche Bank", "symbol": "DBK.DE", "group": "stock", "exclude": ["Deutsche Bank Research"]}
   ],
   "termine_days": 30,
   "kalshi": {
@@ -297,5 +297,51 @@
       "CVX": {"name": "Chevron", "q": "Chevron", "ir": "https://www.chevron.com/investors"},
       "SHEL": {"name": "Shell", "q": "Shell", "ir": "https://www.shell.com/investors.html"}
     }
-  }
+  },
+  "universe": [
+    {"symbol": "EUNL.DE", "short": "MSCI World (iShares)", "name": "iShares Core MSCI World UCITS ETF (Acc)", "type": "ETF", "isin": "IE00B4L5Y983", "wkn": "A0RPWH", "terms": ["MSCI World", "Weltaktien"]},
+    {"symbol": "XDWD.DE", "short": "MSCI World (Xtrackers)", "name": "Xtrackers MSCI World UCITS ETF 1C", "type": "ETF", "isin": "IE00BJ0KDQ92", "wkn": "A1XB5U", "terms": ["MSCI World", "Weltaktien"]},
+    {"symbol": "VWCE.DE", "short": "FTSE All-World thesaurierend (Vanguard)", "name": "Vanguard FTSE All-World UCITS ETF (Acc)", "type": "ETF", "isin": "IE00BK5BQT80", "wkn": "A2PKXG", "terms": ["All-World", "FTSE All World", "Weltaktien"]},
+    {"symbol": "VGWL.DE", "short": "FTSE All-World ausschüttend (Vanguard)", "name": "Vanguard FTSE All-World UCITS ETF (Dist)", "type": "ETF", "isin": "IE00B3RBWM25", "wkn": "A1JX52", "terms": ["All-World", "FTSE All World", "Weltaktien"]},
+    {"symbol": "IUSQ.DE", "short": "MSCI ACWI (iShares)", "name": "iShares MSCI ACWI UCITS ETF (Acc)", "type": "ETF", "isin": "IE00B6R52259", "wkn": "A1JMDF", "terms": ["MSCI ACWI", "Weltaktien"]},
+    {"symbol": "SPYI.DE", "short": "MSCI ACWI IMI (SPDR)", "name": "SPDR MSCI ACWI IMI UCITS ETF", "type": "ETF", "isin": "IE00B3YLTY66", "wkn": "A1JJTD", "terms": ["MSCI ACWI", "Weltaktien"]},
+    {"symbol": "SXR8.DE", "short": "S&P 500 (iShares)", "name": "iShares Core S&P 500 UCITS ETF (Acc)", "type": "ETF", "isin": "IE00B5BMR087", "wkn": "A0YEDG", "terms": ["S&P 500", "S&P-500", "Wall Street"]},
+    {"symbol": "VUSA.DE", "short": "S&P 500 ausschüttend (Vanguard)", "name": "Vanguard S&P 500 UCITS ETF (Dist)", "type": "ETF", "isin": "IE00B3XXRP09", "wkn": "A1JX53", "terms": ["S&P 500", "S&P-500", "Wall Street"]},
+    {"symbol": "SXRV.DE", "short": "Nasdaq 100 (iShares)", "name": "iShares Nasdaq 100 UCITS ETF (Acc)", "type": "ETF", "isin": "IE00B53SZB19", "wkn": "A0YEDL", "terms": ["Nasdaq 100", "Nasdaq-100", "Nasdaq"]},
+    {"symbol": "IS3N.DE", "short": "MSCI Emerging Markets IMI (iShares)", "name": "iShares Core MSCI EM IMI UCITS ETF (Acc)", "type": "ETF", "isin": "IE00BKM4GZ66", "wkn": "A111X9", "terms": ["Schwellenländer", "Emerging Markets", "MSCI Emerging"]},
+    {"symbol": "XMME.DE", "short": "MSCI Emerging Markets (Xtrackers)", "name": "Xtrackers MSCI Emerging Markets UCITS ETF 1C", "type": "ETF", "isin": "IE00BTJRMP35", "wkn": "A12GVR", "terms": ["Schwellenländer", "Emerging Markets", "MSCI Emerging"]},
+    {"symbol": "IUSN.DE", "short": "MSCI World Small Cap (iShares)", "name": "iShares MSCI World Small Cap UCITS ETF", "type": "ETF", "isin": "IE00BF4RFH31", "wkn": "A2DWBY", "terms": ["Small Caps", "Nebenwerte", "MSCI World Small"]},
+    {"symbol": "EXS1.DE", "short": "DAX (iShares)", "name": "iShares Core DAX UCITS ETF (DE)", "type": "ETF", "isin": "DE0005933931", "wkn": "593393", "terms": ["DAX"]},
+    {"symbol": "SXRT.DE", "short": "Euro Stoxx 50 (iShares)", "name": "iShares Core EURO STOXX 50 UCITS ETF (Acc)", "type": "ETF", "isin": "IE00B53L3W79", "wkn": "A0YEDJ", "terms": ["Euro Stoxx 50", "EuroStoxx 50", "Euro-Stoxx"]},
+    {"symbol": "EXSA.DE", "short": "Stoxx Europe 600 (iShares)", "name": "iShares STOXX Europe 600 UCITS ETF (DE)", "type": "ETF", "isin": "DE0002635307", "wkn": "263530", "terms": ["Stoxx 600", "Stoxx Europe 600", "europäische Aktien"]},
+    {"symbol": "MEUD.PA", "short": "Stoxx Europe 600 (Amundi)", "name": "Amundi Core Stoxx Europe 600 UCITS ETF (Acc)", "type": "ETF", "isin": "LU0908500753", "wkn": "LYX0Q0", "terms": ["Stoxx 600", "Stoxx Europe 600", "europäische Aktien"]},
+    {"symbol": "XDWT.DE", "short": "MSCI World IT (Xtrackers)", "name": "Xtrackers MSCI World Information Technology UCITS ETF 1C", "type": "ETF", "isin": "IE00BM67HT60", "wkn": "A113FM", "terms": ["Tech-Aktien", "Technologiewerte", "Techwerte"]},
+    {"symbol": "2B76.DE", "short": "Automation & Robotics (iShares)", "name": "iShares Automation & Robotics UCITS ETF", "type": "ETF", "isin": "IE00BYZK4552", "wkn": "A2ANH0", "terms": ["Robotik", "Roboter", "Automatisierung"]},
+    {"symbol": "IQQH.DE", "short": "Global Clean Energy (iShares)", "name": "iShares Global Clean Energy UCITS ETF", "type": "ETF", "isin": "IE00B1XNHC34", "wkn": "A0MW0M", "terms": ["Clean Energy", "erneuerbare Energie", "Solaraktien", "Windkraft"]},
+    {"symbol": "4GLD.DE", "short": "Xetra-Gold", "name": "Xetra-Gold (Gold-ETC)", "type": "ETF", "isin": "DE000A0S9GB0", "wkn": "A0S9GB", "terms": ["Goldpreis", "Gold"]},
+    {"symbol": "AAPL", "short": "Apple", "name": "Apple Inc.", "type": "Aktie", "isin": "US0378331005", "wkn": "865985", "terms": ["Apple"]},
+    {"symbol": "MSFT", "short": "Microsoft", "name": "Microsoft Corp.", "type": "Aktie", "isin": "US5949181045", "wkn": "870747", "terms": ["Microsoft"]},
+    {"symbol": "NVDA", "short": "Nvidia", "name": "NVIDIA Corp.", "type": "Aktie", "isin": "US67066G1040", "wkn": "918422", "terms": ["Nvidia"]},
+    {"symbol": "AMZN", "short": "Amazon", "name": "Amazon.com Inc.", "type": "Aktie", "isin": "US0231351067", "wkn": "906866", "terms": ["Amazon"]},
+    {"symbol": "GOOGL", "short": "Alphabet (Google)", "name": "Alphabet Inc. Class A", "type": "Aktie", "isin": "US02079K3059", "wkn": "A14Y6F", "terms": ["Alphabet", "Google"]},
+    {"symbol": "META", "short": "Meta", "name": "Meta Platforms Inc.", "type": "Aktie", "isin": "US30303M1027", "wkn": "A1JWVX", "terms": ["Meta", "Facebook"]},
+    {"symbol": "TSLA", "short": "Tesla", "name": "Tesla Inc.", "type": "Aktie", "isin": "US88160R1014", "wkn": "A1CX3T", "terms": ["Tesla"]},
+    {"symbol": "KO", "short": "Coca-Cola", "name": "The Coca-Cola Company", "type": "Aktie", "isin": "US1912161007", "wkn": "850663", "terms": ["Coca-Cola"], "exclude": ["FEMSA", "HBC", "Europacific", "Icecek"]},
+    {"symbol": "SAP.DE", "short": "SAP", "name": "SAP SE", "type": "Aktie", "isin": "DE0007164600", "wkn": "716460", "terms": ["SAP"]},
+    {"symbol": "SIE.DE", "short": "Siemens", "name": "Siemens AG", "type": "Aktie", "isin": "DE0007236101", "wkn": "723610", "terms": ["Siemens"], "exclude": ["Siemens Energy", "Siemens Healthineers"]},
+    {"symbol": "ALV.DE", "short": "Allianz", "name": "Allianz SE", "type": "Aktie", "isin": "DE0008404005", "wkn": "840400", "terms": ["Allianz"], "exclude": ["Allianz Arena"]},
+    {"symbol": "DTE.DE", "short": "Deutsche Telekom", "name": "Deutsche Telekom AG", "type": "Aktie", "isin": "DE0005557508", "wkn": "555750", "terms": ["Telekom"]},
+    {"symbol": "MBG.DE", "short": "Mercedes-Benz", "name": "Mercedes-Benz Group AG", "type": "Aktie", "isin": "DE0007100000", "wkn": "710000", "terms": ["Mercedes"]},
+    {"symbol": "BMW.DE", "short": "BMW", "name": "Bayerische Motoren Werke AG", "type": "Aktie", "isin": "DE0005190003", "wkn": "519000", "terms": ["BMW"]},
+    {"symbol": "VOW3.DE", "short": "Volkswagen Vz.", "name": "Volkswagen AG Vorzugsaktien", "type": "Aktie", "isin": "DE0007664039", "wkn": "766403", "terms": ["Volkswagen", "VW-"]},
+    {"symbol": "BAS.DE", "short": "BASF", "name": "BASF SE", "type": "Aktie", "isin": "DE000BASF111", "wkn": "BASF11", "terms": ["BASF"]},
+    {"symbol": "RHM.DE", "short": "Rheinmetall", "name": "Rheinmetall AG", "type": "Aktie", "isin": "DE0007030009", "wkn": "703000", "terms": ["Rheinmetall"]},
+    {"symbol": "IFX.DE", "short": "Infineon", "name": "Infineon Technologies AG", "type": "Aktie", "isin": "DE0006231004", "wkn": "623100", "terms": ["Infineon"]},
+    {"symbol": "DBK.DE", "short": "Deutsche Bank", "name": "Deutsche Bank AG", "type": "Aktie", "isin": "DE0005140008", "wkn": "514000", "terms": ["Deutsche Bank"]},
+    {"symbol": "ASML.AS", "short": "ASML", "name": "ASML Holding N.V.", "type": "Aktie", "isin": "NL0010273215", "wkn": "A1J4U4", "terms": ["ASML"]},
+    {"symbol": "NOVO-B.CO", "short": "Novo Nordisk", "name": "Novo Nordisk A/S B", "type": "Aktie", "isin": "DK0062498333", "wkn": "A3EU6F", "terms": ["Novo Nordisk"]},
+    {"symbol": "1211.HK", "short": "BYD", "name": "BYD Co. Ltd. H", "type": "Aktie", "isin": "CNE100000296", "wkn": "A0M4W9", "terms": ["BYD"]},
+    {"symbol": "1810.HK", "short": "Xiaomi", "name": "Xiaomi Corp. B", "type": "Aktie", "isin": "KYG9830T1067", "wkn": "A2JNY1", "terms": ["Xiaomi"]},
+    {"symbol": "0992.HK", "short": "Lenovo", "name": "Lenovo Group Ltd.", "type": "Aktie", "isin": "HK0992009065", "wkn": "894983", "terms": ["Lenovo"]}
+  ]
 }

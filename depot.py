@@ -15,6 +15,7 @@ from textutil import compile_keywords
 
 ROOT = Path(__file__).parent
 ITERATIONS = 300_000
+_FX = {}  # Wechselkurse je Lauf nur einmal abrufen, viele Werte teilen sich USD oder HKD
 
 
 def load():
@@ -68,7 +69,9 @@ def to_eur(q, alerts, is_etf):
     if cur in ("", "EUR") or not q.get("c") or q.get("price") is None:
         return q
     unit, code = (100.0, "GBP") if cur == "GBp" else (1.0, cur)
-    fx = fetch_quote({"name": "fx", "symbol": f"EUR{code}=X", "group": "fx"}, alerts)
+    if code not in _FX:
+        _FX[code] = fetch_quote({"name": "fx", "symbol": f"EUR{code}=X", "group": "fx"}, alerts)
+    fx = _FX[code]
     if not fx.get("c") or not fx.get("price"):
         q["fx_error"] = f"Wechselkurs EUR/{code} nicht verfügbar"
         return q

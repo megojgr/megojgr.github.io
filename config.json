@@ -254,7 +254,8 @@
   },
   "podcasts": [
     {"name": "Handelsblatt Morning Briefing", "by": "Handelsblatt", "feed": "https://handelsblatt-morningbriefing.podigee.io/feed/mp3", "spotify_show": "1QZr5NinuorbELLt2SwLJU", "skip_re": "^(Podcast-Tipp|Neu:|Trailer)"},
-    {"name": "Marktgeflüster", "by": "Finanzfluss", "feed": "https://feeds.megaphone.fm/FGH8365603623", "spotify_show": "3y9LP87SHF5b3hciAsZDBh"}
+    {"name": "Marktgeflüster", "by": "Finanzfluss", "feed": "https://feeds.megaphone.fm/FGH8365603623", "spotify_show": "3y9LP87SHF5b3hciAsZDBh", "announce": true},
+    {"name": "Mikro trifft Makro", "by": "DekaBank", "feed": "https://mikro-trifft-makro.podigee.io/feed/mp3", "spotify_show": "7CwcU9CTUonwrU4jFAZdOI", "announce": true}
   ],
   "earnings": {
     "back_days": 7, "ahead_days": 14, "min_cap_b": 60, "news_hours": 96,

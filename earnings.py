@@ -81,6 +81,75 @@ def series_of(rows):
     return {"t": [(d - EPOCH).days for d, _ in rows], "c": [round(c, 2) for _, c in rows]}
 
 
+MONTHS = {m: i for i, m in enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
+
+
+def _nasdaq(path):
+    return (json.loads(fetch("https://api.nasdaq.com/api/" + path, 25, headers=NASDAQ, ua=BROWSER_UA)).get("data") or {})
+
+
+def parse_revenue(table):
+    """Quartalsumsätze aus der Nasdaq-Tabelle: [(Quartalsende JJJJ-MM-TT, Umsatz in Mio. $)]. Das Datum steht in der EPS-Zeile."""
+    out, rows = {}, (table or {}).get("rows") or []
+    for k, r in enumerate(rows[:-1]):
+        if r.get("value1") != "Revenue" or rows[k + 1].get("value1") != "EPS":
+            continue
+        for col in ("value2", "value3", "value4"):
+            m = re.search(r"\((\d{2})/(\d{2})/(\d{4})\)", rows[k + 1].get(col) or "")
+            v = re.search(r"([\d,]+(?:\.\d+)?)\(m\)", r.get(col) or "")
+            if m and v:
+                out[f"{m.group(3)}-{m.group(1)}-{m.group(2)}"] = float(v.group(1).replace(",", ""))
+    return sorted(out.items())
+
+
+def fundamentals(symbol):
+    """Umsatz der letzten Quartale, Gewinnprognosen der Analysten und Kursziel; einzelne Teile dürfen fehlen."""
+    f = {"fetched": _now(), "rev": [], "fq": [], "fy": [], "target": None}
+    try:
+        f["rev"] = parse_revenue(_nasdaq(f"company/{urllib.parse.quote(symbol)}/revenue?limit=1").get("revenueTable"))
+    except Exception:
+        pass
+    try:
+        d = _nasdaq(f"analyst/{urllib.parse.quote(symbol)}/earnings-forecast")
+        keep = lambda r: {"end": r.get("fiscalEnd"), "est": number(r.get("consensusEPSForecast")), "hi": number(r.get("highEPSForecast")),
+                          "lo": number(r.get("lowEPSForecast")), "n": number(r.get("noOfEstimates")), "up": number(r.get("up")), "down": number(r.get("down"))}
+        f["fq"] = [keep(r) for r in ((d.get("quarterlyForecast") or {}).get("rows") or [])[:4]]
+        f["fy"] = [keep(r) for r in ((d.get("yearlyForecast") or {}).get("rows") or [])[:2]]
+    except Exception:
+        pass
+    try:
+        c = _nasdaq(f"analyst/{urllib.parse.quote(symbol)}/targetprice").get("consensusOverview") or {}
+        if c.get("priceTarget"):
+            f["target"] = {k: c.get(k) for k in ("priceTarget", "lowPriceTarget", "highPriceTarget", "buy", "hold", "sell")}
+    except Exception:
+        pass
+    return f
+
+
+def quarter_ym(text):
+    m = re.match(r"([A-Za-z]{3})\w*[ /]+(\d{4})", text or "")
+    return (int(m.group(2)), MONTHS.get(m.group(1).title())) if m else (None, None)
+
+
+def attach_fund(i, f):
+    """Umsatz und Wachstum zum Vorjahresquartal, Prognosen und Kursziel an einen Termin hängen."""
+    if not f:
+        return
+    rev = f.get("rev") or []
+    find = lambda y, m: next((v for e, v in rev if int(e[:4]) == y and int(e[5:7]) == m), None)
+    growth = lambda a, b: round((a / b - 1) * 100, 1) if a is not None and b else None
+    y, m = quarter_ym((i.get("result") or {}).get("quarter") or i.get("quarter"))
+    hist = [{"end": e, "rev": v, "yoy": growth(v, find(int(e[:4]) - 1, int(e[5:7])))} for e, v in rev][-8:]
+    cur = find(y, m) if y else None
+    i["revenue"] = {"value": cur, "prev": find(y - 1, m) if y else None, "yoy": growth(cur, find(y - 1, m)) if y else None,
+                    "last_yoy": next((h["yoy"] for h in reversed(hist) if h["yoy"] is not None), None), "hist": hist} if rev else None
+    i["forecast"] = {"q": f.get("fq") or [], "y": f.get("fy") or []} if f.get("fq") or f.get("fy") else None
+    t = f.get("target")
+    if t:
+        last = (i.get("series") or {}).get("c") or [None]
+        i["target"] = {**t, "last": last[-1], "upside": growth(t["priceTarget"], last[-1]) if last[-1] else None}
+
+
 def reaction(rows, day, when):
     """Kursbewegung rund um die Zahlen: vor Börsenöffnung Berichtstag gegen Vortag, nach Börsenschluss Folgetag gegen Berichtstag."""
     if when not in ("pre", "after"):
@@ -277,12 +346,32 @@ def build(cfg, today):
         return i
 
     coming = [i for i in items if i not in done and (i["watch"] or i["cap_b"] >= 200)]
+    wanted = [i for i in items if i["watch"] or i["cap_b"] >= ec.get("fund_min_cap_b", 150)]
     with ThreadPoolExecutor(max_workers=6) as ex:
         list(ex.map(enrich, done))
         list(ex.map(lambda i: attach_chart(i, dt.date.fromisoformat(i["date"])), coming))
     for i in items:
         if i["status"] == "pending" and i["date"] < today.isoformat():
             i["status"] = "missing"      # Termin vorbei, aber noch kein Ergebnis in der Quelle
+    # Umsatz, Prognosen und Kursziele: höchstens einmal am Tag je Firma, nach frischen Zahlen öfter, bis der Umsatz da ist
+    fund = cache.get("fund", {})
+    now = dt.datetime.now(dt.timezone.utc)
+
+    def stale(i):
+        f = fund.get(i["symbol"])
+        if not f:
+            return True
+        age = (now - dt.datetime.fromisoformat(f["fetched"])).total_seconds() / 3600
+        y, m = quarter_ym(i.get("quarter"))
+        waiting = i["status"] != "upcoming" and y and not any(int(e[:4]) == y and int(e[5:7]) == m for e, _ in f.get("rev") or [])
+        return age >= ec.get("fund_hours", 24) or (waiting and age >= 2)
+    todo = list(dict.fromkeys(i["symbol"] for i in sorted(wanted, key=lambda i: abs((dt.date.fromisoformat(i["date"]) - today).days)) if stale(i)))
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for sym, f in zip(todo[:ec.get("fund_per_run", 40)], ex.map(fundamentals, todo[:ec.get("fund_per_run", 40)])):
+            fund[sym] = f
+    for i in wanted:
+        attach_fund(i, fund.get(i["symbol"]))
+    fund = {s: f for s, f in fund.items() if s in {i["symbol"] for i in items}}
     for i in items:
         i.pop("cal_eps", None)
         i.pop("cal_surprise", None)
@@ -291,8 +380,9 @@ def build(cfg, today):
     out = {"items": items, "checked": _now(), "stale": False, "error": None if not errors else f"{len(errors)} Kalendertage fehlen"}
     keep = {k: v for k, v in times.items() if k.split("|")[1] >= str(today - dt.timedelta(days=60))}
     # Die Zwischenspeicherdatei landet im Repository: nur schreiben, wenn sich Inhalte (nicht nur der Zeitstempel) geändert haben
-    snapshot = {"times": keep, "last": {**out, "checked": None, "items": [{**i, "news": [], "series": None} for i in items]}}
-    if json.dumps(snapshot, sort_keys=True) != json.dumps({"times": cache.get("times"), "last": {**(cache.get("last") or {}), "checked": None}}, sort_keys=True):
+    snapshot = {"times": keep, "fund": fund, "last": {**out, "checked": None, "items": [{**i, "news": [], "series": None} for i in items]}}
+    if json.dumps(snapshot, sort_keys=True) != json.dumps({"times": cache.get("times"), "fund": cache.get("fund"),
+                                                           "last": {**(cache.get("last") or {}), "checked": None}}, sort_keys=True):
         try:
             CACHE.parent.mkdir(exist_ok=True)
             CACHE.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")

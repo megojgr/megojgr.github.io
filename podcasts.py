@@ -54,7 +54,7 @@ def latest_on_spotify(show):
 
 def one(p):
     show_url = f"https://open.spotify.com/show/{p['spotify_show']}"
-    out = {"name": p["name"], "by": p.get("by"), "show_url": show_url, "url": show_url, "exact": False,
+    out = {"name": p["name"], "by": p.get("by"), "announce": bool(p.get("announce")), "show_url": show_url, "url": show_url, "exact": False,
            "title": None, "time": None, "minutes": None, "image": None, "error": None}
     try:
         ep = latest_in_feed(p["feed"], p.get("skip_re"))

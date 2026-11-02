@@ -338,6 +338,15 @@
   .enews { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; font-size: 14px; line-height: 1.35; }
   .enews a:hover { color: var(--link); text-decoration: underline; text-underline-offset: 3px; } .enews small { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
   .emorebtn { margin: 18px 0 4px; }
+  .efund { display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 9px; }
+  .efund b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .revbars { display: grid; gap: 6px; margin-top: 6px; }
+  .revbar { display: grid; grid-template-columns: 78px 1fr 92px 64px; gap: 8px; align-items: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .revbar .bar { height: 12px; background: var(--soft); border-radius: 6px; overflow: hidden; } .revbar .bar i { display: block; height: 100%; background: color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 6px; }
+  .revbar.now .bar i { background: var(--ink); } .revbar .v { text-align: right; } .revbar .g { text-align: right; }
+  .ratings { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 8px 0 4px; background: var(--soft); }
+  .ratings i { display: block; } .ratings .b { background: var(--up); } .ratings .h { background: color-mix(in srgb, var(--muted) 60%, transparent); } .ratings .s { background: var(--down); }
+  @media (max-width: 560px) { .revbar { grid-template-columns: 64px 1fr 80px 56px; font-size: 12.5px; } }
   .elink { font: inherit; letter-spacing: inherit; background: none; border: 0; padding: 0; margin: 0; color: inherit; text-align: left; cursor: pointer; }
   .elink::after { content: " ›"; color: var(--muted); font-weight: 400; }
   .elink:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
@@ -830,6 +839,8 @@ function glance() {
     if (nt.length || ny.length) rows.push(["Quartalszahlen", [nt.length > 0 && `Heute: ${nt.join(", ")}`, nt.length > 0 && ny.length > 0 && "  ·  ", ny.length > 0 && `Gestern: ${ny.join(", ")}`, "  ",
       h("a", { href: "#zahlen", onclick: (ev) => { ev.preventDefault(); show("zahlen"); } }, "alle Quartalszahlen")]]);
   }
+  const fresh = (DATA.podcasts || []).filter(p => p.announce && p.time && Date.now() - new Date(p.time) < 3 * 864e5);
+  if (fresh.length) rows.push(["Neue Podcast-Folge", fresh.map((p, k) => [k ? "  ·  " : "", h("a", { href: p.url, target: "_blank", rel: "noopener" }, `${p.name}: ${p.title}`)])]);
   const mb = DATA.briefings.find(b => b.name.includes("Morning Briefing"));
   if (mb) rows.push(["Morning Briefing", h("a", { href: mb.url }, mb.title.replace(/^Morning Briefing:\s*/, ""))]);
   let move = null;
@@ -1306,16 +1317,19 @@ function earnCard(it) {
     const text = r.verdict === "übertroffen" ? `▲ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % über der Erwartung`
       : r.verdict === "verfehlt" ? `▼ ${Math.abs(s).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % unter der Erwartung` : "≈ im Rahmen der Erwartung";
     body = h("div", { class: "eres" }, h("span", { class: "everdict " + cls }, text), epsBars(r), earnChange(it, false),
-      it.reaction && h("div", { class: "ereact" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+      it.reaction && h("div", { class: "ereact" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))),
+      earnFund(it, false));
   } else if (upcoming) {
     const parts = [it.est != null && ["Erwartet: ", h("b", {}, usd(it.est)), " je Aktie", it.est_n ? ` (${it.est_n} Analysten)` : ""],
       it.prev_eps != null && [it.est != null ? " · " : "", "Vorjahr: ", h("b", {}, usd(it.prev_eps))]].filter(Boolean);
     body = h("div", { class: "eexp" }, parts.length ? parts : "Noch keine Erwartung veröffentlicht.",
       it.status === "pending" && h("div", { class: "note", style: "margin:4px 0 0" }, "Heute erwartet. Die Kennzahlen erscheinen, sobald die Datenquelle sie hat."),
-      it.reaction && h("div", { class: "ereact", style: "margin-top:4px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+      it.reaction && h("div", { class: "ereact", style: "margin-top:4px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))),
+      h("div", { style: "margin-top:8px" }, earnFund(it, true)));
   } else {
     body = h("div", { class: "eexp" }, h("span", { class: "note", style: "margin:0" }, "Zahlen sind veröffentlicht. Die genauen Kennzahlen liefert die Datenquelle meist erst mit etwas Verzögerung nach."),
-      it.reaction && h("div", { class: "ereact", style: "margin-top:6px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))));
+      it.reaction && h("div", { class: "ereact", style: "margin-top:6px" }, it.reaction.label + ": ", h("b", { class: it.reaction.pct >= 0 ? "up" : "down" }, pct(it.reaction.pct))),
+      h("div", { style: "margin-top:8px" }, earnFund(it, false)));
   }
   const cap = it.cap_b >= 1000 ? (it.cap_b / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Bio. $" : it.cap_b + " Mrd. $";
   return h("article", { class: "ecard " + cls },
@@ -1330,6 +1344,26 @@ function earnCard(it) {
     (L.ir || it.news.length > 1) && h("div", { class: "emore" }, L.ir && [h("a", { href: L.sec, target: "_blank", rel: "noopener" }, "SEC-Einreichungen"), "  ·  "],
       h("a", { href: L.search, target: "_blank", rel: "noopener" }, "Alle Berichte in Google News")),
     earnNews(it, 3));
+}
+
+// Umsatz in Mio. $ lesbar: "201,9 Mrd. $"
+const revText = (m) => m == null ? "–" : m >= 1000 ? (m / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Mrd. $" : Math.round(m).toLocaleString("de-DE") + " Mio. $";
+const growthText = (g) => g == null ? "" : (g >= 0 ? "▲ +" : "▼ −") + Math.abs(g).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %";
+const growthSpan = (g) => g == null ? null : h("b", { class: g >= 0 ? "up" : "down" }, growthText(g));
+// Zusatzzeilen in der Karte: Umsatz und Wachstum, Gewinnprognose mit Spanne, Kursziel der Analysten
+function earnFund(it, upcoming) {
+  const R = it.revenue, F = it.forecast, T = it.target, lines = [];
+  if (R && !upcoming) lines.push(R.value != null ? h("div", {}, "Umsatz: ", h("b", {}, revText(R.value)), R.yoy != null ? ["  ", growthSpan(R.yoy), " zum Vorjahresquartal"] : "")
+    : h("div", {}, "Umsatz: folgt, die Datenquelle trägt ihn meist ein bis zwei Tage später nach."));
+  if (R && upcoming) lines.push(h("div", {}, "Umsatz im Vorjahresquartal: ", h("b", {}, revText(R.prev)), R.last_yoy != null ? ["  ·  zuletzt ", growthSpan(R.last_yoy), " Wachstum"] : ""));
+  const fq = F && F.q && F.q[0];
+  if (upcoming && fq && fq.est != null) {
+    const g = it.prev_eps ? (fq.est / it.prev_eps - 1) * 100 : null;
+    lines.push(h("div", {}, `Prognose Gewinn je Aktie: `, h("b", {}, usd(fq.est)), ` (Spanne ${usd(fq.lo)} bis ${usd(fq.hi)})`, g != null ? ["  ·  ", growthSpan(Math.abs(it.prev_eps) > 0.05 ? g : null), g != null && Math.abs(it.prev_eps) > 0.05 ? " zum Vorjahr" : ""] : ""));
+  }
+  if (T && T.priceTarget) lines.push(h("div", {}, "Kursziel: ", h("b", {}, usd(T.priceTarget)), T.upside != null ? ` (${T.upside >= 0 ? "+" : "−"}${Math.abs(T.upside).toLocaleString("de-DE", { maximumFractionDigits: 1 })} % zum Kurs)` : "",
+    `  ·  ${T.buy} Kaufen, ${T.hold} Halten, ${T.sell} Verkaufen`));
+  return lines.length ? h("div", { class: "efund" }, lines) : null;
 }
 
 // Kleine Textzeile: Veränderung des Gewinns je Aktie zum Vorjahresquartal (sonst zum Vorquartal)
@@ -1444,6 +1478,8 @@ function openEarnings(it) {
     tiles.push(tile(cls, "Gewinn je Aktie", chg ? chg[0] : h("b", {}, usd(r.eps)), chg ? chg[1] : h("span", { class: "s" }, `Ergebnis ${usd(r.eps)}`)));
     tiles.push(tile(cls, "Gegenüber Erwartung", h("b", { class: r.surprise >= 0 ? "up" : "down" }, (r.surprise >= 0 ? "▲ +" : "▼ −") + Math.abs(r.surprise).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %"),
       h("span", { class: "s" }, `Ergebnis ${usd(r.eps)}, erwartet ${usd(r.est)}`)));
+    if (it.revenue) tiles.push(tile("", "Umsatz", it.revenue.value != null ? h("b", { class: it.revenue.yoy >= 0 ? "up" : "down" }, growthText(it.revenue.yoy) || revText(it.revenue.value)) : h("b", {}, "folgt"),
+      h("span", { class: "s" }, it.revenue.value != null ? `${revText(it.revenue.value)} im Quartal, Vorjahr ${revText(it.revenue.prev)}` : "Die Datenquelle trägt den Umsatz meist ein bis zwei Tage später nach.")));
   } else if (upcoming) {
     tiles.push(tile("", "Erwartung", h("b", {}, usd(it.est)), h("span", { class: "s" }, [it.est_n ? `${it.est_n} Analysten` : "Schätzung der Analysten", it.prev_eps != null ? ` · Vorjahr ${usd(it.prev_eps)}` : ""].join(""))));
   } else tiles.push(tile("", "Kennzahlen", h("b", {}, "folgen"), h("span", { class: "s" }, "Die Datenquelle liefert sie meist erst einen Tag nach der Veröffentlichung.")));
@@ -1454,6 +1490,28 @@ function openEarnings(it) {
   }
 
   const hist = r && r.hist && r.hist.length ? r.hist : [];
+  // Umsatz der letzten Quartale als Balken, Prognosen der Analysten und Kursziel
+  const RH = (it.revenue && it.revenue.hist) || [], maxRev = Math.max(1, ...RH.map(x => x.rev));
+  const qLabel = (end) => { const d = new Date(end + "T12:00:00"); return d.toLocaleDateString("de-DE", { month: "short" }) + " " + d.getFullYear(); };
+  const revSection = RH.length > 0 && [h("h3", { class: "sec2" }, "Umsatz der letzten Quartale"),
+    h("div", { class: "revbars" }, RH.map((x, k) => h("div", { class: "revbar" + (k === RH.length - 1 ? " now" : "") },
+      h("span", {}, qLabel(x.end)), h("span", { class: "bar" }, h("i", { style: `width:${Math.max(2, x.rev / maxRev * 100)}%` })),
+      h("span", { class: "v" }, revText(x.rev)), h("span", { class: "g " + (x.yoy == null ? "" : x.yoy >= 0 ? "up" : "down") }, x.yoy == null ? "" : (x.yoy >= 0 ? "+" : "−") + Math.abs(x.yoy).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %")))),
+    h("p", { class: "note" }, "Rechts das Wachstum zum gleichen Quartal des Vorjahres. Umsatzprognosen bietet keine freie Datenquelle an, deshalb stehen unten die Gewinnprognosen.")];
+  const F = it.forecast, fRows = F ? [...(F.q || []).map(x => ({ ...x, kind: "Quartal" })), ...(F.y || []).map(x => ({ ...x, kind: "Geschäftsjahr" }))] : [];
+  const fcSection = fRows.length > 0 && [h("h3", { class: "sec2" }, "Prognosen der Analysten: Gewinn je Aktie"),
+    h("table", { class: "ehist" }, h("thead", {}, h("tr", {}, h("th", {}, "Zeitraum"), h("th", {}, "Konsens"), h("th", {}, "Spanne"), h("th", {}, "Änderungen"))),
+      h("tbody", {}, fRows.map(x => { const [m, y] = (x.end || "").split(" ");
+        return h("tr", {}, h("td", {}, `${x.kind} bis ${MONTH[m] || m} ${y || ""}`), h("td", {}, usd(x.est)), h("td", {}, `${usd(x.lo)} – ${usd(x.hi)}`),
+          h("td", {}, h("span", { class: "up" }, `↑${x.up || 0}`), " ", h("span", { class: "down" }, `↓${x.down || 0}`))); }))),
+    h("p", { class: "note" }, "Konsens aus den Schätzungen der Analysten (Nasdaq/Zacks). Änderungen: wie viele ihre Schätzung in den letzten 4 Wochen angehoben oder gesenkt haben.")];
+  const T = it.target, nRat = T ? (T.buy || 0) + (T.hold || 0) + (T.sell || 0) : 0;
+  const tgSection = T && T.priceTarget && [h("h3", { class: "sec2" }, "Kursziel und Empfehlungen"),
+    h("p", {}, "Durchschnittliches Kursziel: ", h("b", {}, usd(T.priceTarget)), T.upside != null ? [" (", h("span", { class: T.upside >= 0 ? "up" : "down" }, `${T.upside >= 0 ? "+" : "−"}${Math.abs(T.upside).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %`), " zum letzten Kurs von ", usd(T.last), ")"] : "",
+      h("br"), `Spanne der Kursziele: ${usd(T.lowPriceTarget)} bis ${usd(T.highPriceTarget)}`),
+    nRat > 0 && [h("div", { class: "ratings", title: `${T.buy} Kaufen, ${T.hold} Halten, ${T.sell} Verkaufen` },
+      h("i", { class: "b", style: `width:${T.buy / nRat * 100}%` }), h("i", { class: "h", style: `width:${T.hold / nRat * 100}%` }), h("i", { class: "s", style: `width:${T.sell / nRat * 100}%` })),
+      h("div", { class: "sub" }, h("span", { class: "up" }, `${T.buy} Kaufen`), "  ·  ", `${T.hold} Halten`, "  ·  ", h("span", { class: "down" }, `${T.sell} Verkaufen`))]];
   const histTable = hist.length > 0 && [h("h3", { class: "sec2" }, "Gewinn je Aktie der letzten Quartale"),
     h("table", { class: "ehist" }, h("thead", {}, h("tr", {}, h("th", {}, "Quartal"), h("th", {}, "Ergebnis"), h("th", {}, "Erwartet"), h("th", {}, "Abweichung"))),
       h("tbody", {}, hist.map(x => { const [m, y] = (x.quarter || "").split(" ");
@@ -1472,7 +1530,7 @@ function openEarnings(it) {
       ref != null ? h("p", { class: "elegend" }, h("i"), `Zahlen veröffentlicht am ${new Date(it.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "long" })}${when ? ", " + when : ""}. Graue Linie: Kurs davor, farbige Linie: Kurs danach, gestrichelt: Kurs zum Zeitpunkt der Zahlen.`)
         : h("p", { class: "elegend" }, upcoming ? `Die Zahlen kommen am ${new Date(it.date + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "long" })}${when ? ", " + when : ""}.` : "Zeitpunkt der Zahlen nicht im Kursverlauf erkennbar.")]
       : h("p", { class: "note" }, "Für diese Firma liegt gerade kein Kursverlauf vor."),
-    histTable,
+    revSection, histTable, fcSection, tgSection,
     h("div", { class: "elinks", style: "margin-top:18px" },
       h("a", { class: "ebtn", href: orig.url, target: "_blank", rel: "noopener" }, "Originalquelle ↗", h("small", {}, orig.label)),
       h("a", { class: "ebtn alt", href: analysis.url, target: "_blank", rel: "noopener" }, (upcoming ? "Vorschau" : "Analyse") + " ↗", h("small", {}, analysis.label))),
@@ -1784,6 +1842,7 @@ function podcastBlock() {
     const d = new Date(iso), day = d.toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
     const time = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }) + " Uhr";
     if (day === berlinDay()) return [h("b", {}, "Heute"), `, ${time}`];
+    if (Date.now() - d < 3 * 864e5) return [h("b", {}, "Neu"), "  ·  ", d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Berlin" })];
     if (day === berlinDay(-1)) return `Gestern, ${time}`;
     return d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Berlin" });
   };

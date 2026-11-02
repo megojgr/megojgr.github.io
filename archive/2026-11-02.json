@@ -1,40 +1,40 @@
 {
  "date": "2026-11-02",
- "generated": "2026-11-02T16:25:49.131224+00:00",
+ "generated": "2026-11-02T16:56:57.563811+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25997.8,
-   "pct": 0.696,
+   "price": 25981.09,
+   "pct": 0.631,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7625.73,
-   "pct": 0.602,
+   "price": 7623.45,
+   "pct": 0.572,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 25624.332,
-   "pct": 0.736,
+   "price": 25602.32,
+   "pct": 0.65,
    "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 52281.78,
-   "pct": 0.988,
+   "price": 52335.43,
+   "pct": 1.092,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6183.39,
-   "pct": 0.849,
+   "price": 6176.06,
+   "pct": 0.73,
    "alert": null
   },
   {
@@ -54,36 +54,36 @@
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 18.73,
-   "pct": -3.553,
+   "price": 18.85,
+   "pct": -2.932,
    "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1204,
-   "pct": 0.3473,
+   "price": 1.1206,
+   "pct": 0.3586,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 3973.0,
-   "pct": 1.901,
+   "price": 3978.0,
+   "pct": 2.029,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 105.52,
-   "pct": -6.973,
+   "price": 104.86,
+   "pct": -7.555,
    "alert": "day"
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 69102.41,
-   "pct": -1.228,
+   "price": 69055.15,
+   "pct": -1.295,
    "alert": "week"
   }
  ],
@@ -92,14 +92,14 @@
    "title": "Aktuelles zum Krieg in der Ukraine",
    "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
    "topic": "world",
-   "n": 13,
+   "n": 14,
    "alert": false
   },
   {
    "title": "Nadeln und Nägel in Halloween-Süßigkeiten entdeckt",
    "url": "https://www.tagesschau.de/inland/nadeln-suessigkeiten-halloween-100.html",
    "topic": "germany",
-   "n": 11,
+   "n": 10,
    "alert": false
   },
   {
@@ -117,8 +117,15 @@
    "alert": false
   },
   {
-   "title": "Merz verurteilt Krawalle am Rande der Jugendproteste",
-   "url": "https://www.tagesschau.de/inland/jugendproteste-gewalt-merz-100.html",
+   "title": "Tarifrunde im Bergischen Land: IG Metall plant Warnstreiks und Kundgebungen in der Region",
+   "url": "https://rp-online.de/nrw/staedte/wermelskirchen/warnstreiks-im-bergischen-ig-metall-ruft-zu-aktionen-auf_aid-157677007",
+   "topic": "germany",
+   "n": 3,
+   "alert": false
+  },
+  {
+   "title": "Aufbruch: Der Anti-Wüst: SPD präsentiert Ott-Kampagne",
+   "url": "https://www.zeit.de/news/2026-11/02/der-anti-wuest-spd-praesentiert-ott-kampagne",
    "topic": "germany",
    "n": 4,
    "alert": false
@@ -138,24 +145,17 @@
    "alert": false
   },
   {
-   "title": "IG Metall ruft zu weiteren Warnstreiks in 240 Unternehmen in NRW auf",
-   "url": "https://www.waz.de/lokales/essen/article413566445/ig-metall-ruft-weiteren-zu-warnstreiks-in-240-unternehmen-in-nrw-auf.html",
-   "topic": "germany",
-   "n": 3,
-   "alert": false
+   "title": "Stocks jump as oil prices tumble before midterms, tech shares rebound: Live updates",
+   "url": "https://www.cnbc.com/2026/11/01/stock-market-today-live-updates.html",
+   "topic": "markets",
+   "n": 2,
+   "alert": true
   },
   {
-   "title": "Deutsche Börse-Aktie: Es geht wieder bergab",
-   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQcHBHamQwaXpOaDNUOWJWRXBDU01YTkdpbjJ2OGNXdC1MLVpicWFJNXlJcDlNeHp6eU81UDFSTk5hR084cldQd1ctU2w0V2ZSeDd2dDZwNEVJMkJzMllJZ0doX3Qxd1l4UjZfT1hpc2tiRURacnBET0RRb1owYk91c1dTa05tdGxlZGc1eFdYTU9BWWM5VlRzR1Y3Nmg4ck1tazZWUC1jaUdVYUdYMVNGX0xHMG9LeDA?oc=5",
-   "topic": "markets",
-   "n": 3,
-   "alert": false
-  },
-  {
-   "title": "Deutsche Bank-Aktie: Fünfter Tag in Folge Gewinne",
-   "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOSW9QSXdGbE5nWGNONmxfb2cwWkpmclBuNVYzRkF5eUt0MktYMzdOeXZzakV2SG9YWVk0UHlzNFlXYXdhb1o1Nk0yV2dSb0pFd2p3MnJzMmxDOVM2dVVIem5hSU9MeU45ZWZtUHI0aXUwbWNmVXYwQmVTOHRWc3dzaXpsSXNROXF4dERjSTMybW9La0xvdWlMMnFtV1JyQkFOSExoYkJXU3N3V1pFSFhsYWx4YktPeWpRSlV5VzZsQQ?oc=5",
-   "topic": "markets",
-   "n": 1,
+   "title": "Ukraine: Feuerpause in Oleschky ausgelaufen",
+   "url": "https://www.tagesschau.de/ausland/europa/ukraine-waffenruhe-cherson-100.html",
+   "topic": "world",
+   "n": 4,
    "alert": false
   }
  ],
@@ -174,7 +174,15 @@
    "source": "Polymarket",
    "lead": "Democrats Sweep",
    "p": 0.725,
-   "d1": 0.01
+   "d1": 0.02
+  },
+  {
+   "title": "Which party will win the House in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.945,
+   "d1": null
   },
   {
    "title": "Which party will win the Senate in 2026?",
@@ -190,15 +198,7 @@
    "source": "Polymarket",
    "lead": "JD Vance",
    "p": 0.1835,
-   "d1": -0.0045
-  },
-  {
-   "title": "Which party will win the House in 2026?",
-   "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
-   "source": "Polymarket",
-   "lead": "Democratic Party",
-   "p": 0.945,
-   "d1": null
+   "d1": -0.0055
   },
   {
    "title": "Will 1win launch a token by ___?",
@@ -206,7 +206,7 @@
    "source": "Polymarket",
    "lead": "October 31, 2026",
    "p": 0.9995,
-   "d1": null
+   "d1": 0.001
   }
  ]
 }

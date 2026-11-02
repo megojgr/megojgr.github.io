@@ -1,161 +1,161 @@
 {
  "date": "2026-11-02",
- "generated": "2026-11-02T04:10:57.915830+00:00",
+ "generated": "2026-11-02T16:25:49.131224+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 25818.21,
-   "pct": -0.851,
+   "price": 25997.8,
+   "pct": 0.696,
    "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7580.07,
-   "pct": -1.818,
+   "price": 7625.73,
+   "pct": 0.602,
    "alert": null
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 25436.998,
-   "pct": -2.855,
-   "alert": "day"
+   "price": 25624.332,
+   "pct": 0.736,
+   "alert": null
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 51770.31,
-   "pct": -1.093,
+   "price": 52281.78,
+   "pct": 0.988,
    "alert": null
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6131.31,
-   "pct": -1.221,
+   "price": 6183.39,
+   "pct": 0.849,
    "alert": null
   },
   {
    "name": "Nikkei 225",
    "group": "index",
-   "price": 63520.61,
-   "pct": 0.364,
+   "price": 63081.86,
+   "pct": -0.329,
    "alert": null
   },
   {
    "name": "Hang Seng",
    "group": "index",
-   "price": 23448.63,
-   "pct": 0.662,
+   "price": 23393.32,
+   "pct": 0.425,
    "alert": null
   },
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 19.42,
-   "pct": 12.907,
-   "alert": "day"
+   "price": 18.73,
+   "pct": -3.553,
+   "alert": null
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1177,
-   "pct": 0.1006,
+   "price": 1.1204,
+   "pct": 0.3473,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 3913.1,
-   "pct": 0.364,
+   "price": 3973.0,
+   "pct": 1.901,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 109.7,
-   "pct": -3.288,
-   "alert": "week"
+   "price": 105.52,
+   "pct": -6.973,
+   "alert": "day"
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 70260.58,
-   "pct": 0.898,
-   "alert": null
+   "price": 69102.41,
+   "pct": -1.228,
+   "alert": "week"
   }
  ],
  "heute": [
   {
-   "title": "Russlands Krieg in der Ukraine - Bundespräsident Steinmeier: Chinas Staats- und Parteichef Xi \"irritiert\" über Berichte zu Gipfel mit USA und Russland zur Ukraine",
-   "url": "https://www.deutschlandfunk.de/bundespraesident-steinmeier-chinas-staats-und-parteichef-xi-irritiert-ueber-berichte-zu-gipfel-mit-u-110.html",
+   "title": "Aktuelles zum Krieg in der Ukraine",
+   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
    "topic": "world",
+   "n": 13,
+   "alert": false
+  },
+  {
+   "title": "Nadeln und Nägel in Halloween-Süßigkeiten entdeckt",
+   "url": "https://www.tagesschau.de/inland/nadeln-suessigkeiten-halloween-100.html",
+   "topic": "germany",
    "n": 11,
    "alert": false
   },
   {
-   "title": "Nach Halloween-Geschenken für Kinder - Polizei ermittelt in fünf Bundesländern wegen Nadeln in Süßigkeiten",
-   "url": "https://www.deutschlandfunk.de/polizei-ermittelt-in-fuenf-bundeslaendern-wegen-nadeln-in-suessigkeiten-108.html",
+   "title": "Wuppertaler Polizei: Größere Verkehrskontrollen in der Halloween-Nacht",
+   "url": "http://www.wuppertaler-rundschau.de/lokales/groessere-verkehrskontrollen-in-der-halloween-nacht_aid-157682727",
    "topic": "germany",
-   "n": 7,
+   "n": 5,
    "alert": false
   },
   {
-   "title": "China Construction Bank im Aufwind: Starke Quartalszahlen und Regulierungsimpulse stützen die Aktie",
-   "url": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxNY3BjbzA0RkJVNmtBS1d4bUNKR0tyOVlCYzVtY1QzdEFpd0VMRFZIeXpjV1RGRW00UzlLWXItRlVjRmZyX3NiYWk3a3podnJSdUo1aE9IMEd0R2dSb0JITEZXTFJiZ1AteHdwbHVHVTJCbjNGWHR0cEtYWWFfQlB4NklwUzQzM3FRcTAxaFZ0RDVqQVVvakpnUnFUQXhGdG1YVUhHZnYwSDRJVHAyWWl6Qi1wSmZwdWVSZVExWkdaNVhUTC1xLXBHbXBDTWtRWlk3dGl3WVFvaDdmUVU4d2h2cU9Pdlowc3BGSzBpSkE3ZjE?oc=5",
+   "title": "Bulgariens amtierende Präsidentin Jotowa gewinnt Stichwahl",
+   "url": "https://www.tagesschau.de/ausland/europa/stichwahl-bulgarien-102.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Merz verurteilt Krawalle am Rande der Jugendproteste",
+   "url": "https://www.tagesschau.de/inland/jugendproteste-gewalt-merz-100.html",
+   "topic": "germany",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Apple-Aktie: iPhone-Konzern gibt vor Quartalszahlen nach",
+   "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOeTFqY3dyRHBOOFE4TVBrV3hCWjFrWlh1M2t6bXBVMG1jY2dlbVRIR1A1R01LV0hmUUFmdHV6U0twaG40M2NRNVJncndhRzBwcXlIS2ZpWmdKREs4MV9NZDcxdUFvalNiRlB0dV9Bb0FKX3dTb1duZlcwSFVFRGVOT3lBWW5EQ1dBQzV4akdvZ3c3SzRxY1NuV2tYblZXbnZSQkFtdnoxcWU?oc=5",
    "topic": "markets",
-   "n": 5,
+   "n": 3,
    "alert": false
   },
   {
-   "title": "Tarife - Weitere Warnstreiks der IG Metall",
-   "url": "https://www.deutschlandfunk.de/weitere-warnstreiks-der-ig-metall-100.html",
+   "title": "Neun Tote bei Flugzeugabsturz in Florida",
+   "url": "https://www.tagesschau.de/ausland/amerika/flugzeugabsturz-usa-florida-100.html",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "IG Metall ruft zu weiteren Warnstreiks in 240 Unternehmen in NRW auf",
+   "url": "https://www.waz.de/lokales/essen/article413566445/ig-metall-ruft-weiteren-zu-warnstreiks-in-240-unternehmen-in-nrw-auf.html",
    "topic": "germany",
-   "n": 4,
+   "n": 3,
    "alert": false
   },
   {
-   "title": "+++ Iran-Krieg +++: Israelischer Oppositionspolitiker warnt vor neuem Krieg mit Iran unter Netanjahu",
-   "url": "https://www.handelsblatt.com/politik/international/iran-krieg-israelische-opposition-warnt-vor-neuem-krieg-mit-iran/100136895.html",
-   "topic": "world",
-   "n": 5,
+   "title": "Deutsche Börse-Aktie: Es geht wieder bergab",
+   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQcHBHamQwaXpOaDNUOWJWRXBDU01YTkdpbjJ2OGNXdC1MLVpicWFJNXlJcDlNeHp6eU81UDFSTk5hR084cldQd1ctU2w0V2ZSeDd2dDZwNEVJMkJzMllJZ0doX3Qxd1l4UjZfT1hpc2tiRURacnBET0RRb1owYk91c1dTa05tdGxlZGc1eFdYTU9BWWM5VlRzR1Y3Nmg4ck1tazZWUC1jaUdVYUdYMVNGX0xHMG9LeDA?oc=5",
+   "topic": "markets",
+   "n": 3,
    "alert": false
   },
   {
-   "title": "Stichwahl - Amtsinhaberin Jotowa gewinnt Präsidentschaftswahl in Bulgarien",
-   "url": "https://www.deutschlandfunk.de/amtsinhaberin-jotowa-gewinnt-praesidentschaftswahl-in-bulgarien-102.html",
-   "topic": "world",
-   "n": 4,
-   "alert": false
-  },
-  {
-   "title": "Krawalle und Plünderungen überschatten \"Gen Z regelt\"-Demos",
-   "url": "https://www.zdfheute.de/politik/deutschland/gen-z-proteste-pluenderungen-gewalt-100.html",
-   "topic": "germany",
-   "n": 5,
-   "alert": false
-  },
-  {
-   "title": "Hackerangriff: FBI: Nordkoreanische Hacker stecken hinter milliardenschwerem Krypto-Diebstahl bei Binance",
-   "url": "https://www.handelsblatt.com/finanzen/maerkte/devisen-rohstoffe/binance-fbi-sieht-nordkoreanische-hacker-hinter-krypto-diebstahl/100266403.html",
-   "topic": "world",
-   "n": 4,
-   "alert": false
-  },
-  {
-   "title": "Liveblog Ukrainekrieg: App für Notfall-Warnungen in Ukraine und Russland gehackt",
-   "url": "https://www.faz.net/aktuell/politik/ukraine/ukraine-liveticker-app-fuer-notfall-warnungen-in-ukraine-und-russland-gehackt-faz-110683325.html",
-   "topic": "world",
-   "n": 4,
-   "alert": false
-  },
-  {
-   "title": "Krieg gegen die Ukraine: Cyberangriffe stören ukrainische und russische Warn-Apps",
-   "url": "https://www.zeit.de/politik/ausland/2026-11/hackerangriffe-warn-apps-ukraine-russland-air-alert-cyberangriff",
-   "topic": "world",
-   "n": 4,
+   "title": "Deutsche Bank-Aktie: Fünfter Tag in Folge Gewinne",
+   "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOSW9QSXdGbE5nWGNONmxfb2cwWkpmclBuNVYzRkF5eUt0MktYMzdOeXZzakV2SG9YWVk0UHlzNFlXYXdhb1o1Nk0yV2dSb0pFd2p3MnJzMmxDOVM2dVVIem5hSU9MeU45ZWZtUHI0aXUwbWNmVXYwQmVTOHRWc3dzaXpsSXNROXF4dERjSTMybW9La0xvdWlMMnFtV1JyQkFOSExoYkJXU3N3V1pFSFhsYWx4YktPeWpRSlV5VzZsQQ?oc=5",
+   "topic": "markets",
+   "n": 1,
    "alert": false
   }
  ],
@@ -166,23 +166,31 @@
    "source": "Polymarket",
    "lead": "None",
    "p": 0.315,
-   "d1": 0.07
-  },
-  {
-   "title": "Will 1win launch a token by ___?",
-   "url": "https://polymarket.com/event/will-1win-launch-a-token-by",
-   "source": "Polymarket",
-   "lead": "October 31, 2026",
-   "p": 0.9995,
-   "d1": null
+   "d1": 0.06
   },
   {
    "title": "Balance of Power: 2026 Midterms",
    "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
    "source": "Polymarket",
    "lead": "Democrats Sweep",
-   "p": 0.705,
-   "d1": null
+   "p": 0.725,
+   "d1": 0.01
+  },
+  {
+   "title": "Which party will win the Senate in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-senate-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.735,
+   "d1": 0.01
+  },
+  {
+   "title": "Presidential Election Winner 2028",
+   "url": "https://polymarket.com/event/presidential-election-winner-2028",
+   "source": "Polymarket",
+   "lead": "JD Vance",
+   "p": 0.1835,
+   "d1": -0.0045
   },
   {
    "title": "Which party will win the House in 2026?",
@@ -193,20 +201,12 @@
    "d1": null
   },
   {
-   "title": "Which party will win the Senate in 2026?",
-   "url": "https://polymarket.com/event/which-party-will-win-the-senate-in-2026",
+   "title": "Will 1win launch a token by ___?",
+   "url": "https://polymarket.com/event/will-1win-launch-a-token-by",
    "source": "Polymarket",
-   "lead": "Democratic Party",
-   "p": 0.715,
+   "lead": "October 31, 2026",
+   "p": 0.9995,
    "d1": null
-  },
-  {
-   "title": "Texas Senate Election Winner",
-   "url": "https://polymarket.com/event/texas-senate-election-winner",
-   "source": "Polymarket",
-   "lead": "James Talarico (D)",
-   "p": 0.735,
-   "d1": 0.03
   }
  ]
 }

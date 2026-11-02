@@ -691,6 +691,7 @@ function openDetail(q, extra) {
     extra && extra.mine && h("div", { class: "sub", style: "margin-top:6px" }, extra.qty ? `${de.format(extra.qty)} Stück im Depot` : "Im Depot zum Beobachten", "  ",
       h("button", { class: "btn", style: "margin-left:8px", onclick: () => openEditor(extra.id) }, "Bearbeiten")),
     h("div", { class: "big" }, price(q.price) + cur, q.pct != null && h("small", { class: q.pct >= 0 ? "up" : "down" }, pct(q.pct) + " heute")),
+    q.note && h("div", { class: "sub", style: "margin-top:2px" }, q.note),
     q.local && h("div", { class: "sub", style: "margin-top:2px" }, `umgerechnet in Euro, Börsenkurs ${price(q.local.price)} ${q.local.currency}; die Verlaufswerte rechnen den jeweiligen Tageskurs ein`),
     rangeBar, info, chartBox,
     h("div", { class: "stats" },

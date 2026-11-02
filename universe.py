@@ -23,7 +23,8 @@ def news_for(u, per_item=6):
     """Google-News-Suche nach den Begriffen des Werts; ein Titel muss einen der Begriffe enthalten."""
     terms = u["terms"]
     words = " OR ".join(f'"{t}"' for t in terms)
-    query = f"({words}) when:3d" if u["type"] == "ETF" else f"({words}) (Aktie OR Börse OR Quartal OR Konzern) when:3d"
+    extra = u.get("q_extra") or ("" if u["type"] == "ETF" else "(Aktie OR Börse OR Quartal OR Konzern)")
+    query = f"({words}) {extra} when:3d".replace("  ", " ")
     url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(query) + "&hl=de&gl=DE&ceid=DE:de"
     title_re = re.compile(r"(?<![A-Za-zÄÖÜäöü-])(" + "|".join(re.escape(t) for t in terms) + ")", re.I)
     exclude = re.compile("|".join(re.escape(x) for x in u.get("exclude", [])), re.I) if u.get("exclude") else None
@@ -48,9 +49,18 @@ def build(cfg, alerts):
     items = cfg.get("universe") or []
     if not items:
         return []
+    def quote(u):
+        q = to_eur(fetch_quote({"name": u["short"], "symbol": u["symbol"], "group": "depot"}, alerts), alerts, u["type"] == "ETF")
+        if u.get("price_symbol") and q.get("price"):
+            # Kurs von einer anderen Anteilsklasse (ohne Verlauf), Verlauf von "symbol" auf diesen Kurs umgerechnet
+            p = to_eur(fetch_quote({"name": u["short"], "symbol": u["price_symbol"], "group": "depot"}, alerts), alerts, True)
+            if p.get("price"):
+                k = p["price"] / q["price"]
+                q.update(price=p["price"], c=[x * k for x in q["c"]], hi52=q["hi52"] and q["hi52"] * k, lo52=q["lo52"] and q["lo52"] * k)
+        return q
+
     with ThreadPoolExecutor(max_workers=8) as ex:
-        quotes = list(ex.map(lambda u: to_eur(fetch_quote({"name": u["short"], "symbol": u["symbol"], "group": "depot"}, alerts),
-                                              alerts, u["type"] == "ETF"), items))
+        quotes = list(ex.map(quote, items))
 
     try:
         cache = json.loads(CACHE.read_text(encoding="utf-8"))
@@ -79,7 +89,7 @@ def build(cfg, alerts):
     out = []
     for u, q in zip(items, quotes):
         q["c"] = compact(q.get("c") or [])
-        out.append({"id": u["symbol"], **{k: u[k] for k in ("name", "short", "type", "isin", "wkn", "symbol")},
+        out.append({"id": u["symbol"], "note": u.get("note"), **{k: u[k] for k in ("name", "short", "type", "isin", "wkn", "symbol")},
                     **{k: q.get(k) for k in ("price", "pct", "week", "month", "t", "c", "currency", "hi52", "lo52", "alert", "error", "local", "fx_error")},
                     "news": news.get(u["symbol"], []), "context": []})
     return out

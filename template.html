@@ -182,6 +182,12 @@
   .dlg textarea.code { width: 100%; box-sizing: border-box; font: 12px/1.4 ui-monospace, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); word-break: break-all; margin: 8px 0; }
   .lock { background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); padding: 22px; max-width: 460px; margin: 24px 0; }
   .lock h2 { margin: 0 0 6px; font: 700 22px var(--serif); }
+  #btn-search svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; display: block; }
+  #btn-search { display: inline-grid; place-items: center; min-width: 36px; }
+  .sfield { position: relative; margin: 10px 0 4px; }
+  .sfield svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
+  .dlg .sfield input[type=text] { padding-left: 40px; margin: 0; font-size: 16px; }
+  .sinfo { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; min-height: 18px; }
   .lock input[type=password], .dlg input[type=password], .dlg input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink); margin: 10px 0 8px; }
   .lock label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 12px; }
 
@@ -471,6 +477,7 @@
   <div class="wrap">
     <div class="mast-bar">
       <span id="today"></span><span class="grow"></span>
+      <button class="btn icon" id="btn-search" aria-label="Meldungen suchen" title="Meldungen suchen"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
       <button class="btn primary" id="btn-refresh" aria-label="Aktualisieren"><span class="ic">↻</span><span class="lb">Aktualisieren</span></button>
       <button class="btn icon" id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
@@ -1063,6 +1070,52 @@ async function importDepot(code) {
   MY = d; MYPIN = null;
   await mySave();
   return true;
+}
+
+// ------------------------------------------------------------------ Suche in allen Meldungen
+// Ohne Eingabe: die wichtigsten Meldungen gerade. Die Tastatur öffnet sich erst beim Tippen auf das Suchfeld.
+function openSearch() {
+  const fold = (t) => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
+  // Alle Meldungen der Seite: Startseite, Regionen, dazu Meldungen zu Aktien, ETF-Themen und Quartalszahlen
+  const pool = [...DATA.stories];
+  const seen = new Set(pool.map(x => x.url));
+  const add = (x) => { if (x && x.url && x.title && !seen.has(x.url)) { seen.add(x.url); pool.push(x.sources ? x
+    : { title: x.title, title_de: x.title_de, summary: "", url: x.url, time: x.time, lang: x.lang || "de", topic: "markets", score: 0,
+        sources: [{ name: x.source || "Google News", url: x.url }], watch: [], src_lang: x.src_lang }); } };
+  (DATA.heute || []).forEach(add);
+  (DATA.universe || []).forEach(u => (u.news || []).forEach(add));
+  Object.values(DATA.etf_themes || {}).forEach(t => (t.news || []).forEach(add));
+  ((DATA.earnings && DATA.earnings.items) || []).forEach(i => (i.news || []).forEach(add));
+  const text = (x) => x._s || (x._s = fold([x.title, x.title_de, x.summary, x.summary_de, ...(x.sources || []).map(y => y.name), ...(x.watch || [])].join(" ")));
+  const head = (x) => x._t || (x._t = fold([x.title, x.title_de].join(" ")));
+  const input = h("input", { type: "text", inputmode: "search", enterkeyhint: "search", placeholder: "Suche in allen Meldungen, z. B. Nvidia oder Wuppertal", autocomplete: "off", "aria-label": "Suchbegriff" });
+  const info = h("p", { class: "sinfo" }), list = h("div");
+  let timer = null;
+  const render = () => {
+    const words = fold(input.value).split(/\s+/).filter(w => w.length > 1);
+    if (!words.length) {
+      const top = pool.slice().sort((a, b) => b.score - a.score || b.time.localeCompare(a.time)).slice(0, 15);
+      info.textContent = "Die wichtigsten Meldungen gerade, nach Zahl der Quellen und Aktualität.";
+      list.replaceChildren(sec("Beliebt gerade"), ...[items(top, {})].flat());
+      return;
+    }
+    const hits = pool.filter(x => words.every(w => text(x).includes(w)))
+      .map(x => ({ x, rank: words.filter(w => head(x).includes(w)).length }))
+      .sort((a, b) => b.rank - a.rank || b.x.time.localeCompare(a.x.time)).map(r => r.x);
+    info.textContent = hits.length ? `${hits.length} Treffer in ${pool.length} Meldungen der letzten Tage${hits.length > 40 ? ", die neuesten 40 zuerst" : ""}` : "";
+    list.replaceChildren(...(hits.length ? [items(hits.slice(0, 40), {})].flat()
+      : [h("div", { class: "empty" }, "Keine Meldung gefunden. Gesucht wird in Überschriften, Teasern und Quellen der letzten Tage.")]));
+  };
+  input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 120); });
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") input.blur(); });  // Tastatur schließen, Treffer stehen schon da
+  render();
+  const glass = svgEl("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" });
+  glass.append(svgEl("circle", { cx: 10.5, cy: 10.5, r: 6.5 }), svgEl("path", { d: "M15.5 15.5 21 21" }));
+  const close = h("button", { class: "btn", autofocus: true, onclick: () => $("detail").close() }, "Schließen");
+  showDlg(h("div", { class: "top" }, h("div", {}, h("div", { class: "sub" }, "Mego News"), h("h2", {}, "Suchen")), close),
+    h("div", { class: "sfield" }, glass, input),
+    info, list);
+  close.focus({ preventScroll: true });  // nicht das Suchfeld: sonst öffnet sich am Handy sofort die Tastatur
 }
 
 function dlgTop(title, sub) {
@@ -2170,6 +2223,7 @@ function openSettings() {
   dlg.showModal();
 }
 $("btn-settings").addEventListener("click", openSettings);
+$("btn-search").addEventListener("click", openSearch);
 
 // ------------------------------------------------------------------ Start
 

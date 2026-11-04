@@ -1,0 +1,212 @@
+{
+ "date": "2026-11-04",
+ "generated": "2026-11-04T04:12:16.645378+00:00",
+ "quotes": [
+  {
+   "name": "DAX",
+   "group": "index",
+   "price": 25864.6,
+   "pct": -0.448,
+   "alert": null
+  },
+  {
+   "name": "S&P 500",
+   "group": "index",
+   "price": 7568.92,
+   "pct": 0.365,
+   "alert": null
+  },
+  {
+   "name": "Nasdaq",
+   "group": "index",
+   "price": 25372.01,
+   "pct": 0.825,
+   "alert": null
+  },
+  {
+   "name": "Dow Jones",
+   "group": "index",
+   "price": 51786.7,
+   "pct": -0.38,
+   "alert": null
+  },
+  {
+   "name": "Euro Stoxx 50",
+   "group": "index",
+   "price": 6144.56,
+   "pct": -0.51,
+   "alert": null
+  },
+  {
+   "name": "Nikkei 225",
+   "group": "index",
+   "price": 60442.16,
+   "pct": -4.185,
+   "alert": "day"
+  },
+  {
+   "name": "Hang Seng",
+   "group": "index",
+   "price": 23528.56,
+   "pct": 0.011,
+   "alert": null
+  },
+  {
+   "name": "VIX (Angstindex)",
+   "group": "index",
+   "price": 20.83,
+   "pct": -1.513,
+   "alert": null
+  },
+  {
+   "name": "EUR/USD",
+   "group": "index",
+   "price": 1.125,
+   "pct": 0.5176,
+   "alert": null
+  },
+  {
+   "name": "Gold",
+   "group": "index",
+   "price": 3948.7,
+   "pct": 0.211,
+   "alert": null
+  },
+  {
+   "name": "Öl (Brent)",
+   "group": "index",
+   "price": 103.09,
+   "pct": -0.492,
+   "alert": "week"
+  },
+  {
+   "name": "Bitcoin (EUR)",
+   "group": "index",
+   "price": 68381.08,
+   "pct": -0.394,
+   "alert": null
+  }
+ ],
+ "heute": [
+  {
+   "title": "Aktuelles zum Krieg in der Ukraine",
+   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "topic": "world",
+   "n": 27,
+   "alert": false
+  },
+  {
+   "title": "EU genehmigt MediaMarktSaturn-Übernahme durch JD.com",
+   "url": "https://www.tagesschau.de/wirtschaft/unternehmen/eu-mediamarkt-saturn-jd-genehmigung-100.html",
+   "topic": "markets",
+   "n": 19,
+   "alert": false
+  },
+  {
+   "title": "US-Kongresswahlen: Die Ergebnisse der Midterms 2026 – live",
+   "url": "https://www.zeit.de/politik/ausland/2026-11/midterms-us-kongresswahlen-ergebnisse-live",
+   "topic": "world",
+   "n": 13,
+   "alert": false
+  },
+  {
+   "title": "US-Midterms: Demokraten gewinnen weitere Sitze",
+   "url": "https://www.dw.com/de/us-midterms-demokraten-gewinnen-weitere-sitze/a-79848805?maca=de-rss-de-all-1119-rdf",
+   "topic": "world",
+   "n": 10,
+   "alert": false
+  },
+  {
+   "title": "Weitere gefährliche Halloween-Süßigkeiten entdeckt - auch im Ausland",
+   "url": "https://www.tagesschau.de/inland/halloween-suessigkeiten-nadeln-100.html",
+   "topic": "germany",
+   "n": 8,
+   "alert": false
+  },
+  {
+   "title": "Spanien: Spaniens Verkehrsminister tritt nach Zugunglück zurück",
+   "url": "https://www.handelsblatt.com/politik/international/spanien-spaniens-verkehrsminister-tritt-nach-zugunglueck-zurueck/100267110.html",
+   "topic": "world",
+   "n": 8,
+   "alert": false
+  },
+  {
+   "title": "Berlin - Merz ruft Russland zu Friedensverhandlungen mit der Ukraine auf",
+   "url": "https://www.deutschlandfunk.de/merz-ruft-russland-zu-friedensverhandlungen-mit-der-ukraine-auf-114.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Midterms in den USA: Machtprobe für Trump",
+   "url": "https://www.tagesschau.de/tagesthemen/video-1677632.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Renten könnten 2027 um 4,1 Prozent steigen",
+   "url": "https://www.tagesschau.de/inland/innenpolitik/rentenerhoehung-entwurf-100.html",
+   "topic": "germany",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Polizei kontrolliert rund 90 Verkehrsteilnehmer in der Halloween-Nacht",
+   "url": "https://wuppertal-total.de/stadtleben/polizei-kontrolliert-rund-90-verkehrsteilnehmer-in-der-halloween-nacht/?utm_source=rss&utm_medium=rss&utm_campaign=polizei-kontrolliert-rund-90-verkehrsteilnehmer-in-der-halloween-nacht",
+   "topic": "germany",
+   "n": 6,
+   "alert": false
+  }
+ ],
+ "pm": [
+  {
+   "title": "Which Senate Swing States will Republicans win? (Build Your Map)",
+   "url": "https://polymarket.com/event/which-tossup-senate-states-will-republicans-win-ak-ia-ks-me-mi-oh-tx",
+   "source": "Polymarket",
+   "lead": "None",
+   "p": 0.875,
+   "d1": 0.51
+  },
+  {
+   "title": "Which party will win the House in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-house-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.9985,
+   "d1": 0.0535
+  },
+  {
+   "title": "Balance of Power: 2026 Midterms",
+   "url": "https://polymarket.com/event/balance-of-power-2026-midterms",
+   "source": "Polymarket",
+   "lead": "Democrats Sweep",
+   "p": 0.9975,
+   "d1": 0.2425
+  },
+  {
+   "title": "Which party will win the Senate in 2026?",
+   "url": "https://polymarket.com/event/which-party-will-win-the-senate-in-2026",
+   "source": "Polymarket",
+   "lead": "Democratic Party",
+   "p": 0.9975,
+   "d1": 0.2425
+  },
+  {
+   "title": "Texas Senate Election Winner",
+   "url": "https://polymarket.com/event/texas-senate-election-winner",
+   "source": "Polymarket",
+   "lead": "James Talarico (D)",
+   "p": 0.9995,
+   "d1": 0.2545
+  },
+  {
+   "title": "Florida Governor Election Winner",
+   "url": "https://polymarket.com/event/florida-governor-winner-2026",
+   "source": "Polymarket",
+   "lead": "Byron Donalds (R) ",
+   "p": 0.9995,
+   "d1": 0.3545
+  }
+ ]
+}

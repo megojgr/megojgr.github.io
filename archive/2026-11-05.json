@@ -1,160 +1,160 @@
 {
  "date": "2026-11-05",
- "generated": "2026-11-05T04:28:40.452439+00:00",
+ "generated": "2026-11-05T16:28:50.045485+00:00",
  "quotes": [
   {
    "name": "DAX",
    "group": "index",
-   "price": 26437.67,
-   "pct": 2.216,
-   "alert": "day"
+   "price": 26286.87,
+   "pct": -0.57,
+   "alert": null
   },
   {
    "name": "S&P 500",
    "group": "index",
-   "price": 7688.62,
-   "pct": 1.581,
-   "alert": null
+   "price": 7478.57,
+   "pct": -2.732,
+   "alert": "day"
   },
   {
    "name": "Nasdaq",
    "group": "index",
-   "price": 25736.514,
-   "pct": 1.437,
-   "alert": null
+   "price": 24736.293,
+   "pct": -3.886,
+   "alert": "day"
   },
   {
    "name": "Dow Jones",
    "group": "index",
-   "price": 53356.12,
-   "pct": 3.031,
+   "price": 52253.54,
+   "pct": -2.066,
    "alert": "day"
   },
   {
    "name": "Euro Stoxx 50",
    "group": "index",
-   "price": 6265.71,
-   "pct": 1.972,
+   "price": 6219.42,
+   "pct": -0.739,
    "alert": null
   },
   {
    "name": "Nikkei 225",
    "group": "index",
-   "price": 61391.97,
-   "pct": -1.281,
+   "price": 61077.9,
+   "pct": -1.786,
    "alert": null
   },
   {
    "name": "Hang Seng",
    "group": "index",
-   "price": 24659.03,
-   "pct": 3.092,
+   "price": 24796.98,
+   "pct": 3.668,
    "alert": "day"
   },
   {
    "name": "VIX (Angstindex)",
    "group": "index",
-   "price": 16.61,
-   "pct": -20.259,
-   "alert": null
+   "price": 23.5,
+   "pct": 41.581,
+   "alert": "day"
   },
   {
    "name": "EUR/USD",
    "group": "index",
-   "price": 1.1266,
-   "pct": 0.2817,
+   "price": 1.1226,
+   "pct": -0.0786,
    "alert": null
   },
   {
    "name": "Gold",
    "group": "index",
-   "price": 4148.5,
-   "pct": 1.854,
+   "price": 4110.4,
+   "pct": 0.918,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 93.72,
-   "pct": -0.951,
+   "price": 97.02,
+   "pct": 2.536,
    "alert": "week"
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 71377.83,
-   "pct": 3.793,
+   "price": 68358.9,
+   "pct": -4.734,
    "alert": null
   }
  ],
  "heute": [
   {
-   "title": "\"Es war nicht der Iran-Krieg\": Bushs früherer Sprecher greift Wahl-Analyse von Vance an",
-   "url": "https://www.n-tv.de/politik/Bushs-frueherer-Sprecher-greift-Wahl-Analyse-von-Vance-an-id31496922.html",
+   "title": "Vance zu den Midterms: \"Der Grund für unsere Niederlage ist der Krieg\"",
+   "url": "https://www.tagesschau.de/ausland/amerika/midterms-vance-irankrieg-100.html",
    "topic": "world",
-   "n": 20,
+   "n": 18,
    "alert": false
   },
   {
-   "title": "Aktuelles zum Krieg in der Ukraine",
-   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "title": "+++ Ukraine-Krieg +++: EU zahlt Ukraine weitere Milliardensumme aus",
+   "url": "https://www.handelsblatt.com/politik/international/ukraine-eu-zahlt-ukraine-weitere-milliardensumme-aus/27982126.html",
    "topic": "world",
-   "n": 12,
+   "n": 10,
    "alert": false
   },
   {
-   "title": "US-Kongresswahlen: Die Ergebnisse der Midterms 2026 – live",
-   "url": "https://www.zeit.de/politik/ausland/2026-11/midterms-us-kongresswahlen-ergebnisse-live",
-   "topic": "world",
-   "n": 9,
-   "alert": false
-  },
-  {
-   "title": "Bayern - Freie-Wähler-Chef Hubert Aiwanger im Alter von 55 Jahren gestorben",
-   "url": "https://www.deutschlandfunk.de/freie-waehler-chef-hubert-aiwanger-im-alter-von-55-jahren-gestorben-108.html",
+   "title": "Hubert Aiwanger: Hubert Aiwanger: Seine Stärke war Nähe",
+   "url": "https://www.zeit.de/politik/2026-11/hubert-aiwanger-bayern-nachrichtenpodcast",
    "topic": "germany",
-   "n": 9,
+   "n": 10,
    "alert": false
   },
   {
-   "title": "+++ Ukraine-Krieg +++: Selenskyj ehrt Melania Trump mit ukrainischem Orden",
-   "url": "https://www.handelsblatt.com/politik/international/ukraine-selenskyj-ehrt-melania-trump-mit-ukrainischem-orden/27982126.html",
-   "topic": "world",
-   "n": 8,
+   "title": "Marktbericht: DAX springt auf Rekordhoch",
+   "url": "https://www.tagesschau.de/wirtschaft/finanzen/marktberichte/marktbericht-dax-dow-zwischenwahlen-100.html",
+   "topic": "markets",
+   "n": 6,
+   "alert": true
+  },
+  {
+   "title": "Personalien - Freuding wird Generalinspekteur der Bundeswehr",
+   "url": "https://www.deutschlandfunk.de/freuding-wird-generalinspekteur-der-bundeswehr-100.html",
+   "topic": "germany",
+   "n": 7,
    "alert": false
   },
   {
-   "title": "Nach den \"Midterms\" - Präsident Trump und Vize Vance nach Republikaner-Niederlage bei US-Kongresswahlen uneins über Fortführung des Iran-Kriegs",
-   "url": "https://www.deutschlandfunk.de/praesident-trump-und-vize-vance-nach-republikaner-niederlage-bei-us-kongresswahlen-uneins-ueber-fort-106.html",
-   "topic": "world",
+   "title": "Bund und Eigentümerfamilien einigen sich auf Kaufpreis bei KNDS",
+   "url": "https://www.tagesschau.de/wirtschaft/unternehmen/knds-bundesregierung-100.html",
+   "topic": "markets",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Keine Anzeichen für Fremdverschulden bei Aiwangers Tod",
+   "url": "https://www.tagesschau.de/video/video-1678712.html",
+   "topic": "germany",
    "n": 6,
    "alert": false
   },
   {
-   "title": "Nach Sieg bei den Midterms: Welche Optionen die Demokraten haben",
-   "url": "https://www.tagesschau.de/ausland/demokraten-optionen-100.html",
+   "title": "What to Know About the Bomb Threats Disrupting Flights in Europe",
+   "url": "https://www.nytimes.com/2026/11/05/world/europe/bomb-threats-europe-flights-airlines.html",
    "topic": "world",
-   "n": 6,
+   "n": 5,
    "alert": false
   },
   {
-   "title": "Tod von Hubert Aiwanger: »Bayern verliert einen leidenschaftlichen Politiker«",
-   "url": "https://www.spiegel.de/politik/tod-von-hubert-aiwanger-bayern-verliert-einen-leidenschaftlichen-politiker-a-a21b26a6-13d4-41d3-9aba-cbd753622b60#ref=rss",
+   "title": "Berlin - Bundestag debattiert über erste Pflegereform - Linnemann kündigt Nachbesserungen an Gesetzentwurf an",
+   "url": "https://www.deutschlandfunk.de/bundestag-debattiert-ueber-erste-pflegereform-linnemann-kuendigt-nachbesserungen-an-gesetzentwurf-an-100.html",
    "topic": "germany",
    "n": 5,
    "alert": false
   },
   {
-   "title": "Hyperscalers and Apple surge after election results remove investor uncertainty",
-   "url": "https://www.cnbc.com/2026/11/04/apple-and-other-big-tech-stocks-surge-after-2026-midterm-elections.html",
+   "title": "Vor Übernahme durch Unicredit: Commerzbank-Chefin: Es kann noch den einen oder anderen Mitarbeiterabbau geben",
+   "url": "https://www.faz.net/aktuell/finanzen/finanzmarkt/in-der-commerzbank-wackeln-weitere-arbeitsplaetze-201655305.html",
    "topic": "markets",
-   "n": 2,
-   "alert": false
-  },
-  {
-   "title": "Polizei-News Wuppertal, 04.11.26: SG- Verkehrsunfall nach internistischem Notfall - Fahrer verstorben",
-   "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE1FNUsxeFBsZ1ZUMmdfSk1rWmxKUDhPbi1DV01BNXd3dWRDbE16bUJ6SzdFOTA4NE9yOUt2dmp4NVlCT3k4VmNkaUItVThWdVhOcW9KdE1TSEFROE9GWHRHNmVETWlaRTVQanpsQWhuQkNFOHVDY0ZnTjEtcUU?oc=5",
-   "topic": "germany",
    "n": 5,
    "alert": false
   }
@@ -165,48 +165,48 @@
    "url": "https://polymarket.com/event/republican-presidential-nominee-2028",
    "source": "Polymarket",
    "lead": "J.D. Vance",
-   "p": 0.3395,
-   "d1": 0.058
-  },
-  {
-   "title": "Mississippi Senate Election Winner",
-   "url": "https://polymarket.com/event/mississippi-senate-election-winner",
-   "source": "Polymarket",
-   "lead": "Scott Colom (D)",
-   "p": 0.963,
-   "d1": 0.8535
-  },
-  {
-   "title": "Democratic Presidential Nominee 2028",
-   "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
-   "source": "Polymarket",
-   "lead": "Jon Ossoff",
-   "p": 0.2635,
-   "d1": 0.0305
+   "p": 0.351,
+   "d1": 0.0385
   },
   {
    "title": "Presidential Election Winner 2028",
    "url": "https://polymarket.com/event/presidential-election-winner-2028",
    "source": "Polymarket",
    "lead": "Jon Ossoff",
-   "p": 0.1785,
-   "d1": 0.0005
+   "p": 0.2045,
+   "d1": 0.025
+  },
+  {
+   "title": "Democratic Presidential Nominee 2028",
+   "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
+   "source": "Polymarket",
+   "lead": "Jon Ossoff",
+   "p": 0.2745,
+   "d1": -0.01
+  },
+  {
+   "title": "Fed Decision in December?",
+   "url": "https://polymarket.com/event/fed-decision-in-december-20260729232808632",
+   "source": "Polymarket",
+   "lead": "25 bps increase",
+   "p": 0.705,
+   "d1": -0.1
+  },
+  {
+   "title": "Bitcoin above ___ on November 5?",
+   "url": "https://polymarket.com/event/bitcoin-above-on-november-5-2026",
+   "source": "Polymarket",
+   "lead": "74,000",
+   "p": 0.9975,
+   "d1": 0.001
   },
   {
    "title": "Alaska Senate Election Winner",
    "url": "https://polymarket.com/event/alaska-senate-election-winner",
    "source": "Polymarket",
    "lead": "Mary Peltola (D)",
-   "p": 0.9425,
-   "d1": 0.0075
-  },
-  {
-   "title": "Which Senate Swing States will Republicans win? (Build Your Map)",
-   "url": "https://polymarket.com/event/which-tossup-senate-states-will-republicans-win-ak-ia-ks-me-mi-oh-tx",
-   "source": "Polymarket",
-   "lead": "None",
-   "p": 0.9435,
-   "d1": 0.0785
+   "p": 0.9715,
+   "d1": 0.0195
   }
  ]
 }

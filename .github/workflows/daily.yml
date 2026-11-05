@@ -81,10 +81,23 @@ jobs:
       cancel-in-progress: false
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment2.outputs.page_url }}
     steps:
+      # GitHub bleibt beim Veröffentlichen gelegentlich in "updating_pages" hängen. Dann nach 5 Minuten abbrechen
+      # und es ein zweites Mal versuchen, statt bis zum nächsten stündlichen Lauf den alten Stand zu zeigen.
       - id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 300000
+      - name: Kurz warten vor dem zweiten Versuch
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        run: sleep 45
+      - id: deployment2
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        uses: actions/deploy-pages@v4
+        with:
+          timeout: 420000
 
   # Cloudflare: läuft nur, wenn die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID gesetzt sind
   # (Anleitung: Anleitung_Cloudflare.md). Ohne Secrets bleibt der Job wirkungslos.

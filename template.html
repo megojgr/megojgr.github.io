@@ -2203,7 +2203,10 @@ async function refresh() {
       toast("busy", "Suche nach einem neueren Stand …");
       const d = await fetchLatest();
       if (d.generated === before.generated) {
-        toast("info", `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. GitHub holt rund jede Stunde automatisch neue Daten. Mit einem Token unter ⚙ startest du den Abruf sofort selbst.`, { ms: 11000 });
+        const late = (Date.now() - new Date(before.generated)) / 60000 > 75;
+        toast("info", late
+          ? `Der neue Stand verspätet sich (zuletzt ${fmtTime(before.generated)} Uhr). Die Seite erkennt das selbst und startet den Abruf neu, meist innerhalb von 20 Minuten.`
+          : `Kein neuerer Stand vorhanden, letzte Aktualisierung ${fmtTime(before.generated)} Uhr. GitHub holt rund jede Stunde automatisch neue Daten. Mit einem Token unter ⚙ startest du den Abruf sofort selbst.`, { ms: 11000 });
         return;
       }
       fresh = d;

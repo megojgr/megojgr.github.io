@@ -18,6 +18,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Ein hängender Abruf darf die Kette nicht stundenlang blockieren (Standard wären 6 Stunden)
+    timeout-minutes: 30
+    outputs:
+      generated: ${{ steps.stand.outputs.generated }}
     concurrency:
       group: mego-build
       cancel-in-progress: false
@@ -37,13 +41,16 @@ jobs:
           restore-keys: |
             mego-translate-
       - name: Abhängigkeiten installieren
-        run: pip install cryptography ctranslate2 sentencepiece
+        run: pip install --retries 5 --timeout 60 cryptography ctranslate2 sentencepiece
       - name: News sammeln und Seite bauen
         env:
           # Depot-Positionen und Passwort liegen nur als Secrets, nie im Repo
           DEPOT_JSON: ${{ secrets.DEPOT_JSON }}
           DEPOT_PASSWORT: ${{ secrets.DEPOT_PASSWORT }}
         run: python collect.py
+      - name: Zeitstempel des neuen Stands merken
+        id: stand
+        run: echo "generated=$(python -c "import json;print(json.load(open('docs/data.json',encoding='utf-8'))['generated'])")" >> "$GITHUB_OUTPUT"
       - name: Tagesarchiv speichern
         # Ein Fehler hier (z. B. Konflikt mit einem gleichzeitigen Lauf) darf die Seite nicht verhindern
         continue-on-error: true
@@ -76,6 +83,7 @@ jobs:
     needs: build
     if: ${{ vars.PAGES_OFF != 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     concurrency:
       group: pages
       cancel-in-progress: false
@@ -90,20 +98,36 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           timeout: 300000
+      # Nachsehen, ob die echte Seite wirklich den neuen Stand ausliefert (GitHub meldet manchmal Erfolg ohne neue Seite)
+      - name: Prüfen, ob die Seite neu ist
+        id: check1
+        if: ${{ steps.deployment.outcome == 'success' }}
+        env:
+          WANT: ${{ needs.build.outputs.generated }}
+          URL: ${{ steps.deployment.outputs.page_url }}
+        run: bash .github/scripts/live_check.sh 240
       - name: Kurz warten vor dem zweiten Versuch
-        if: ${{ steps.deployment.outcome == 'failure' }}
+        if: ${{ steps.deployment.outcome == 'failure' || steps.check1.outputs.ok != 'true' }}
         run: sleep 45
       - id: deployment2
-        if: ${{ steps.deployment.outcome == 'failure' }}
+        if: ${{ steps.deployment.outcome == 'failure' || steps.check1.outputs.ok != 'true' }}
         uses: actions/deploy-pages@v4
         with:
           timeout: 420000
+      # Klappt auch der zweite Versuch nicht, schlägt der Job fehl: Dann startet der nächste Lauf schon nach 12 Minuten
+      - name: Nach dem zweiten Versuch erneut prüfen
+        if: ${{ steps.deployment2.outcome == 'success' }}
+        env:
+          WANT: ${{ needs.build.outputs.generated }}
+          URL: ${{ steps.deployment2.outputs.page_url }}
+        run: bash .github/scripts/live_check.sh 300 strict
 
   # Cloudflare: läuft nur, wenn die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID gesetzt sind
   # (Anleitung: Anleitung_Cloudflare.md). Ohne Secrets bleibt der Job wirkungslos.
   cloudflare:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
@@ -127,19 +151,30 @@ jobs:
   # Das darf der eingebaute GITHUB_TOKEN (workflow_dispatch löst als einzige Ausnahme neue Läufe aus).
   # Es wartet immer nur ein Lauf: Ein neuer Warte-Job ersetzt den alten (cancel-in-progress),
   # so verdoppeln sich Ketten auch bei mehreren manuellen Starts nicht.
+  # Nach einem Fehler (Abruf oder Veröffentlichen) wartet die Kette nur 12 Minuten, damit die Seite schnell wieder aktuell ist.
+  # Der Start des nächsten Laufs wird wiederholt und kontrolliert, damit die Kette nicht an einem kurzen GitHub-Fehler abreißt.
   naechster:
     needs: [build, deploy, cloudflare]
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 75
     concurrency:
       group: mego-naechster
       cancel-in-progress: true
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
       - name: Knapp eine Stunde warten, dann nächsten Lauf starten
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          FAILED: ${{ needs.build.result != 'success' || needs.deploy.result == 'failure' || needs.deploy.result == 'cancelled' }}
         run: |
-          sleep 3240
-          gh workflow run daily.yml --ref main
+          if [ "$FAILED" = "true" ]; then
+            echo "Dieser Lauf hatte einen Fehler: nächster Versuch schon in 12 Minuten"
+            sleep 720
+          else
+            sleep 3240
+          fi
+          bash .github/scripts/dispatch.sh

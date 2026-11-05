@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sys
+import traceback
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
@@ -295,8 +296,46 @@ def summarize(stories, heute, cfg):
     return briefing[:6], status
 
 
+PROBLEMS = []  # Bausteine, die in diesem Lauf ausgefallen sind und den letzten Stand weiterzeigen
+
+
+def previous_data(cfg):
+    """Der zuletzt veröffentlichte Stand. Fällt ein Baustein aus, zeigt die Seite dessen alten Teil weiter,
+    statt dass der ganze Lauf scheitert und gar nichts aktualisiert wird."""
+    repo = os.environ.get("GITHUB_REPOSITORY") or cfg.get("repo", "")
+    if "/" not in repo:
+        return {}
+    owner, name = repo.split("/", 1)
+    url = f"https://{owner}.github.io/" + ("" if name.lower() == f"{owner.lower()}.github.io" else name + "/")
+    try:
+        return json.loads(fetch(url + f"data.json?t={int(NOW.timestamp())}", 40, retries=2))
+    except Exception as e:
+        print(f"Hinweis: letzter veröffentlichter Stand nicht abrufbar ({type(e).__name__})")
+        return {}
+
+
+def guarded(name, fn, fallback):
+    """Führt einen Baustein aus. Bei einem Fehler: Meldung ins Protokoll und Ersatzwert, der Lauf geht weiter."""
+    try:
+        return fn()
+    except Exception as e:
+        print(f"BAUSTEIN-FEHLER {name}: {type(e).__name__}: {e}")
+        traceback.print_exc(limit=4)
+        PROBLEMS.append(name)
+        return fallback() if callable(fallback) else fallback
+
+
 def main():
+    for stream in (sys.stdout, sys.stderr):  # Emojis in Titeln dürfen das Protokoll nicht zum Absturz bringen
+        try:
+            stream.reconfigure(errors="replace")
+        except Exception:
+            pass
     cfg = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+    prev = previous_data(cfg)
+    prev_quotes = {q.get("name"): q for q in prev.get("quotes") or []}
+    empty_geo = {"conflict": None, "chokepoints": [], "carriers": None, "tankers": None, "military": None,
+                 "elections": [], "notes": "Globus-Daten diesmal nicht verfügbar"}
     today = NOW.date().isoformat()
 
     positions, password = depot.load(), os.environ.get("DEPOT_PASSWORT")
@@ -320,23 +359,33 @@ def main():
         gp_f = ex.submit(geopolitics.build, cfg, cfg["alerts"])
         uni_f = ex.submit(universe.build, cfg, cfg["alerts"])
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
-        quotes = [f.result() for f in quotes_f]
-        pm_top, pm_window, pm_error = pm_f.result()
-        kalshi_all, kalshi_error = kalshi_f.result()
-        brief_list, brief_errors = brief_f.result()
-        election_list, election_note = elect_f.result()
-        live_data = live_f.result()
-        local_data = local_f.result()
-        earn_data = earn_f.result()
-        pod_data = pod_f.result()
-        gp_data = gp_f.result()
-        uni_data, etf_themes = uni_f.result()
+        quotes = [guarded(f"Kurs {q['name']}", f.result,
+                          lambda q=q: prev_quotes.get(q["name"]) or {**q, "price": None, "alert": False})
+                  for q, f in zip(cfg["quotes"], quotes_f)]
+        pm_top, pm_window, pm_error = guarded("Polymarket", pm_f.result, ([], [], "Polymarket diesmal nicht verfügbar"))
+        kalshi_all, kalshi_error = guarded("Kalshi", kalshi_f.result, ([], "Kalshi diesmal nicht verfügbar"))
+        brief_list, brief_errors = guarded("Sendungen", brief_f.result,
+                                           lambda: (prev.get("briefings") or [], ["Sendungen: alter Stand"]))
+        election_list, election_note = guarded("Wahlen", elect_f.result,
+                                               lambda: (prev.get("elections") or [], "Wahlkalender: alter Stand"))
+        live_data = guarded("Live", live_f.result, lambda: prev.get("live") or {})
+        local_data = guarded("Region", local_f.result,
+                             lambda: prev.get("local") or {"weather": None, "warnings": [], "errors": ["Region nicht verfügbar"]})
+        earn_data = guarded("Quartalszahlen", earn_f.result,
+                            lambda: {**prev["earnings"], "stale": True} if prev.get("earnings") else None)
+        pod_data = guarded("Podcasts", pod_f.result, lambda: prev.get("podcasts") or [])
+        gp_data = guarded("Geopolitik", gp_f.result, lambda: prev.get("geopolitics") or {
+            "categories": [], "stocks": [], "etfs": [], "sector": {"day": None, "week": None, "month": None, "n": 0}})
+        uni_data, etf_themes = guarded("Werteliste", uni_f.result,
+                                       lambda: (prev.get("universe") or [], prev.get("etf_themes") or {}))
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
     prediction = pm_top + kalshi_top[: cfg["kalshi"]["max_events"]]
-    termine = build_termine(pm_window + pm_top + kalshi_all, cfg["termine_days"])
+    termine = guarded("Termine", lambda: build_termine(pm_window + pm_top + kalshi_all, cfg["termine_days"]),
+                      lambda: prev.get("termine") or [])
     heute = build_heute(stories, cfg["heute_per_topic"])
-    briefing, ai_status = summarize(stories, heute, cfg)
+    briefing, ai_status = guarded("Zusammenfassung", lambda: summarize(stories, heute, cfg),
+                                  lambda: (prev.get("briefing") or [], "Zusammenfassung diesmal nicht verfügbar"))
     for s in stories + [s for s, _ in private]:
         s.pop("titles", None)
     # Fremdsprachige Meldungen ins Deutsche übersetzen, aber nur die, die irgendwo angezeigt werden
@@ -350,14 +399,18 @@ def main():
     if earn_data:
         for it in earn_data["items"]:
             shown += it["news"]
-    translation_note = translate.apply(list({id(s): s for s in shown}.values()))
-    geo_data = geo.build(cfg, stories, election_list, NOW.date())
+    translation_note = guarded("Übersetzung", lambda: translate.apply(list({id(s): s for s in shown}.values())),
+                               "Übersetzung diesmal nicht verfügbar")
+    geo_data = guarded("Globus", lambda: geo.build(cfg, stories, election_list, NOW.date()),
+                       lambda: {**empty_geo, **(prev.get("geo") or {})})
 
     depot_data = {"state": depot_state}
     if positions:
-        depot_obj = depot.build(positions, private, cfg["alerts"])
-        depot_data = ({"state": "enc", "enc": depot.encrypt(depot_obj, password)} if password
-                      else {"state": "plain", "data": depot_obj})  # unverschlüsselt nur bei lokalen Läufen
+        def build_depot():
+            depot_obj = depot.build(positions, private, cfg["alerts"])
+            return ({"state": "enc", "enc": depot.encrypt(depot_obj, password)} if password
+                    else {"state": "plain", "data": depot_obj})  # unverschlüsselt nur bei lokalen Läufen
+        depot_data = guarded("Depot", build_depot, lambda: prev.get("depot") or {"state": "none"})
 
     data = {
         "generated": NOW.isoformat(),
@@ -382,72 +435,80 @@ def main():
         "status": {"feeds": feed_status, "ai": ai_status, "elections_note": election_note,
                    "translation": {"note": translation_note, "count": getattr(translate.apply, "count", 0)},
                    "briefing_errors": brief_errors,
-                   "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error}},
+                   "prediction_errors": {"Polymarket": pm_error, "Kalshi": kalshi_error},
+                   "problems": PROBLEMS},
     }
     # Stündliche Läufe sollen das Archiv nicht fluten: nur zu den Archivstunden (morgens und nachmittags) speichern
     if (os.environ.get("GITHUB_ACTIONS") and NOW.hour in cfg["archive_hours"]) or "--archive" in sys.argv:
-        archive.write(data, today)
-    data["history"] = archive.load(cfg["history_days"])
+        guarded("Archiv schreiben", lambda: archive.write(data, today), None)
+    data["history"] = guarded("Archiv laden", lambda: archive.load(cfg["history_days"]), lambda: prev.get("history") or [])
 
     OUT.mkdir(exist_ok=True)
     for asset in (ROOT / "static").glob("*"):  # Symbole und Manifest für die Handy-App
         shutil.copy2(asset, OUT / asset.name)
-    etf_info = etfs.build(cfg, OUT, int(os.environ.get("ETF_NAMES_PER_RUN", "600")))  # Suchliste und Verläufe als eigene Dateien
+    etf_info = guarded("ETF-Suche", lambda: etfs.build(cfg, OUT, int(os.environ.get("ETF_NAMES_PER_RUN", "600"))),
+                       lambda: {"note": "ETF-Suche diesmal nicht neu gebaut"})  # Suchliste und Verläufe als eigene Dateien
     blob =json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     page = (ROOT / "template.html").read_text(encoding="utf-8").replace("__DATA__", blob)
     (OUT / "index.html").write_text(page, encoding="utf-8")
 
-    for f in feed_status:
-        if f["error"] or not f["count"]:
-            print(f"FEED-PROBLEM {f['name']}: {f['error'] or 'leer'}")
-    alerts = [q["name"] for q in quotes if q["alert"]]
-    by_topic = {t: sum(s["topic"] == t for s in stories) for t in cfg["topics"]}
-    print(f"{len(feed_status)} Feeds, {len(stories)} Meldungen {by_topic} "
-          f"({sum(s['alert'] for s in stories)} Crash-Radar, {sum(s['election'] for s in stories)} Wahlen), "
-          f"{sum(1 for q in quotes if q['price'] is not None)}/{len(quotes)} Kurse, Alarm: {alerts or 'keiner'}")
-    print(f"Prediction Markets: {len(pm_top)} Polymarket, {min(len(kalshi_top), cfg['kalshi']['max_events'])} Kalshi, "
-          f"{len(termine)} Termine; Wahlkalender: {len(election_list)} kommende"
-          + (f" ({election_note})" if election_note else ""))
-    print("Sendungen/Briefings: " + (", ".join(b["name"] for b in brief_list) or "keine")
-          + (f"; Fehler: {brief_errors}" if brief_errors else ""))
-    c, cps, car = geo_data["conflict"], geo_data["chokepoints"], geo_data["carriers"]
-    print(f"Globus: {len(c['points']) if c else 0} Konfliktorte ({', '.join(c['days']) if c else 'keine Daten'}), "
-          f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
-          f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
-          f"{len(geo_data['tankers']['ships']) if geo_data['tankers'] else 0} Tanker, "
-          f"{len(geo_data['military']['planes']) if geo_data.get('military') else 0} Militärflugzeuge, "
-          f"{len((geo_data['conflict'] or {}).get('force') or [])} Aufmarsch-Orte, {len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
-    wx = local_data["weather"]
-    print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW, {sum(s['europe'] for s in stories)} Europa; "
-          f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
-          f"{len(local_data['warnings'])} DWD-Warnungen" + (f"; Fehler: {local_data['errors']}" if local_data["errors"] else ""))
-    if earn_data:
-        its = earn_data["items"]
-        print(f"Quartalszahlen: {len(its)} Termine, {sum(i['status'] == 'reported' for i in its)} mit Ergebnis, "
-              f"{sum(1 for i in its if i['reaction'])} mit Kursreaktion" + (f"; {earn_data['error']}" if earn_data.get("error") else "")
-              + (" (alter Stand)" if earn_data.get("stale") else ""))
-    print(f"Werteliste für eigene Depots: {sum(1 for u in uni_data if u['price'] is not None)}/{len(uni_data)} Kurse, "
-          f"{sum(len(u['news']) for u in uni_data)} Meldungen")
-    print(f"ETF-Suche: {etf_info.get('count', 0)} ETFs/ETCs mit Kursen von {etf_info.get('listed', 0)} an Xetra, "
-          f"{etf_info.get('named', 0)} mit vollem Namen" + (f"; {etf_info['note']}" if etf_info.get("note") else ""))
-    print("Geopolitik: " + ", ".join(f"{c['label']} {len(c['news'])}" for c in gp_data["categories"])
-          + f"; Rüstungssektor {gp_data['sector']['n']} Werte, heute {gp_data['sector']['day']} %")
-    print("Podcasts: " + "; ".join(f"{p['name']}: {p['title'] or 'keine Folge'} ({'Folge' if p['exact'] else 'nur Sendung'})"
-                                   + (f" [{p['error']}]" if p["error"] else "") for p in pod_data))
-    print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))
-    lv = live_data["channels"]
-    for c in lv:
-        if c["state"] in ("aus", "unbekannt") and c.get("dbg"):
-            print(f"  Live-Diagnose {c['name']}: {c['dbg']}" + (f" {c['error']}" if c.get("error") else ""))
-    print(f"Live: {sum(c['state'] == 'live' for c in lv)} live, {sum(c['state'] == 'geplant' for c in lv)} geplant, "
-          f"{live_data['failed']} Abrufe fehlgeschlagen" + (" (alter Stand)" if live_data.get("stale") else ""))
-    print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")
-          + f" | Verlauf: {len(data['history'])} Tage")
-    for name, err in data["status"]["prediction_errors"].items():
-        if err:
-            print(f"FEHLER {name}: {err}")
-    print(f"-> {OUT / 'index.html'}")
+    # Die Seite ist schon geschrieben: Ein Fehler in der Protokoll-Zusammenfassung darf das Veröffentlichen nicht verhindern
+    try:
+        for f in feed_status:
+            if f["error"] or not f["count"]:
+                print(f"FEED-PROBLEM {f['name']}: {f['error'] or 'leer'}")
+        alerts = [q["name"] for q in quotes if q["alert"]]
+        by_topic = {t: sum(s["topic"] == t for s in stories) for t in cfg["topics"]}
+        print(f"{len(feed_status)} Feeds, {len(stories)} Meldungen {by_topic} "
+              f"({sum(s['alert'] for s in stories)} Crash-Radar, {sum(s['election'] for s in stories)} Wahlen), "
+              f"{sum(1 for q in quotes if q['price'] is not None)}/{len(quotes)} Kurse, Alarm: {alerts or 'keiner'}")
+        print(f"Prediction Markets: {len(pm_top)} Polymarket, {min(len(kalshi_top), cfg['kalshi']['max_events'])} Kalshi, "
+              f"{len(termine)} Termine; Wahlkalender: {len(election_list)} kommende"
+              + (f" ({election_note})" if election_note else ""))
+        print("Sendungen/Briefings: " + (", ".join(b["name"] for b in brief_list) or "keine")
+              + (f"; Fehler: {brief_errors}" if brief_errors else ""))
+        c, cps, car = geo_data["conflict"], geo_data["chokepoints"], geo_data["carriers"]
+        print(f"Globus: {len(c['points']) if c else 0} Konfliktorte ({', '.join(c['days']) if c else 'keine Daten'}), "
+              f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
+              f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
+              f"{len(geo_data['tankers']['ships']) if geo_data['tankers'] else 0} Tanker, "
+              f"{len(geo_data['military']['planes']) if geo_data.get('military') else 0} Militärflugzeuge, "
+              f"{len((geo_data['conflict'] or {}).get('force') or [])} Aufmarsch-Orte, {len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+        wx = local_data["weather"]
+        print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW, {sum(s['europe'] for s in stories)} Europa; "
+              f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
+              f"{len(local_data['warnings'])} DWD-Warnungen" + (f"; Fehler: {local_data['errors']}" if local_data["errors"] else ""))
+        if earn_data:
+            its = earn_data["items"]
+            print(f"Quartalszahlen: {len(its)} Termine, {sum(i['status'] == 'reported' for i in its)} mit Ergebnis, "
+                  f"{sum(1 for i in its if i['reaction'])} mit Kursreaktion" + (f"; {earn_data['error']}" if earn_data.get("error") else "")
+                  + (" (alter Stand)" if earn_data.get("stale") else ""))
+        print(f"Werteliste für eigene Depots: {sum(1 for u in uni_data if u['price'] is not None)}/{len(uni_data)} Kurse, "
+              f"{sum(len(u['news']) for u in uni_data)} Meldungen")
+        print(f"ETF-Suche: {etf_info.get('count', 0)} ETFs/ETCs mit Kursen von {etf_info.get('listed', 0)} an Xetra, "
+              f"{etf_info.get('named', 0)} mit vollem Namen" + (f"; {etf_info['note']}" if etf_info.get("note") else ""))
+        if PROBLEMS:
+            print(f"AUSGEFALLENE BAUSTEINE (alter Stand gezeigt): {', '.join(PROBLEMS)}")
+        print("Geopolitik: " + ", ".join(f"{c['label']} {len(c['news'])}" for c in gp_data["categories"])
+              + f"; Rüstungssektor {gp_data['sector']['n']} Werte, heute {gp_data['sector']['day']} %")
+        print("Podcasts: " + "; ".join(f"{p['name']}: {p['title'] or 'keine Folge'} ({'Folge' if p['exact'] else 'nur Sendung'})"
+                                       + (f" [{p['error']}]" if p["error"] else "") for p in pod_data))
+        print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))
+        lv = live_data["channels"]
+        for c in lv:
+            if c["state"] in ("aus", "unbekannt") and c.get("dbg"):
+                print(f"  Live-Diagnose {c['name']}: {c['dbg']}" + (f" {c['error']}" if c.get("error") else ""))
+        print(f"Live: {sum(c['state'] == 'live' for c in lv)} live, {sum(c['state'] == 'geplant' for c in lv)} geplant, "
+              f"{live_data['failed']} Abrufe fehlgeschlagen" + (" (alter Stand)" if live_data.get("stale") else ""))
+        print(f"Depot: {depot_data['state']}" + (f", {len(private)} passende Meldungen" if positions else "")
+              + f" | Verlauf: {len(data['history'])} Tage")
+        for name, err in data["status"]["prediction_errors"].items():
+            if err:
+                print(f"FEHLER {name}: {err}")
+        print(f"-> {OUT / 'index.html'}")
+    except Exception as e:
+        print(f"Hinweis: Zusammenfassung im Protokoll unvollständig ({type(e).__name__}: {e})")
 
 
 if __name__ == "__main__":

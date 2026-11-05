@@ -93,6 +93,9 @@ jobs:
     steps:
       # GitHub bleibt beim Veröffentlichen gelegentlich in "updating_pages" hängen. Dann nach 5 Minuten abbrechen
       # und es ein zweites Mal versuchen, statt bis zum nächsten stündlichen Lauf den alten Stand zu zeigen.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
       - id: deployment
         continue-on-error: true
         uses: actions/deploy-pages@v4
@@ -102,6 +105,7 @@ jobs:
       - name: Prüfen, ob die Seite neu ist
         id: check1
         if: ${{ steps.deployment.outcome == 'success' }}
+        continue-on-error: true
         env:
           WANT: ${{ needs.build.outputs.generated }}
           URL: ${{ steps.deployment.outputs.page_url }}

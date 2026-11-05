@@ -80,7 +80,7 @@
     ]
   },
   "geo": {
-    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5, "wars": 6},
+    "ttl_hours": {"conflict": 6, "chokepoints": 12, "carriers": 12, "quakes": 0.5, "tankers": 0.5, "wars": 6, "military": 0.5},
     "crime_conflicts": ["Mexican drug war", "Colombian conflict", "Ecuadorian conflict", "Haitian conflict"],
     "not_war_conflicts": ["Venezuelan conflict"],
     "war_parties": [
@@ -391,5 +391,184 @@
     {"key": "world", "label": "Welt", "match": [" WORLD", " ACWI", " ALL-WORLD", " ALL WORLD", " GLOBAL", " DEVELOPED", " WLD"], "terms": ["MSCI World", "Weltaktien", "Weltbörsen", "All-World"], "q_extra": "", "holdings": ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META"]},
     {"key": "bonds", "label": "Anleihen", "match": [], "terms": ["Anleihen", "Bundesanleihen", "Anleiherenditen", "Zinsen"], "q_extra": "", "holdings": []},
     {"key": "markets", "label": "Aktienmärkte", "match": [], "terms": ["Aktienmärkte", "Börse", "Aktienmarkt"], "q_extra": "", "holdings": []}
-  ]
+  ],
+  "geopolitics": {
+    "categories": [
+      {
+        "key": "truppen", "must": ["truppe", "soldat", "manöver", "übung", "flugzeugträger", "kampfjet", "marine", "bundeswehr", "nato", "verleg", "aufmarsch", "troop", "deploy", "exercise", "carrier", "fighter jet", "military", "forces"],
+        "label": "Truppen & Manöver",
+        "queries": [
+          {
+            "q": "(Truppenverlegung OR Truppenaufmarsch OR Manöver OR Militärübung OR \"Soldaten verlegt\" OR \"Kampfjets verlegt\" OR Flugzeugträger OR Marineverband)",
+            "lang": "de"
+          },
+          {
+            "q": "(\"troop deployment\" OR \"troops deployed\" OR \"military buildup\" OR \"military exercise\" OR \"fighter jets deployed\" OR \"carrier strike group\")",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "key": "angriffe", "must": ["angriff", "schlag", "offensive", "beschuss", "bombard", "rakete", "drohne", "attack", "strike"],
+        "label": "Angriffe & Militärschläge",
+        "queries": [
+          {
+            "q": "(Luftangriff OR Raketenangriff OR Drohnenangriff OR Militärschlag OR Bodenoffensive OR Gegenoffensive)",
+            "lang": "de"
+          }
+        ]
+      },
+      {
+        "key": "eskalation", "must": ["krieg", "ultimatum", "kriegsrecht", "mobil", "bündnisfall", "artikel 5", "waffenstillstand", "waffenruhe", "declares war", "declaration of war", "martial law", "mobiliz", "ceasefire"],
+        "label": "Eskalation & Kriegserklärungen",
+        "queries": [
+          {
+            "q": "(Kriegserklärung OR Ultimatum OR Kriegsrecht OR Mobilmachung OR Generalmobilmachung OR Bündnisfall OR \"Artikel 5\" OR Kriegszustand OR Waffenstillstand)",
+            "lang": "de"
+          },
+          {
+            "q": "(\"declares war\" OR \"declaration of war\" OR \"martial law\" OR mobilization OR ultimatum OR ceasefire)",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "key": "ruestung", "must": ["rüstung", "auftrag", "waffen", "bundeswehr", "beschaffung", "sondervermögen", "panzer", "kampfjet", "munition", "contract", "arms", "weapons", "military sale", "procure"],
+        "label": "Rüstungsaufträge & Verträge",
+        "queries": [
+          {
+            "q": "(Rüstungsauftrag OR Rüstungsdeal OR Rüstungsvertrag OR Waffenlieferung OR Rüstungsexport OR \"Bundeswehr bestellt\" OR Großauftrag OR Sondervermögen)",
+            "lang": "de"
+          },
+          {
+            "q": "(\"defense contract\" OR \"Pentagon contract\" OR \"arms deal\" OR \"weapons sale\" OR \"foreign military sale\")",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "key": "aktien", "must": ["aktie", "rüstung", "rheinmetall", "hensoldt", "renk", "etf", "stock", "shares", "börse"],
+        "label": "Rüstungsaktien",
+        "queries": [
+          {
+            "q": "(Rüstungsaktien OR Rüstungswerte OR \"Rheinmetall-Aktie\" OR \"Hensoldt-Aktie\" OR \"Renk-Aktie\" OR \"Rüstungs-ETF\" OR Rüstungskonzern)",
+            "lang": "de"
+          },
+          {
+            "q": "(\"defense stocks\" OR \"defence stocks\" OR \"Lockheed Martin stock\" OR \"defense ETF\")",
+            "lang": "en"
+          }
+        ]
+      }
+    ],
+    "stocks": [
+      {
+        "symbol": "RHM.DE",
+        "short": "Rheinmetall",
+        "country": "DE"
+      },
+      {
+        "symbol": "HAG.DE",
+        "short": "Hensoldt",
+        "country": "DE"
+      },
+      {
+        "symbol": "R3NK.DE",
+        "short": "Renk",
+        "country": "DE"
+      },
+      {
+        "symbol": "AIR.PA",
+        "short": "Airbus",
+        "country": "EU"
+      },
+      {
+        "symbol": "HO.PA",
+        "short": "Thales",
+        "country": "FR"
+      },
+      {
+        "symbol": "SAF.PA",
+        "short": "Safran",
+        "country": "FR"
+      },
+      {
+        "symbol": "BA.L",
+        "short": "BAE Systems",
+        "country": "GB"
+      },
+      {
+        "symbol": "LDO.MI",
+        "short": "Leonardo",
+        "country": "IT"
+      },
+      {
+        "symbol": "SAAB-B.ST",
+        "short": "Saab",
+        "country": "SE"
+      },
+      {
+        "symbol": "KOG.OL",
+        "short": "Kongsberg",
+        "country": "NO"
+      },
+      {
+        "symbol": "LMT",
+        "short": "Lockheed Martin",
+        "country": "US"
+      },
+      {
+        "symbol": "NOC",
+        "short": "Northrop Grumman",
+        "country": "US"
+      },
+      {
+        "symbol": "RTX",
+        "short": "RTX",
+        "country": "US"
+      },
+      {
+        "symbol": "GD",
+        "short": "General Dynamics",
+        "country": "US"
+      },
+      {
+        "symbol": "LHX",
+        "short": "L3Harris",
+        "country": "US"
+      },
+      {
+        "symbol": "PLTR",
+        "short": "Palantir",
+        "country": "US"
+      }
+    ],
+    "etfs": [
+      {
+        "symbol": "DFEN.DE",
+        "short": "VanEck Defense",
+        "type": "ETF"
+      },
+      {
+        "symbol": "DFNC.DE",
+        "short": "iShares Europe Defence",
+        "type": "ETF"
+      },
+      {
+        "symbol": "EUDF.DE",
+        "short": "WisdomTree Europe Defence",
+        "type": "ETF"
+      },
+      {
+        "symbol": "ASWC.DE",
+        "short": "Future of Defence",
+        "type": "ETF"
+      },
+      {
+        "symbol": "5J50.DE",
+        "short": "iShares Global Aerospace & Defence",
+        "type": "ETF"
+      }
+    ]
+  }
 }

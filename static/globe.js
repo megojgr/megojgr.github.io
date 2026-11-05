@@ -65,7 +65,7 @@
       return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
     }
 
-    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, tankers: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
+    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, tankers: true, mil: true, force: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
@@ -92,6 +92,9 @@
     const strongest = quakeData.reduce((a, q) => (!a || q.mag > a.mag ? q : a), null);
     const carriers = (geo.carriers && geo.carriers.ships || []).filter(s => s.lat != null);
     const tankers = (geo.tankers && geo.tankers.ships) || [];
+    const milPlanes = (geo.military && geo.military.planes) || [], MILL = (geo.military && geo.military.labels) || {};
+    const forcePts = (conflictForce => conflictForce)(((geo.conflict || {}).force) || []);
+    const maxF = Math.max(1, ...forcePts.map(f => f.w));
     const tons = (t) => t >= 1e6 ? (t / 1e6).toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " Mio. t" : t >= 1000 ? Math.round(t / 1000).toLocaleString("de-DE") + " Tsd. t" : "unter 1 Tsd. t";
     const elections = (geo.elections || []).slice().sort((a, b) => a.date.localeCompare(b.date));
     const confShown = () => conflict.points.filter(p => p.w >= maxW * (S.minConf / 100) ** 2);
@@ -103,7 +106,7 @@
     const g2 = canvas.getContext("2d");
     const tip = h("div", { class: "gtip" });
     const legend = h("div", { class: "glegend" },
-      [["255,77,61", "Krieg (ab 1.000 Tote im Jahr)"], ["176,124,255", "Konflikte, Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"]]
+      [["255,77,61", "Krieg (ab 1.000 Tote im Jahr)"], ["176,124,255", "Konflikte, Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"], ["127,211,255", "Militärflugzeuge"], ["255,159,28", "Aufmarsch"]]
         .map(([c, t]) => h("span", {}, h("i", { style: `background:rgb(${c})` }), t)));
     const stage = h("div", { class: "gstage" }, canvas, tip, legend,
       h("div", { class: "gbtns" },
@@ -136,6 +139,8 @@
       sw("elections", "Wahlen", `${elections.length} in den nächsten 12 Monaten`),
       sw("carriers", "Flugzeugträger (USA)", geo.carriers ? `Tracker vom ${geo.carriers.as_of}${stale(geo.carriers)}` : "keine Daten"),
       sw("tankers", "Tanker (nur nördliche Ostsee)", tankers.length ? `${tankers.length} Schiffe, ${tankers.filter(t => t.status === "in Fahrt").length} in Fahrt${stale(geo.tankers)}` : "keine Daten"),
+      sw("mil", "Militärflugzeuge (ADS-B)", milPlanes.length ? `${milPlanes.length} mit Signal, Momentaufnahme${stale(geo.military)}` : "keine Daten"),
+      sw("force", "Truppenaufmarsch laut Meldungen", forcePts.length ? `${forcePts.length} Orte in 2 Tagen` : "keine Meldungen"),
       sw("quakes", "Erdbeben", quakeData.length ? `${quakeData.length} ab Stärke 4,5 in 7 Tagen${strongest ? ", stärkstes M " + magText(strongest.mag) : ""}${stale(geo.quakes)}` : "keine Daten"),
       sw("borders", "Ländergrenzen"),
       sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
@@ -315,6 +320,31 @@
           hits.push({ x, y, r: Math.max(7, r), type: "tanker", item: t });
         }
       }
+      // Aufmarsch laut Meldungen: orange Ringe, Größe nach Zahl der Meldungen
+      if (S.force) {
+        for (const f of forcePts) {
+          if (!vis(f.lon, f.lat)) continue;
+          const [x, y] = proj([f.lon, f.lat]), r = (4 + 10 * Math.sqrt(f.w / maxF)) * Math.min(1.5, Math.max(0.8, zoom * 0.8));
+          g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI);
+          g2.fillStyle = "rgba(255,159,28,.16)"; g2.fill();
+          g2.setLineDash([4, 3]); g2.strokeStyle = "rgba(255,159,28,.95)"; g2.lineWidth = 1.6; g2.stroke(); g2.setLineDash([]);
+          if (isSel("force", f)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r + 5, 0, 2 * Math.PI); g2.stroke(); }
+          hits.push({ x, y, r: Math.max(10, r), type: "force", item: f });
+        }
+      }
+      // Militärflugzeuge: kleine hellblaue Pfeile
+      if (S.mil) {
+        for (const p of milPlanes) {
+          if (!vis(p.lon, p.lat)) continue;
+          const [x, y] = proj([p.lon, p.lat]), s = p.kind === "fighter" || p.kind === "bomber" ? 6 : 4.5;
+          g2.beginPath(); g2.moveTo(x, y - s); g2.lineTo(x + s * 0.8, y + s * 0.8); g2.lineTo(x, y + s * 0.35); g2.lineTo(x - s * 0.8, y + s * 0.8); g2.closePath();
+          g2.fillStyle = p.kind === "fighter" || p.kind === "bomber" ? "#ffd1d1" : "rgb(127,211,255)"; g2.fill();
+          g2.strokeStyle = "#0a1420"; g2.lineWidth = 0.8; g2.stroke();
+          if (isSel("mil", p)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, s + 5, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && zoom > 4) halo(`${p.type}`, x + s + 3, y + 4, "#cfeeff", 10);
+          hits.push({ x, y, r: 9, type: "mil", item: p });
+        }
+      }
       // Flugzeugträger
       if (S.carriers) {
         for (const s of carriers) {
@@ -379,7 +409,8 @@
       canvas.style.cursor = hit ? "pointer" : "grab";
       if (hit) {
         tip.textContent = hit.type === "unrest" ? `Unruhen: ${hit.item.name}` : hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
-          : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.type === "tanker" ? "Tanker " + hit.item.name : hit.item.name;
+          : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.type === "tanker" ? "Tanker " + hit.item.name : hit.type === "mil" ? `${MILL[hit.item.kind] || "Militär"}: ${hit.item.call} (${hit.item.type})`
+          : hit.type === "force" ? `Aufmarsch laut Meldungen: ${hit.item.name}` : hit.item.name;
         tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
       } else tip.classList.remove("on");
     }
@@ -472,6 +503,19 @@
           item.tsunami ? h("p", { class: "note" }, "Das Flag „Meeresgebiet“ bedeutet nur, dass die Tsunami-Warnzentren informiert werden. Ein Tsunami ist damit nicht bestätigt.") : null,
           h("p", {}, link("Details bei der USGS", item.url)),
           h("p", { class: "note" }, "Quelle: USGS, alle Beben ab Stärke 4,5 der letzten 7 Tage. Stärke und Ort sind anfangs vorläufig und werden oft korrigiert."));
+      } else if (type === "mil") {
+        lon = item.lon; lat = item.lat;
+        node = h("div", {}, h("h3", {}, item.call), h("div", { class: "gtag", style: "background:rgb(127,211,255);color:#04121e" }, MILL[item.kind] || "Militär"),
+          h("p", {}, `Flugzeugtyp: ${item.type}`, item.reg ? ` · Kennung ${item.reg}` : "", h("br"),
+            item.alt_m != null ? `Höhe ${num.format(item.alt_m)} m` : "Höhe unbekannt", item.kmh ? ` · ${num.format(item.kmh)} km/h` : ""),
+          h("p", {}, link("Flug bei ADS-B Exchange ansehen", `https://globe.adsbexchange.com/?icao=${item.hex}`)),
+          h("p", { class: "note" }, "Momentaufnahme beim letzten Abruf (adsb.lol, offene ADS-B-Daten). Sichtbar sind nur Flugzeuge mit eingeschaltetem Transponder, Kampfeinsätze laufen meist ohne Signal."));
+      } else if (type === "force") {
+        lon = item.lon; lat = item.lat;
+        node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag", style: "background:rgb(255,159,28);color:#1e1000" }, "Aufmarsch laut Meldungen"),
+          h("p", {}, `${item.n} Meldungen in den letzten 2 Tagen über Truppenaufmarsch, Mobilmachung oder erhöhte Alarmbereitschaft an diesem Ort.`),
+          newsBlock(null, DATA.stories.filter(s => (item.country && s.title.includes(item.country)) || s.title.includes(item.name.split(",")[0])).slice(0, 4), "Meldungen dazu"),
+          h("p", { class: "note" }, "Maschinell aus Nachrichten ausgewertet (GDELT), Fehler möglich. Echte Truppenstandorte sind nicht öffentlich."));
       } else if (type === "tanker") {
         lon = item.lon; lat = item.lat;
         node = h("div", {}, h("h3", {}, item.name), h("div", { class: "gtag", style: "background:rgb(54,224,192);color:#04201b" }, "Tanker"),

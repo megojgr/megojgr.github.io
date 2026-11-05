@@ -20,6 +20,7 @@ import depot
 import earnings
 import elections
 import geo
+import geopolitics
 import live
 import localinfo
 import podcasts
@@ -314,6 +315,7 @@ def main():
         local_f = ex.submit(localinfo.build, cfg)
         earn_f = ex.submit(earnings.build, cfg, NOW.date())
         pod_f = ex.submit(podcasts.build, cfg)
+        gp_f = ex.submit(geopolitics.build, cfg, cfg["alerts"])
         uni_f = ex.submit(universe.build, cfg, cfg["alerts"])
         stories, feed_status, private = build_stories(cfg, extra_feeds, match)
         quotes = [f.result() for f in quotes_f]
@@ -325,6 +327,7 @@ def main():
         local_data = local_f.result()
         earn_data = earn_f.result()
         pod_data = pod_f.result()
+        gp_data = gp_f.result()
         uni_data, etf_themes = uni_f.result()
 
     kalshi_top = sorted((e for e in kalshi_all if e["vol24h"] > 0), key=lambda e: e["vol24h"], reverse=True)
@@ -340,6 +343,7 @@ def main():
         shown += [s for s in stories if s["topic"] == topic][:40]
     shown += [s for s in stories if s["watch"] or s["alert"]]
     shown += sorted((s for s in stories if s["europe"]), key=lambda s: s["time"], reverse=True)[:40]
+    shown += [n for c in gp_data["categories"] for n in c["news"] if n["lang"] != "de"]  # englische Geopolitik-Meldungen
     shown += sorted((s for s, _ in private), key=lambda s: s["score"], reverse=True)[:80]
     if earn_data:
         for it in earn_data["items"]:
@@ -367,6 +371,7 @@ def main():
         "local": local_data,
         "earnings": earn_data,
         "podcasts": pod_data,
+        "geopolitics": gp_data,
         "universe": uni_data,
         "etf_themes": etf_themes,
         "prediction": prediction,
@@ -408,7 +413,9 @@ def main():
     print(f"Globus: {len(c['points']) if c else 0} Konfliktorte ({', '.join(c['days']) if c else 'keine Daten'}), "
           f"{len(cps)} Meerengen ({sum(1 for x in cps if x['level'])} auffällig), "
           f"{len(car['ships']) if car else 0} Flugzeugträger ({car['as_of'] if car else '-'}), "
-          f"{len(geo_data['tankers']['ships']) if geo_data['tankers'] else 0} Tanker, {len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
+          f"{len(geo_data['tankers']['ships']) if geo_data['tankers'] else 0} Tanker, "
+          f"{len(geo_data['military']['planes']) if geo_data.get('military') else 0} Militärflugzeuge, "
+          f"{len((geo_data['conflict'] or {}).get('force') or [])} Aufmarsch-Orte, {len(geo_data['elections'])} Wahlen" + (f"; Probleme: {geo_data['notes']}" if geo_data["notes"] else ""))
     wx = local_data["weather"]
     print(f"Region: {sum(s['region'] == 'wuppertal' for s in stories)} Wuppertal, {sum(s['region'] == 'nrw' for s in stories)} NRW, {sum(s['europe'] for s in stories)} Europa; "
           f"Wetter {'%d °C, %s' % (wx['now']['temp'], wx['now']['text']) if wx else 'fehlt'}; "
@@ -422,6 +429,8 @@ def main():
           f"{sum(len(u['news']) for u in uni_data)} Meldungen")
     print(f"ETF-Suche: {etf_info.get('count', 0)} ETFs/ETCs mit Kursen von {etf_info.get('listed', 0)} an Xetra, "
           f"{etf_info.get('named', 0)} mit vollem Namen" + (f"; {etf_info['note']}" if etf_info.get("note") else ""))
+    print("Geopolitik: " + ", ".join(f"{c['label']} {len(c['news'])}" for c in gp_data["categories"])
+          + f"; Rüstungssektor {gp_data['sector']['n']} Werte, heute {gp_data['sector']['day']} %")
     print("Podcasts: " + "; ".join(f"{p['name']}: {p['title'] or 'keine Folge'} ({'Folge' if p['exact'] else 'nur Sendung'})"
                                    + (f" [{p['error']}]" if p["error"] else "") for p in pod_data))
     print(f"Übersetzung: {getattr(translate.apply, 'count', 0)} Überschriften ins Deutsche" + (f" ({translation_note})" if translation_note else ""))

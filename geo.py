@@ -77,7 +77,7 @@ def gdelt_day(day):
     raw = fetch(f"https://data.gdeltproject.org/events/{day:%Y%m%d}.export.CSV.zip", 150, retries=1)
     z = zipfile.ZipFile(io.BytesIO(raw))
     stats = collections.defaultdict(collections.Counter)
-    war_cells, unrest_cells = {}, {}
+    war_cells, unrest_cells, force_cells = {}, {}, {}
 
     def add(cells, key, w, lat, lon, full):
         c = cells.setdefault(key, {"w": 0, "n": 0, "best": (0, lat, lon, full)})
@@ -123,7 +123,9 @@ def gdelt_day(day):
                     add(unrest_cells, key, w, lat, lon, full)
             elif specific and root == "18" and not armed:
                 add(unrest_cells, key, w, lat, lon, full)
-    return stats, war_cells, unrest_cells
+            if specific and code in ("150", "152", "154") and (armed or code != "150"):
+                add(force_cells, key, w, lat, lon, full)
+    return stats, war_cells, unrest_cells, force_cells
 
 
 def classify(c):
@@ -248,14 +250,60 @@ def cell_points(cells, level_of, world, level, limit):
     return out
 
 
+def force_points(cells, world, limit):
+    """Orte mit Meldungen über Truppenaufmarsch, erhöhte Alarmbereitschaft oder Mobilmachung, die stärksten zuerst."""
+    out = []
+    for v in sorted(cells.values(), key=lambda v: v["w"], reverse=True):
+        if v["n"] < 2:
+            continue  # eine einzelne Meldung ist zu wenig
+        _, lat, lon, full = v["best"]
+        parts = [x.strip() for x in full.split(",") if x.strip()]
+        out.append({"lat": round(lat, 2), "lon": round(lon, 2), "w": v["w"], "n": v["n"],
+                    "name": ", ".join(dict.fromkeys([parts[0], parts[-1]])) if parts else full,
+                    "country": de_name(find_country(parts[-1] if parts else "", world)[0] or (parts[-1] if parts else ""))})
+        if len(out) >= limit:
+            break
+    return out
+
+
+# Militärflugzeuge mit eingeschaltetem Transponder (ADS-B, offene Daten von adsb.lol): Typcode -> Gruppe
+MIL_TYPES = {
+    "fighter": ["F16", "F15", "F18", "F22", "F35", "F5", "EUFI", "RFAL", "TOR", "GRIF", "JAS3", "M200", "MIR2", "SU27", "SU30", "SU35", "MG29", "J10", "AJET"],
+    "bomber": ["B52", "B1", "B2", "TU95", "TU16", "T160"],
+    "tanker": ["K35R", "K35E", "KC46", "K46", "KC10", "A332", "MRTT", "A310", "KC39", "IL78"],
+    "transport": ["C17", "C130", "C30J", "A400", "C5M", "C5", "C295", "CN35", "C27J", "IL76", "AN12", "AN124", "E390", "Y20"],
+    "isr": ["E3TF", "E3CF", "E6", "E7", "E737", "R135", "P8", "P3", "Q4", "Q9", "GLF5", "E2", "U2", "RC12", "MQ9", "AWAC", "SNTN"],
+    "heli": ["H60", "H47", "H64", "H53", "H53S", "V22", "NH90", "EC45", "EC35", "AS65", "AS55", "LYNX", "MI8", "A139", "UH1", "H1", "CH47"],
+}
+MIL_LABEL = {"fighter": "Kampfjets", "bomber": "Bomber", "tanker": "Tankflugzeuge", "transport": "Transporter", "isr": "Aufklärung & Seeüberwachung", "heli": "Hubschrauber"}
+
+
+def military_data():
+    """Momentaufnahme der Militärflugzeuge, die gerade ein ADS-B-Signal senden. Trainer und Kleinflugzeuge fallen weg."""
+    data = json.loads(fetch("https://api.adsb.lol/v2/mil", 30, ua="MegoNews/1.0 (privater News-Leser)"))
+    kind_of = {t: k for k, ts in MIL_TYPES.items() for t in ts}
+    planes = []
+    for a in data.get("ac") or []:
+        kind = kind_of.get((a.get("t") or "").upper())
+        lat, lon = a.get("lat"), a.get("lon")
+        if not kind or lat is None or lon is None or a.get("alt_baro") == "ground":
+            continue
+        alt = a.get("alt_baro") if isinstance(a.get("alt_baro"), (int, float)) else None
+        planes.append({"call": (a.get("flight") or "").strip() or a.get("r") or a.get("hex"), "type": a.get("t"), "kind": kind,
+                       "reg": a.get("r"), "lat": round(lat, 3), "lon": round(lon, 3), "alt_m": round(alt * 0.3048) if alt else None,
+                       "kmh": round(a["gs"] * 1.852) if a.get("gs") else None, "hex": a.get("hex")})
+    counts = collections.Counter(p["kind"] for p in planes)
+    return {"planes": planes, "counts": {k: counts.get(k, 0) for k in MIL_LABEL}, "labels": MIL_LABEL, "total_seen": len(data.get("ac") or [])}
+
+
 def conflicts(today, days, max_points, world, reason_countries=20, wars=None, parties=(), crime=(), not_war=()):
-    stats, war_cells, unrest_cells, used = collections.defaultdict(collections.Counter), {}, {}, []
+    stats, war_cells, unrest_cells, force_cells, used = collections.defaultdict(collections.Counter), {}, {}, {}, []
     for back in range(1, days + 3):
         if len(used) >= days:
             break
         day = today - dt.timedelta(days=back)
         try:
-            s, wc, uc = gdelt_day(day)
+            s, wc, uc, fc = gdelt_day(day)
         except Exception:
             continue  # Tagesdatei noch nicht da: einen Tag weiter zurück
         used.append(day.isoformat())
@@ -263,6 +311,7 @@ def conflicts(today, days, max_points, world, reason_countries=20, wars=None, pa
             stats[name].update(counter)
         merge_cells(war_cells, wc)
         merge_cells(unrest_cells, uc)
+        merge_cells(force_cells, fc)
     if not used:
         raise RuntimeError("keine GDELT-Tagesdatei erreichbar")
 
@@ -293,12 +342,13 @@ def conflicts(today, days, max_points, world, reason_countries=20, wars=None, pa
     level_of = {c["id"]: c["level"] for c in countries}
     result = {"days": used, "countries": countries, "war_years": wars["years"] if wars else [], "listed": bool(wars),
               "points": cell_points(war_cells, level_of, world, "war", max_points),
-              "unrest": cell_points(unrest_cells, level_of, world, "unrest", 80)}
+              "unrest": cell_points(unrest_cells, level_of, world, "unrest", 80),
+              "force": force_points(force_cells, world, 60)}
     reasons(countries, reason_countries)
     return result
 
 
-SCHEMA = {"conflict": 5, "chokepoints": 3}  # Version der Datenstruktur im Zwischenspeicher
+SCHEMA = {"conflict": 6, "chokepoints": 3}  # Version der Datenstruktur im Zwischenspeicher
 REASON_NAMES = {"Palestine": "Gaza OR Westjordanland", "United States of America": "USA"}
 
 
@@ -591,13 +641,15 @@ def build(cfg, stories, election_list, today):
         return value
 
     wars = part("wars", lambda: wars_list(world))
-    with ThreadPoolExecutor(max_workers=5) as ex:
+    with ThreadPoolExecutor(max_workers=6) as ex:
         f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"], wars, g.get("war_parties", ()), g.get("crime_conflicts", ()), g.get("not_war_conflicts", ())))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
         f_eq = ex.submit(part, "quakes", quakes_data)
         f_tank = ex.submit(part, "tankers", tankers_data)
+        f_mil = ex.submit(part, "military", military_data)
         conflict, cps, carriers, quakes, tankers = f_conf.result(), f_cp.result(), f_car.result(), f_eq.result(), f_tank.result()
+        military = f_mil.result()
     try:
         headlines = carrier_headlines()
     except Exception:
@@ -612,6 +664,7 @@ def build(cfg, stories, election_list, today):
         carriers = dict(carriers, headlines=headlines)
     return {
         "tankers": tankers,
+        "military": military,
         "names": {cid: de_name(name) for name, cid in world.items()},
         "conflict": conflict, "chokepoints": items, "carriers": carriers, "quakes": quakes,
         "elections": elections_layer(election_list, world, g["election_days"], today), "notes": notes,

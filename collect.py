@@ -204,7 +204,9 @@ def build_stories(cfg, extra_feeds=(), match=None):
         for m in sorted(public_members or members, key=lambda m: m["time"], reverse=True):
             if m["source"] not in seen:
                 seen.add(m["source"])
-                sources.append({"name": m["source"], "url": m["url"]})
+                sources.append({"name": m["source"], "url": m["url"], "title": m["title"], "time": m["time"].isoformat()})
+        if len(sources) < 3:  # Überschrift je Quelle nur für die aufklappbare Liste bei mehreren Quellen
+            sources = [{"name": x["name"], "url": x["url"]} for x in sources]
         newest = max(m["time"] for m in members)
         age_h = (NOW - newest).total_seconds() / 3600
         headlines = " ".join(m["title"] for m in members)

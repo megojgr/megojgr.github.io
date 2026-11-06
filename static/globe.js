@@ -19,6 +19,15 @@
         document.head.append(s);
       });
     }
+    // Bahnrechnung für die Satelliten (SGP4). Fehlt sie, läuft der Globus ohne Satelliten weiter.
+    if (!window.satellite) {
+      await new Promise((res) => {
+        const s = document.createElement("script");
+        s.src = "satellite.min.js";
+        s.onload = res; s.onerror = res;
+        document.head.append(s);
+      });
+    }
     if (!window.__world) {
       const r = await fetch("world.json");
       if (!r.ok) throw new Error("world.json: HTTP " + r.status);
@@ -65,7 +74,7 @@
       return DATA.stories.filter(s => { const t = s.title.toLowerCase(); return stems.some((st, i) => pats[i] ? pats[i].test(t) : t.includes(st)); }).slice(0, 4);
     }
 
-    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, tankers: true, mil: true, force: true, quakes: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
+    const defaults = { borders: true, names: true, labels: true, conflict: true, unrest: true, chokes: true, elections: true, carriers: true, tankers: true, mil: true, force: true, quakes: true, sats: true, satCom: false, satFoot: true, satLand: "all", jam: true, net: true, minConf: 0, minUnrest: 0, elDays: 90, minMag: 5, quakeDays: 7, spin: 2 };
     let S = { ...defaults };
     try { S = { ...defaults, ...JSON.parse(store.get("globe") || "{}") }; } catch {}
     const save = () => store.set("globe", JSON.stringify(S));
@@ -101,12 +110,105 @@
     const elShown = () => elections.filter(e => e.days <= S.elDays);
     const elByCountry = () => { const m = new Map(); for (const e of elShown()) if (!m.has(e.id)) m.set(e.id, e); return m; };
 
+    // ---------- Satelliten: Position live aus den Bahndaten (SGP4 mit satellite.js)
+    const SL = window.satellite, satInfo = geo.satellites || null, LANDS = (satInfo && satInfo.lands) || {};
+    const SATK = { img: ["Bildaufklärung", "255,214,102"], sar: ["Radaraufklärung", "255,128,214"], elint: ["Signalaufklärung", "120,235,150"],
+      warn: ["Raketen-Frühwarnung", "255,120,90"], mil: ["Militär, Aufgabe unklar", "190,200,220"] };
+    const OWNER = { mil: "Betreiber: Militär oder Geheimdienst", dual: "Betreiber: Staat, zivil und militärisch genutzt", com: "Betreiber: Firma (kommerziell), Bilder auch für Militärs und Medien" };
+    const LANDGROUP = [["all", "Alle Länder"], ["CN", "China"], ["RU", "Russland"], ["US", "USA"], ["EU", "Europa"], ["other", "Andere (Israel, Indien, Iran …)"]];
+    const EUROPE = ["DE", "FR", "IT", "ES", "FI", "EU"], BIG = ["CN", "RU", "US", ...EUROPE];
+    const RE = 6371, D2R = Math.PI / 180;
+    const sats = (SL && satInfo ? satInfo.sats : []).map(s => {
+      try { const rec = SL.twoline2satrec(s.a, s.b); return rec.error ? null : { ...s, rec, id: s.a.slice(2, 7).trim(), period: 2 * Math.PI / rec.no, inc: rec.inclo / D2R }; } catch { return null; }
+    }).filter(Boolean);
+    const inGroup = (s) => S.satLand === "all" || (S.satLand === "EU" ? EUROPE.includes(s.c) : S.satLand === "other" ? !BIG.includes(s.c) : s.c === S.satLand);
+    const satShown = (s) => (s.o === "com" ? S.satCom : S.sats) && inGroup(s);
+    const satOn = () => sats.length > 0 && (S.sats || S.satCom);
+    function satAt(s, date) {
+      const pv = SL.propagate(s.rec, date);
+      if (!pv || !pv.position) return null;
+      const g = SL.eciToGeodetic(pv.position, SL.gstime(date)), v = pv.velocity;
+      return { lon: SL.degreesLong(g.longitude), lat: SL.degreesLat(g.latitude), h: g.height, v: v ? Math.hypot(v.x, v.y, v.z) : null };
+    }
+    // Erdmittelpunktswinkel (Grad) des Gebiets, das der Satellit erfassen kann: Bild- und Radarsatelliten schauen
+    // bis etwa 30° bzw. 45° zur Seite, alle anderen sehen bis zum Horizont (ab 5° Höhe über dem Horizont)
+    const sensorAngle = (k) => k === "img" ? 30 : k === "sar" ? 45 : 0;
+    function reach(kind, h) {
+      const k = (RE + h) / RE, off = h < 3000 ? sensorAngle(kind) : 0;
+      if (off) { const x = k * Math.sin(off * D2R); if (x < 1) return Math.asin(x) / D2R - off; }
+      const e = 5 * D2R; return (Math.acos(Math.cos(e) / k) - e) / D2R;
+    }
+    // Tief fliegende Bild- und Radarsatelliten (eine Runde unter 200 Minuten): Sie überfliegen ein Gebiet nur kurz
+    const watches = (s) => (s.k === "img" || s.k === "sar") && s.period < 200;
+    let satPos = [], satT = 0;
+    function updateSats(force) {
+      const t = Date.now();
+      if (!force && t - satT < 1000) return;
+      satT = t; const d = new Date(t), sel = selected && selected.type === "sat" ? selected.item : null;
+      satPos = [];
+      for (const s of sats) {
+        if (!satShown(s) && s !== sel) continue;
+        const p = satAt(s, d); if (!p) continue;
+        if (watches(s)) { const deg = reach(s.k, p.h); p.rr = deg * D2R; p.ring = circle.center([p.lon, p.lat]).radius(deg)().coordinates[0]; }
+        satPos.push({ s, ...p });
+      }
+    }
+    // Bahn für die nächsten 12 Stunden im Minutentakt, zwischengespeichert (für Überflüge)
+    const TRACK_MIN = 720, trackCache = new Map();
+    function trackOf(s) {
+      const c = trackCache.get(s);
+      if (c && Date.now() - c.t0 < 10 * 60000) return c;
+      const t0 = Date.now(), lon = new Float32Array(TRACK_MIN + 1), lat = new Float32Array(TRACK_MIN + 1), hh = new Float32Array(TRACK_MIN + 1);
+      const stat = s.period > 600;  // geostationär oder sehr hoch: bewegt sich kaum, eine Stichprobe pro 10 Minuten reicht
+      for (let i = 0; i <= TRACK_MIN; i++) {
+        if (stat && i % 10) { lon[i] = lon[i - 1]; lat[i] = lat[i - 1]; hh[i] = hh[i - 1]; continue; }
+        const p = satAt(s, new Date(t0 + i * 60000));
+        if (p) { lon[i] = p.lon; lat[i] = p.lat; hh[i] = p.h; } else { lon[i] = NaN; lat[i] = NaN; hh[i] = 0; }
+      }
+      const tr = { t0, lon, lat, h: hh };
+      trackCache.set(s, tr); return tr;
+    }
+    // Ziel = Land als Kreis gleicher Fläche um den Mittelpunkt (grob, für Überflüge reicht das)
+    const targetOf = (id) => { const f = featById.get(id), c = centroid.get(id); return f && c ? { id, c, rho: Math.acos(1 - d3.geoArea(f) / (2 * Math.PI)) } : null; };
+    function passesOf(s, tr, tg) {
+      const out = []; let cur = null;
+      for (let i = 0; i <= TRACK_MIN; i++) {
+        const ok = !isNaN(tr.lon[i]) && d3.geoDistance([tr.lon[i], tr.lat[i]], tg.c) < reach(s.k, tr.h[i]) * D2R + tg.rho;
+        if (ok) { if (cur) cur.b = i; else cur = { s, tg, a: i, b: i }; } else if (cur) { out.push(cur); cur = null; }
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
+    // Viele Bahnen in kleinen Portionen rechnen, damit die Seite nicht hängt
+    let satJob = 0;
+    function inChunks(list, fn, done) {
+      const job = ++satJob; let i = 0;
+      (function chunk() {
+        if (job !== satJob || !alive) return;
+        const t = performance.now();
+        while (i < list.length && performance.now() - t < 25) fn(list[i++]);
+        if (i < list.length) setTimeout(chunk, 0); else done();
+      })();
+    }
+    const clock = (min) => new Date(Date.now() + min * 60000).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    const durText = (min) => min >= 120 ? `${num.format(Math.round(min / 6) / 10)} Std.` : `${Math.round(min)} Min.`;
+    const landOf = (s) => LANDS[s.c] || s.c;
+    const satEpoch = satInfo && satInfo.epoch ? new Date(satInfo.epoch) : null;
+    const satOld = satEpoch && Date.now() - satEpoch.getTime() > 3 * 86400000;
+    function countryAt(lon, lat) { const f = world.features.find(f => d3.geoContains(f, [lon, lat])); return f ? nameOf(f) : null; }
+
+    // ---------- GPS-Störungen und Internet-Ausfälle
+    const jam = geo.gpsjam || null, jamCells = (jam && jam.cells) || [], jamAreas = (jam && jam.areas) || [];
+    const jamDay = jam && jam.day ? new Date(jam.day + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "short" }) : "";
+    const outages = ((geo.outages && geo.outages.items) || []).filter(o => o.id && centroid.get(o.id));
+    const areaName = (a) => (a.sea ? "Meer vor " : "") + a.country + (a.near ? `, bei ${a.near}` : "");
+
     // ---------- Aufbau der Oberfläche
     const canvas = h("canvas", { class: "gcanvas", "aria-label": "Globus" });
     const g2 = canvas.getContext("2d");
     const tip = h("div", { class: "gtip" });
     const legend = h("div", { class: "glegend" },
-      [["255,77,61", "Krieg (ab 1.000 Tote im Jahr)"], ["176,124,255", "Konflikte, Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"], ["127,211,255", "Militärflugzeuge"], ["255,159,28", "Aufmarsch"]]
+      [["255,77,61", "Krieg (ab 1.000 Tote im Jahr)"], ["176,124,255", "Konflikte, Unruhen & Spannungen"], ["77,163,255", "Wahl"], ["255,190,70", "Erdbeben"], ["54,224,192", "Tanker"], ["127,211,255", "Militärflugzeuge"], ["255,159,28", "Aufmarsch"], ["255,214,102", "Aufklärungssatelliten"], ["255,64,129", "GPS-Störungen"], ["0,200,255", "Internet-Ausfall"]]
         .map(([c, t]) => h("span", {}, h("i", { style: `background:rgb(${c})` }), t)));
     const stage = h("div", { class: "gstage" }, canvas, tip, legend,
       h("div", { class: "gbtns" },
@@ -142,6 +244,16 @@
       sw("mil", "Militärflugzeuge (ADS-B)", milPlanes.length ? `${milPlanes.length} mit Signal, Momentaufnahme${stale(geo.military)}` : "keine Daten"),
       sw("force", "Truppenaufmarsch laut Meldungen", forcePts.length ? `${forcePts.length} Orte in 2 Tagen` : "keine Meldungen"),
       sw("quakes", "Erdbeben", quakeData.length ? `${quakeData.length} ab Stärke 4,5 in 7 Tagen${strongest ? ", stärkstes M " + magText(strongest.mag) : ""}${stale(geo.quakes)}` : "keine Daten"),
+      h("h3", {}, "Satelliten & Frühwarnzeichen"),
+      sw("sats", "Aufklärungssatelliten", !SL ? "Bahnrechnung nicht geladen" : sats.length ? `${sats.filter(s => s.o !== "com").length} von Militär und Staat, live berechnet${satOld ? " (Bahndaten älter als 3 Tage)" : ""}` : "keine Daten"),
+      sw("satCom", "Kommerzielle Bild- und Radarsatelliten", sats.length ? `${sats.filter(s => s.o === "com").length} Satelliten (z. B. Maxar, ICEYE, Jilin-1)` : "keine Daten"),
+      sw("satFoot", "Überwachungsbereiche", "Kreis um Bild- und Radarsatelliten: Gebiet, das sie gerade aufnehmen können"),
+      h("label", { class: "gsel" }, h("span", {}, "Satelliten aus"),
+        h("select", { onchange: (e) => { S.satLand = e.target.value; save(); updateSats(true); renderLists(); } },
+          LANDGROUP.map(([v, t]) => h("option", { value: v, selected: S.satLand === v || null }, t)))),
+      sw("jam", "GPS-Störungen", jam ? `${jam.red} stark gestörte Zellen am ${jamDay}${stale(jam)}` : "keine Daten"),
+      sw("net", "Internet-Ausfälle", geo.outages ? `${outages.length} Länder in 48 Std.${stale(geo.outages)}` : "keine Daten"),
+      h("h3", {}, "Karte"),
       sw("borders", "Ländergrenzen"),
       sw("names", "Ländernamen", "mehr Namen beim Hineinzoomen"),
       sw("labels", "Beschriftung der Punkte"),
@@ -157,6 +269,7 @@
     const proj = d3.geoOrthographic().clipAngle(90).precision(0.6);
     const path = d3.geoPath(proj, g2);
     const graticule = d3.geoGraticule10();
+    const circle = d3.geoCircle().precision(6);
     const sphere = { type: "Sphere" };
     const allLand = { type: "FeatureCollection", features: world.features };
     let W = 0, H = 0, dpr = 1, rot = [-35, -25], zoom = 1, dirty = true, selected = null, hits = [];
@@ -213,6 +326,58 @@
         if (f) { g2.beginPath(); path(f); g2.strokeStyle = "#fff"; g2.lineWidth = 1.6; g2.stroke(); }
       }
       g2.beginPath(); path(sphere); g2.strokeStyle = "rgba(160,200,255,.4)"; g2.lineWidth = 1; g2.stroke();
+
+      // GPS-Störungen: Sechsecke wie bei gpsjam.org (Zelle etwa 40 km breit), rot ab 10 %, gelb ab 2 % betroffener Flugzeuge
+      if (S.jam && jamCells.length) {
+        const pr = Math.max(1.6, R * (23 / RE));
+        for (const c of jamCells) {
+          if (!vis(c[1], c[0])) continue;
+          const [x, y] = proj([c[1], c[0]]), red = c[2] > 10;
+          g2.beginPath();
+          for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; g2[k ? "lineTo" : "moveTo"](x + pr * Math.cos(a), y + pr * Math.sin(a)); }
+          g2.closePath();
+          g2.fillStyle = red ? `rgba(255,64,129,${(0.42 + Math.min(0.4, c[2] / 150)).toFixed(2)})` : "rgba(255,204,0,.32)"; g2.fill();
+          if (zoom > 3) hits.push({ x, y, r: Math.max(5, pr), type: "jam", item: c });
+        }
+        for (const a of jamAreas) {
+          if (!vis(a.lon, a.lat)) continue;
+          const [x, y] = proj([a.lon, a.lat]);
+          if (selected && selected.type === "jamArea" && selected.item === a) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, 18, 0, 2 * Math.PI); g2.stroke(); }
+          hits.push({ x, y, r: 14, type: "jamArea", item: a });
+        }
+      }
+
+      // Überwachungsbereiche der Bild- und Radarsatelliten, darunter die Bahn des gewählten Satelliten
+      if (satOn() || (selected && selected.type === "sat")) {
+        updateSats();
+        if (S.satFoot) {
+          // Kreise einmal pro Sekunde vorberechnet (updateSats), hier nur projiziert und je Farbe in einem Zug gezeichnet.
+          // Sehr hohe Satelliten (z. B. geostationär) überblicken ein Drittel der Erde: ihr Kreis erscheint nur, wenn ausgewählt.
+          for (const kind of ["img", "sar"]) {
+            g2.beginPath(); let any = false;
+            for (const p of satPos) {
+              if (!p.ring || p.s.k !== kind || !satShown(p.s) || d3.geoDistance([p.lon, p.lat], center) + p.rr > 1.56) continue;
+              p.ring.forEach((pt, i) => { const [x, y] = proj(pt); if (i) g2.lineTo(x, y); else g2.moveTo(x, y); });
+              g2.closePath(); any = true;
+            }
+            if (!any) continue;
+            const col = SATK[kind][1];
+            g2.fillStyle = `rgba(${col},.08)`; g2.fill(); g2.strokeStyle = `rgba(${col},.4)`; g2.lineWidth = 0.8; g2.stroke();
+          }
+        }
+        if (selected && selected.type === "sat") {
+          const s = selected.item, t = Date.now(), per = s.period, step = per > 600 ? 10 : 1;
+          const line = (m0, m1) => { const pts = []; for (let m = m0; m <= m1; m += step) { const p = satAt(s, new Date(t + m * 60000)); if (p) pts.push([p.lon, p.lat]); } return { type: "LineString", coordinates: pts }; };
+          g2.beginPath(); path(line(-Math.min(per / 2, 720), 0)); g2.strokeStyle = "rgba(255,255,255,.3)"; g2.lineWidth = 1.2; g2.stroke();
+          g2.beginPath(); path(line(0, Math.min(per, 1440))); g2.setLineDash([5, 4]); g2.strokeStyle = "rgba(255,255,255,.85)"; g2.lineWidth = 1.4; g2.stroke(); g2.setLineDash([]);
+          const p = satPos.find(q => q.s === s);
+          if (p) {
+            const col = SATK[s.k][1];
+            g2.beginPath(); path(circle.center([p.lon, p.lat]).radius(reach(s.k, p.h))());
+            g2.fillStyle = `rgba(${col},.18)`; g2.fill(); g2.strokeStyle = `rgba(${col},.95)`; g2.lineWidth = 1.6; g2.stroke();
+          }
+        }
+      }
 
       const halo = (txt, x, y, color, size, align) => {
         g2.font = `600 ${size}px system-ui, sans-serif`; g2.textAlign = align || "left"; g2.lineWidth = 3;
@@ -357,6 +522,33 @@
           hits.push({ x, y, r: 16, type: "carrier", item: s });
         }
       }
+      // Internet-Ausfälle: Ring mit Schrägstrich in der Landesmitte
+      if (S.net) {
+        for (const o of outages) {
+          const c = centroid.get(o.id); if (!vis(c[0], c[1])) continue;
+          const [x, y] = proj(c), r = 7;
+          g2.beginPath(); g2.arc(x, y, r, 0, 2 * Math.PI); g2.fillStyle = "rgba(5,16,28,.85)"; g2.fill();
+          g2.strokeStyle = o.ongoing ? "rgb(0,200,255)" : "rgba(0,200,255,.6)"; g2.lineWidth = 2; g2.stroke();
+          g2.beginPath(); g2.moveTo(x - r * 0.7, y + r * 0.7); g2.lineTo(x + r * 0.7, y - r * 0.7); g2.stroke();
+          if (isSel("outage", o)) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, r + 5, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && zoom > 1.2) halo("Internet", x + r + 4, y + 4, "#9eeaff", 10.5);
+          hits.push({ x, y, r: 12, type: "outage", item: o });
+        }
+      }
+      // Satelliten: kleiner Körper mit zwei Solarflügeln, Farbe nach Aufgabe, kommerzielle blasser
+      if (satOn() || (selected && selected.type === "sat")) {
+        for (const p of satPos) {
+          const s = p.s, sel = isSel("sat", s);
+          if ((!satShown(s) && !sel) || !vis(p.lon, p.lat)) continue;
+          const [x, y] = proj([p.lon, p.lat]), col = SATK[s.k][1], r = sel ? 4.6 : 3;
+          g2.fillStyle = s.o === "com" ? `rgba(${col},.6)` : `rgb(${col})`; g2.strokeStyle = "#0a1420"; g2.lineWidth = 0.8;
+          g2.beginPath(); g2.rect(x - r * 0.6, y - r * 0.6, r * 1.2, r * 1.2); g2.rect(x - r * 2, y - r * 0.28, r * 1.1, r * 0.56); g2.rect(x + r * 0.9, y - r * 0.28, r * 1.1, r * 0.56);
+          g2.fill(); g2.stroke();
+          if (sel) { g2.strokeStyle = "#fff"; g2.lineWidth = 1.5; g2.beginPath(); g2.arc(x, y, 11, 0, 2 * Math.PI); g2.stroke(); }
+          if (S.labels && (zoom > 3.5 || sel)) halo(s.n, x + 9, y + 4, `rgb(${col})`, 10);
+          hits.push({ x, y, r: 8, type: "sat", item: s });
+        }
+      }
     }
 
     // ---------- Bedienung
@@ -410,7 +602,10 @@
       if (hit) {
         tip.textContent = hit.type === "unrest" ? `Unruhen: ${hit.item.name}` : hit.type === "quake" ? `M ${magText(hit.item.mag)} · ${hit.item.place}`
           : hit.type === "carrier" ? hit.item.name + " (" + hit.item.hull + ")" : hit.type === "tanker" ? "Tanker " + hit.item.name : hit.type === "mil" ? `${MILL[hit.item.kind] || "Militär"}: ${hit.item.call} (${hit.item.type})`
-          : hit.type === "force" ? `Aufmarsch laut Meldungen: ${hit.item.name}` : hit.item.name;
+          : hit.type === "force" ? `Aufmarsch laut Meldungen: ${hit.item.name}`
+          : hit.type === "sat" ? `${hit.item.n} · ${SATK[hit.item.k][0]} · ${landOf(hit.item)}`
+          : hit.type === "jam" ? `GPS-Störung: ${hit.item[2]} % von ${hit.item[3]} Flugzeugen` : hit.type === "jamArea" ? `GPS-Störungen: ${areaName(hit.item)}`
+          : hit.type === "outage" ? `Internet-Ausfall: ${hit.item.name}` : hit.item.name;
         tip.style.left = x + 12 + "px"; tip.style.top = y + 12 + "px"; tip.classList.add("on");
       } else tip.classList.remove("on");
     }
@@ -524,6 +719,53 @@
             `Position von ${new Date(item.t * 1000).toLocaleString("de-DE", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })} Uhr`),
           h("p", {}, link("Schiff bei MarineTraffic ansehen", `https://www.marinetraffic.com/en/ais/details/ships/mmsi:${item.mmsi}`)),
           h("p", { class: "note" }, "Quelle: Digitraffic (finnische Verkehrsbehörde). Gezeigt wird der letzte Empfang an den Küstenstationen, er kann einige Stunden alt sein. Das AIS-Signal meldet nur „Tanker“: Öl, Chemie und Gas lassen sich nicht unterscheiden. Name, Ziel und Status gibt die Besatzung selbst ein, Schiffe können das Signal auch abschalten."));
+      } else if (type === "sat") {
+        const p = satAt(item, new Date()), [kl, col] = SATK[item.k];
+        lon = p ? p.lon : 0; lat = p ? p.lat : 0;
+        const km = p ? Math.round(reach(item.k, p.h) * D2R * RE) : 0, under = p ? countryAt(p.lon, p.lat) : null;
+        const passBox = h("div", {}, h("p", { class: "note" }, "Überflüge werden berechnet …"));
+        node = h("div", {}, h("h3", {}, item.n),
+          h("div", { class: "gtag", style: `background:rgb(${col});color:#10131a` }, kl), " ",
+          h("div", { class: "gtag" }, landOf(item)),
+          h("p", {}, item.r, h("br"), h("small", {}, OWNER[item.o])),
+          p && h("p", {}, `Höhe ${num.format(Math.round(p.h))} km · ${num.format(Math.round(p.v * 3600))} km/h · eine Runde um die Erde in ${durText(item.period)}`, h("br"),
+            `Bahnneigung ${num.format(Math.round(item.inc * 10) / 10)}°`, h("br"), h("b", {}, under ? `Gerade über: ${under}` : "Gerade über dem Meer")),
+          p && h("p", {}, watches(item)
+            ? `Überwachungsbereich (heller Kreis): etwa ${num.format(km)} km rund um den Punkt unter dem Satelliten. Annahme: Er kann bis ${sensorAngle(item.k)}° zur Seite schauen.${item.k === "sar" ? " Radar sieht auch nachts und durch Wolken." : " Optische Satelliten brauchen Tageslicht und freie Sicht."}`
+            : `Sichtbereich (heller Kreis): etwa ${num.format(km)} km rund um den Punkt unter dem Satelliten, also alles, von wo aus er über dem Horizont steht.${item.k === "elint" ? " Signalaufklärer hören Funk und Radar in diesem Gebiet ab." : item.k === "warn" ? " Frühwarnsatelliten erkennen die Hitze startender Raketen in diesem Gebiet." : ""}`),
+          h("p", { class: "note" }, "Gestrichelt: Bahn der nächsten Runde, blass: die letzte halbe Runde."),
+          passBox,
+          h("p", {}, link("Bahn bei N2YO ansehen", `https://www.n2yo.com/satellite/?s=${item.id}`)),
+          h("p", { class: "note" }, `Position live aus den öffentlichen Bahndaten berechnet (CelesTrak, Stand ${satEpoch ? satEpoch.toLocaleString("de-DE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "unbekannt"}). Ändert ein Satellit seine Bahn, weicht die Position ab, bis neue Bahndaten kommen. Die Aufgabe ist bei Militärsatelliten oft nur aus der Bahn geschätzt.`));
+        setTimeout(() => {
+          if (!selected || selected.item !== item) return;
+          const tr = trackOf(item), hot = [...warCountries, ...unrestCountries.slice(0, 15)].map(c => targetOf(c.id)).filter(Boolean);
+          for (const id of ["158", "408", "364", "376", "804"]) if (!hot.some(t => t.id === id)) { const t = targetOf(id); if (t) hot.push(t); }
+          const list = hot.flatMap(tg => passesOf(item, tr, tg)).sort((a, b) => a.a - b.a);
+          const fname = (pp) => nameOf(featById.get(pp.tg.id));
+          passBox.replaceChildren(h("h4", {}, "Über Kriegs- und Krisengebieten (nächste 12 Std.)"),
+            list.length ? h("div", {}, list.slice(0, 10).map(pp => h("p", { class: "nl" }, h("b", {}, pp.a === 0 ? "jetzt" : clock(pp.a) + " Uhr"), ` · ${fname(pp)}`, h("small", {}, ` · ${pp.b - pp.a >= TRACK_MIN - 1 ? "die ganze Zeit" : "etwa " + durText(pp.b - pp.a + 1)}`))))
+              : h("p", { class: "note" }, "Kein Überflug über Kriegs- oder Krisengebiete in den nächsten 12 Stunden."));
+        }, 30);
+      } else if (type === "jamArea" || type === "jam") {
+        const a = type === "jam" ? { lat: item[0], lon: item[1], cells: 1, pct: item[2], planes: item[3] } : item;
+        lon = a.lon; lat = a.lat;
+        const where = type === "jam" ? (countryAt(a.lon, a.lat) || "über dem Meer") : areaName(a);
+        node = h("div", {}, h("h3", {}, `GPS-Störungen: ${where}`), h("div", { class: "gtag", style: "background:rgb(255,64,129);color:#fff" }, `am ${jamDay}`),
+          h("p", {}, type === "jam" ? `${a.pct} % von ${a.planes} Flugzeugen in dieser Zelle meldeten eine ungenaue GPS-Position.`
+            : `${a.cells} Zellen (je etwa 40 km breit), in denen im Schnitt ${a.pct} % der Flugzeuge eine ungenaue GPS-Position meldeten (${num.format(a.planes)} Flugzeuge erfasst).`),
+          h("p", {}, "Flugzeuge senden, wie genau ihr GPS gerade ist. Melden in einer Gegend viele eine schlechte Genauigkeit, wird dort meist GPS gestört (Jamming) oder mit falschen Signalen getäuscht (Spoofing). Das machen vor allem Militärs, um Drohnen und Raketen abzuwehren. Neue oder wachsende Störgebiete sind ein frühes Zeichen für militärische Aktivität."),
+          h("p", {}, link("Karte bei gpsjam.org öffnen", `https://gpsjam.org/?lat=${a.lat}&lon=${a.lon}&z=6&date=${jam.day}`)),
+          h("p", { class: "note" }, "Quelle: gpsjam.org (John Wiseman) auf Grundlage von ADS-B Exchange, ein Tag Verzögerung. Wo wenige Flugzeuge fliegen, gibt es keine Daten. Ein Ausreißer einzelner Flugzeuge kann eine Zelle färben."));
+      } else if (type === "outage") {
+        const c = centroid.get(item.id); lon = c[0]; lat = c[1];
+        const f = (t) => new Date(t * 1000).toLocaleString("de-DE", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        node = h("div", {}, h("h3", {}, `Internet-Ausfall: ${item.name}`), h("div", { class: "gtag", style: "background:rgb(0,200,255);color:#03121c" }, item.ongoing ? "dauert an" : "vorbei"),
+          h("p", {}, `Beginn: ${f(item.start)} Uhr`, h("br"), item.ongoing ? `Dauer bisher: ${durText((Date.now() / 1000 - item.start) / 60)}` : `Ende: ${f(item.end)} Uhr (Dauer ${durText((item.end - item.start) / 60)})`, h("br"),
+            `Erkannt über: ${item.sources.join(", ")}`),
+          h("p", {}, "Fällt das Internet in einem ganzen Land aus, steckt oft eine Abschaltung durch die Regierung dahinter (bei Unruhen, Wahlen oder vor Militäreinsätzen), manchmal auch Angriffe auf das Netz, Stromausfälle oder beschädigte Seekabel."),
+          h("p", {}, link("Verlauf bei IODA ansehen", `https://ioda.inetintel.cc.gatech.edu/country/${item.code}`)),
+          h("p", { class: "note" }, "Quelle: IODA (Georgia Tech), automatisch erkannt. Fehlalarme sind möglich, kurze und schwache Ausschläge sind schon herausgefiltert."));
       } else if (type === "carrier") {
         lon = item.lon; lat = item.lat;
         const c = geo.carriers;
@@ -544,7 +786,8 @@
               !c.tension && !(c.listed || []).length && h("p", {}, `${c.share} % der Ereignisse sind Gewalt oder Zwang${c.protests ? `, ${c.protests} Proteste` : ""}${c.riots ? `, ${c.riots} Krawalle` : ""} in den letzten 2 Tagen.`)]
             : h("p", { class: "note" }, "Keine auffälligen Kampfhandlungen oder Unruhen in den Daten."),
           newsBlock(c && c.news && c.news.length ? c.news : null, storiesFor(f), c ? (c.level === "war" ? "Anlass: aktuelle Meldungen zum Konflikt" : "Hintergrund: aktuelle Meldungen") : "Meldungen zu diesem Land"),
-          e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."));
+          e ? h("p", {}, h("b", {}, "Wahl: "), `${new Date(e.date + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (in ${e.days} Tagen), ${e.what} `, link("Wikipedia", e.url)) : h("p", { class: "note" }, "Keine Wahl in den nächsten 12 Monaten im Kalender."),
+          countryWatch(f));
         lon = ll[0]; lat = ll[1];
       }
       info.replaceChildren(node);
@@ -553,7 +796,40 @@
       dirty = true;
     }
 
+    // Frühwarnzeichen zu einem Land: Internet, GPS-Störungen und Satelliten, die darüber fliegen
+    function countryWatch(f) {
+      const de = nameOf(f), out = outages.find(o => o.id === f.id), areas = jamAreas.filter(a => a.country === de);
+      const satBox = h("div", {});
+      const node = h("div", {},
+        out && h("p", {}, h("b", {}, "Internet: "), `Ausfall ${out.ongoing ? "dauert an" : "in den letzten 48 Std."} (erkannt über ${out.sources.join(", ")}). `, h("a", { href: "#", onclick: (e) => { e.preventDefault(); select("outage", out); } }, "Details")),
+        areas.length > 0 && h("p", {}, h("b", {}, "GPS-Störungen: "), areas.map(a => `${a.sea ? "auf dem Meer: " : ""}${a.cells} Zellen (${a.pct} % der Flugzeuge)`).join(", "), ` am ${jamDay}.`),
+        satBox);
+      const target = targetOf(f.id);
+      if (!target || !satOn()) return node;
+      const list = sats.filter(s => satShown(s) && s.k !== "mil");
+      satBox.append(h("p", { class: "note" }, `Überflüge von ${list.length} Satelliten werden berechnet …`));
+      const passes = [];
+      inChunks(list, s => { passes.push(...passesOf(s, trackOf(s), target)); }, () => {
+        if (!selected || selected.item !== f) return;
+        const now = passes.filter(p => p.a === 0), seeing = now.filter(p => watches(p.s)), steady = now.filter(p => !watches(p.s) && p.b - p.a >= TRACK_MIN - 1);
+        const next = passes.filter(p => watches(p.s) && p.a > 0).sort((a, b) => a.a - b.a);
+        const byLand = {};
+        for (const p of passes) if (watches(p.s)) byLand[landOf(p.s)] = (byLand[landOf(p.s)] || 0) + 1;
+        const row = (p) => h("button", { class: "grow", onclick: () => select("sat", p.s) }, h("i", { style: `background:rgb(${SATK[p.s.k][1]})` }),
+          h("span", {}, `${p.a === 0 ? "jetzt" : clock(p.a) + " Uhr"} · ${p.s.n}`, h("small", {}, `${landOf(p.s)}, ${SATK[p.s.k][0]}${p.a === 0 ? "" : ", etwa " + durText(p.b - p.a + 1)}`)));
+        satBox.replaceChildren(h("h4", {}, "Satelliten über diesem Land"),
+          h("p", {}, `Gerade im Blick: ${seeing.length === 1 ? "1 Bild- oder Radarsatellit" : seeing.length + " Bild- und Radarsatelliten"}`, steady.length ? `, dazu dauerhaft ${steady.length} Satelliten in großer Höhe (Frühwarnung, Signal- und Fernaufklärung)` : "", "."),
+          h("div", {}, seeing.slice(0, 6).map(row)),
+          h("p", {}, `In den nächsten 12 Stunden: ${next.length} Überflüge von Bild- und Radarsatelliten`,
+            Object.keys(byLand).length ? ` (${Object.entries(byLand).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ")})` : "", "."),
+          h("div", {}, next.slice(0, 10).map(row)),
+          h("p", { class: "note" }, "Grob berechnet: Das Land zählt als Kreis gleicher Fläche um seine Mitte. Die gezeigten Satelliten folgen den Schaltern und der Länderauswahl oben."));
+      });
+      return node;
+    }
+
     function renderLists() {
+      satT = 0;
       const row = (label, sub, color, onclick) => h("button", { class: "grow", onclick },
         color && h("i", { style: `background:${color}` }), h("span", {}, label, sub && h("small", {}, sub)));
       const warList = warCountries.slice(0, 12);
@@ -580,15 +856,45 @@
           tankers.length > 0 &&
           row(`${tankers.length} Tanker in der nördlichen Ostsee`, `${tankers.filter(t => t.status === "in Fahrt").length} in Fahrt, zum Gebiet springen`, "rgb(54,224,192)", () => { flyTo(25, 60, 5); stage.scrollIntoView({ block: "center", behavior: "smooth" }); }),
           h("p", { class: "note" }, "Einzelne Schiffspositionen gibt es ohne Zugangsschlüssel nur für die nördliche Ostsee.")),
+        satOn() && satListNode(),
+        S.jam && jamAreas.length > 0 && h("div", {}, h("h3", {}, `GPS-Störungen am ${jamDay}`),
+          jamAreas.slice(0, 10).map(a => row(areaName(a), `${a.cells} Zellen, ${a.pct} % der Flugzeuge betroffen`, "rgb(255,64,129)", () => select("jamArea", a))),
+          h("p", { class: "note" }, "Störsender und gefälschte GPS-Signale, erkannt an ungenauen Positionsmeldungen von Flugzeugen.")),
+        S.net && geo.outages && h("div", {}, h("h3", {}, "Internet-Ausfälle (48 Std.)"),
+          outages.length ? outages.slice(0, 10).map(o => row(o.name, `${o.ongoing ? "dauert an" : "vorbei"}, seit ${new Date(o.start * 1000).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} Uhr, ${o.sources.join(", ")}`, "rgb(0,200,255)", () => select("outage", o)))
+            : h("p", { class: "note" }, "Kein größerer Ausfall erkannt.")),
         S.carriers && geo.carriers && h("div", {}, h("h3", {}, "Flugzeugträger"),
           carriers.map(s => row(`${s.name} (${s.hull})`, s.where, "#fff", () => select("carrier", s))),
           (geo.carriers.headlines || []).length ? h("div", {}, h("h4", {}, "Aktuelle Meldungen"), geo.carriers.headlines.slice(0, 4).map(n => h("p", { class: "nl" }, link(n.title, n.url)))) : null));
       dirty = true;
     }
 
+    // Satelliten-Liste: wer gerade über den Kriegsgebieten ist, und wie viele es je Land gibt
+    function satListNode() {
+      updateSats(true);
+      const row = (label, sub, color, onclick) => h("button", { class: "grow", onclick }, color && h("i", { style: `background:${color}` }), h("span", {}, label, sub && h("small", {}, sub)));
+      const shown = satPos.filter(p => satShown(p.s)), hot = [...warCountries, ...unrestCountries.filter(c => ["158", "408", "364"].includes(c.id))];
+      const over = hot.map(c => {
+        const tg = targetOf(c.id); if (!tg) return null;
+        const list = shown.filter(p => watches(p.s) && d3.geoDistance([p.lon, p.lat], tg.c) < reach(p.s.k, p.h) * D2R + tg.rho);
+        return { c, list };
+      }).filter(Boolean).sort((a, b) => b.list.length - a.list.length);
+      const byLand = {};
+      for (const p of shown) byLand[landOf(p.s)] = (byLand[landOf(p.s)] || 0) + 1;
+      const byKind = {};
+      for (const p of shown) byKind[p.s.k] = (byKind[p.s.k] || 0) + 1;
+      return h("div", {}, h("h3", {}, `Satelliten über Kriegsgebieten (jetzt)`),
+        over.length ? over.slice(0, 10).map(o => row(o.c.name_de, o.list.length ? `${o.list.length === 1 ? "1 Bild- oder Radarsatellit" : o.list.length + " Bild- und Radarsatelliten"} im Blick: ${o.list.slice(0, 3).map(p => p.s.n).join(", ")}${o.list.length > 3 ? " …" : ""}` : "gerade keiner im Blick", "rgb(255,214,102)", () => select("country", featById.get(o.c.id))))
+          : h("p", { class: "note" }, "Keine Kriegsgebiete in den Daten."),
+        h("h4", {}, `${shown.length} Satelliten angezeigt`),
+        h("p", { class: "nl" }, Object.entries(byLand).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(" · ")),
+        h("p", { class: "nl" }, Object.entries(SATK).filter(([k]) => byKind[k]).map(([k, [t, c]]) => h("span", { style: "white-space:nowrap;margin-right:10px" }, h("i", { style: `display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:rgb(${c})` }), `${t} ${byKind[k]}`))),
+        h("p", { class: "note" }, "Die geheimsten Spionagesatelliten (etwa die amerikanischen KH-11) fehlen: Ihre Bahnen werden nicht veröffentlicht. Die Liste aktualisiert sich jede Minute."));
+    }
+
     const notes = Object.entries(geo.notes || {}).map(([k, v]) => `${k}: ${v}`).join("; ");
     const foot = h("p", { class: "note gfoot" },
-      "Quellen: Wikipedia-Liste laufender bewaffneter Konflikte (Einstufung als Krieg), GDELT (Orte der Kämpfe, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Digitraffic/Fintraffic (Tanker-Positionen, CC BY 4.0), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
+      "Quellen: Wikipedia-Liste laufender bewaffneter Konflikte (Einstufung als Krieg), GDELT (Orte der Kämpfe, maschinell aus Nachrichten, Fehler möglich), IMF PortWatch (Schiffsverkehr), Digitraffic/Fintraffic (Tanker-Positionen, CC BY 4.0), Wikipedia (Wahlen), USNI News Fleet Tracker (wöchentlich, grobe Positionen), Natural Earth (Grenzen, vereinfacht, gemeinfrei), CelesTrak (Satellitenbahnen), gpsjam.org (GPS-Störungen), IODA/Georgia Tech (Internet-Ausfälle). Das ist eine Informationsübersicht und keine amtliche Lagebeurteilung."
       + (notes ? " Hinweis: " + notes : ""));
 
     root.replaceChildren(h("div", { class: "globe-wrap" },
@@ -603,10 +909,12 @@
       const dt = Math.min(0.1, (now - last) / 1000); last = now;
       if (!document.hidden) {
         if (S.spin > 0 && !flying && !selected && !pointers.size && now - lastInteract > 3500) { rot = [rot[0] + S.spin * dt, rot[1]]; dirty = true; }
+        if ((satOn() || (selected && selected.type === "sat")) && Date.now() - satT >= 1000) dirty = true;
         if (dirty) { dirty = false; draw(); }
       }
       requestAnimationFrame(frame);
     }
+    const listTimer = setInterval(() => { if (!alive || !root.isConnected) { clearInterval(listTimer); return; } if (satOn() && !document.hidden) renderLists(); }, 60000);
     const ro = new ResizeObserver(resize); ro.observe(stage);
     resize();
     requestAnimationFrame(frame);

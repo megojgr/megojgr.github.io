@@ -22,6 +22,7 @@ from briefings import _items as rss_items
 from elections import COUNTRY_DE
 from net import fetch
 from textutil import compile_keywords
+import watch
 
 ROOT = Path(__file__).parent
 CACHE = ROOT / "cache" / "geo.json"
@@ -54,6 +55,71 @@ def find_country(name, world):
     name = (name or "").strip()
     name = ALIASES.get(name, name)
     return (name, world[name]) if name in world else (None, None)
+
+
+# Ländernamen, wie IODA sie schreibt
+IODA_NAMES = {
+    "democratic republic of the congo": "Dem. Rep. Congo", "lao peoples democratic republic": "Laos",
+    "iran, islamic republic of": "Iran", "korea, republic of": "South Korea", "viet nam": "Vietnam",
+    "korea, democratic people's republic of": "North Korea", "tanzania, united republic of": "Tanzania",
+    "bolivia, plurinational state of": "Bolivia", "venezuela, bolivarian republic of": "Venezuela",
+    "moldova, republic of": "Moldova", "palestine, state of": "Palestine", "taiwan, province of china": "Taiwan",
+    "syrian arab republic": "Syria", "russian federation": "Russia", "libyan arab jamahiriya": "Libya",
+}
+
+
+def world_shapes():
+    """Außenringe aller Länder mit Begrenzungsrahmen, für die Zuordnung eines Punkts zu einem Land."""
+    shapes = []
+    for f in json.loads(WORLD.read_text(encoding="utf-8"))["features"]:
+        g = f["geometry"]
+        polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+        for poly in polys:
+            ring = poly[0]
+            xs, ys = [p[0] for p in ring], [p[1] for p in ring]
+            shapes.append((f["properties"]["name"], ring, (min(xs), min(ys), max(xs), max(ys))))
+    return shapes
+
+
+def _inside(lon, lat, ring):
+    hit, j = False, len(ring) - 1
+    for i in range(len(ring)):
+        xi, yi = ring[i][0], ring[i][1]
+        xj, yj = ring[j][0], ring[j][1]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            hit = not hit
+        j = i
+    return hit
+
+
+def locator(shapes):
+    """locate(lat, lon) -> (deutscher Landesname, liegt auf dem Meer?). Auf dem Meer: nächstgelegenes Land."""
+    def locate(lat, lon):
+        for name, ring, (x0, y0, x1, y1) in shapes:
+            if x0 <= lon <= x1 and y0 <= lat <= y1 and _inside(lon, lat, ring):
+                return de_name(name), False
+        best, bd, k = None, 1e18, math.cos(math.radians(lat))
+        for name, ring, _ in shapes:
+            for x, y in ring[::2]:
+                d = ((x - lon) * k) ** 2 + (y - lat) ** 2
+                if d < bd:
+                    best, bd = name, d
+        return de_name(best) if best else "", True
+    return locate
+
+
+def finder(world):
+    """find(englischer Name) -> (Name der Weltkarte, ISO-Nummer, deutscher Name), auch für IODA-Schreibweisen."""
+    lower = {n.lower(): n for n in world}
+    def find(name):
+        key = (name or "").strip()
+        cand = IODA_NAMES.get(key.lower(), key)
+        wn, cid = find_country(cand, world)
+        if not wn:
+            wn = lower.get(cand.lower()) or lower.get(cand.split(",")[0].strip().lower())
+            cid = world.get(wn) if wn else None
+        return wn, cid, de_name(wn) if wn else None
+    return find
 
 
 def de_name(name):
@@ -641,15 +707,20 @@ def build(cfg, stories, election_list, today):
         return value
 
     wars = part("wars", lambda: wars_list(world))
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    locate, find = locator(world_shapes()), finder(world)
+    with ThreadPoolExecutor(max_workers=9) as ex:
         f_conf = ex.submit(part, "conflict", lambda: conflicts(today, g["conflict_days"], g["conflict_max_points"], world, g["reason_countries"], wars, g.get("war_parties", ()), g.get("crime_conflicts", ()), g.get("not_war_conflicts", ())))
         f_cp = ex.submit(part, "chokepoints", lambda: {"items": chokepoints_data(g["chokepoints"])})
         f_car = ex.submit(part, "carriers", carriers_data)
         f_eq = ex.submit(part, "quakes", quakes_data)
         f_tank = ex.submit(part, "tankers", tankers_data)
         f_mil = ex.submit(part, "military", military_data)
+        f_sat = ex.submit(part, "satellites", lambda: watch.satellites_data(cache.get("satellites")))
+        f_jam = ex.submit(part, "gpsjam", lambda: watch.gpsjam_data(locate))
+        f_out = ex.submit(part, "outages", lambda: watch.outages_data(find))
         conflict, cps, carriers, quakes, tankers = f_conf.result(), f_cp.result(), f_car.result(), f_eq.result(), f_tank.result()
         military = f_mil.result()
+        satellites, gpsjam, outages = f_sat.result(), f_jam.result(), f_out.result()
     try:
         headlines = carrier_headlines()
     except Exception:
@@ -665,6 +736,7 @@ def build(cfg, stories, election_list, today):
     return {
         "tankers": tankers,
         "military": military,
+        "satellites": satellites, "gpsjam": gpsjam, "outages": outages,
         "names": {cid: de_name(name) for name, cid in world.items()},
         "conflict": conflict, "chokepoints": items, "carriers": carriers, "quakes": quakes,
         "elections": elections_layer(election_list, world, g["election_days"], today), "notes": notes,

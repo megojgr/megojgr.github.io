@@ -42,6 +42,9 @@ jobs:
             mego-translate-
       - name: Abhängigkeiten installieren
         run: pip install --retries 5 --timeout 60 cryptography ctranslate2 sentencepiece
+      - name: Zusatzpaket für die GPS-Störungen
+        continue-on-error: true
+        run: pip install --retries 5 --timeout 60 h3
       - name: News sammeln und Seite bauen
         env:
           # Depot-Positionen und Passwort liegen nur als Secrets, nie im Repo

@@ -207,6 +207,17 @@
   .sinfo { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; min-height: 18px; }
   .lock input[type=password], .dlg input[type=password], .dlg input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink); margin: 10px 0 8px; }
   .lock label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 12px; }
+  /* Zugang: Passwortfenster vor der ganzen Seite */
+  .gate { position: fixed; inset: 0; z-index: 1000; background: var(--bg); display: grid; place-items: center; padding: 16px; overflow: auto; }
+  .gate form { width: 100%; max-width: 380px; background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--ink); border-radius: 10px; padding: 26px 22px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.08); }
+  .gate .brand { font: 800 30px/1 var(--serif); letter-spacing: -.01em; margin: 0 0 14px; }
+  .gate p { margin: 0 0 4px; font-size: 15px; }
+  .gate input { width: 100%; box-sizing: border-box; padding: 12px 13px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 16px; background: var(--bg); color: var(--ink); margin: 14px 0 10px; }
+  .gate button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: var(--ink); color: var(--bg); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .gate button:disabled { opacity: .6; cursor: wait; }
+  .gate .err { color: var(--red); font-size: 13.5px; min-height: 19px; margin: 8px 0 0; }
+  .gate .hint { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
+  body.locked > :not(.gate):not(script) { visibility: hidden; }
 
   /* Filter */
   .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 12px; }
@@ -2135,10 +2146,77 @@ async function fetchLatest() {
   url.searchParams.set("t", Date.now());
   const r = await fetch(url, { cache: "no-store" });
   if (!r.ok) throw new Error(`Der neue Stand konnte nicht geladen werden (Fehler ${r.status}).`);
-  const d = await r.json();
+  let d = await r.json();
+  if (d.lock) {
+    const plain = await unseal(d);
+    if (!plain) { location.reload(); throw new Error("Das Passwort wurde geändert. Bitte neu eingeben."); }  // altes Passwort passt nicht mehr
+    d = plain;
+  }
   d.history ||= [];
   return d;
 }
+
+// ------------------------------------------------------------------ Zugang (Passwort für die ganze Seite)
+// Die Daten kommen verschlüsselt an. Nach der ersten richtigen Eingabe merkt sich das Gerät den Schlüssel
+// (nicht das Passwort), damit auch die stündlich neuen Stände ohne erneute Eingabe aufgehen.
+let SITEKEY = null;
+const b64bytes = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function siteKeyFrom(pw, env) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64bytes(env.salt), iterations: env.iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, true, ["decrypt"]);
+}
+async function openEnvelope(env, key) {
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64bytes(env.iv) }, key, b64bytes(env.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+async function rememberSiteKey(key, env) {
+  const raw = new Uint8Array(await crypto.subtle.exportKey("raw", key));
+  store.set("sitekey", JSON.stringify({ salt: env.salt, iter: env.iter, k: btoa(String.fromCharCode(...raw)) }));
+}
+async function savedSiteKey(env) {
+  try {
+    const s = JSON.parse(store.get("sitekey") || "null");
+    if (!s || s.salt !== env.salt || s.iter !== env.iter) return null;
+    return await crypto.subtle.importKey("raw", b64bytes(s.k), "AES-GCM", true, ["decrypt"]);
+  } catch { return null; }
+}
+async function unseal(env) {
+  if (!SITEKEY) SITEKEY = await savedSiteKey(env);
+  if (!SITEKEY) return null;
+  try { return await openEnvelope(env, SITEKEY); } catch { SITEKEY = null; store.del("sitekey"); return null; }
+}
+function askPassword(env) {
+  return new Promise((resolve) => {
+    document.body.classList.add("locked");
+    const input = h("input", { type: "password", autocomplete: "current-password", placeholder: "Password", "aria-label": "Password", required: true });
+    const err = h("p", { class: "err", role: "alert" });
+    const btn = h("button", { type: "submit" }, "Enter");
+    const form = h("form", { onsubmit: async (e) => {
+      e.preventDefault();
+      if (!input.value) return;
+      btn.disabled = true; btn.textContent = "Checking …"; err.textContent = "";
+      try {
+        const key = await siteKeyFrom(input.value, env);
+        const data = await openEnvelope(env, key);
+        SITEKEY = key; await rememberSiteKey(key, env);
+        gate.remove(); document.body.classList.remove("locked");
+        resolve(data);
+      } catch {
+        err.textContent = "Wrong password. Please try again.";
+        input.select();
+      } finally { btn.disabled = false; btn.textContent = "Enter"; }
+    } },
+      h("div", { class: "brand" }, "Mego News"),
+      h("p", {}, "Enter your password to get access."),
+      input, btn, err,
+      h("p", { class: "hint" }, "This device will remember you."));
+    const gate = h("div", { class: "gate" }, form);
+    document.body.append(gate);
+    input.focus();
+  });
+}
+function forgetSiteKey() { store.del("sitekey"); SITEKEY = null; location.reload(); }
 async function applyData(d) {
   DATA = d; await autoUnlock();
   // Läuft gerade ein Stream, soll das Update ihn nicht abbrechen: nur den Rahmen erneuern
@@ -2291,7 +2369,11 @@ function openSettings() {
     h("h3", { class: "sec2" }, "Depot"),
     h("p", { class: "note" }, DEPOT ? "Dein Depot ist auf diesem Gerät entsperrt." : "Dein Depot ist gesperrt."),
     h("div", { class: "actions" },
-      h("button", { class: "btn", onclick: () => { store.del("depotpw"); DEPOT = null; renderAll(); dlg.close(); } }, "Passwort auf diesem Gerät vergessen"))));
+      h("button", { class: "btn", onclick: () => { store.del("depotpw"); DEPOT = null; renderAll(); dlg.close(); } }, "Passwort auf diesem Gerät vergessen")),
+    SITEKEY && h("h3", { class: "sec2" }, "Zugang zur Seite"),
+    SITEKEY && h("p", { class: "note" }, "Die Seite ist mit einem Passwort geschützt. Dieses Gerät ist angemeldet und öffnet auch neue Stände ohne erneute Eingabe."),
+    SITEKEY && h("div", { class: "actions" },
+      h("button", { class: "btn", onclick: forgetSiteKey }, "Auf diesem Gerät abmelden"))));
   dlg.showModal();
 }
 $("btn-settings").addEventListener("click", openSettings);
@@ -2300,6 +2382,11 @@ $("btn-search").addEventListener("click", openSearch);
 // ------------------------------------------------------------------ Start
 
 async function init() {
+  if (DATA.lock) {
+    document.body.classList.add("locked");
+    DATA = (await unseal(DATA)) || await askPassword(DATA);
+    document.body.classList.remove("locked");
+  }
   DATA.history ||= [];
   myInit();
   let incoming = null;

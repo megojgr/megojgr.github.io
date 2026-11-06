@@ -47,6 +47,8 @@ jobs:
           # Depot-Positionen und Passwort liegen nur als Secrets, nie im Repo
           DEPOT_JSON: ${{ secrets.DEPOT_JSON }}
           DEPOT_PASSWORT: ${{ secrets.DEPOT_PASSWORT }}
+          # Passwort für die ganze Seite (Zugang). Fehlt es, ist die Seite offen.
+          SITE_PASSWORT: ${{ secrets.SITE_PASSWORT }}
         run: python collect.py
       - name: Zeitstempel des neuen Stands merken
         id: stand

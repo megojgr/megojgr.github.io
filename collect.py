@@ -25,6 +25,7 @@ import geopolitics
 import live
 import localinfo
 import podcasts
+import sitelock
 import etfs
 import translate
 import universe
@@ -308,7 +309,11 @@ def previous_data(cfg):
     owner, name = repo.split("/", 1)
     url = f"https://{owner}.github.io/" + ("" if name.lower() == f"{owner.lower()}.github.io" else name + "/")
     try:
-        return json.loads(fetch(url + f"data.json?t={int(NOW.timestamp())}", 40, retries=2))
+        d = json.loads(fetch(url + f"data.json?t={int(NOW.timestamp())}", 40, retries=2))
+        if d.get("lock"):  # mit Passwort geschützter Stand: nur mit dem Secret SITE_PASSWORT lesbar
+            pw = os.environ.get("SITE_PASSWORT")
+            d = sitelock.unseal(d, pw, repo) if pw else {}
+        return d
     except Exception as e:
         print(f"Hinweis: letzter veröffentlichter Stand nicht abrufbar ({type(e).__name__})")
         return {}
@@ -448,8 +453,15 @@ def main():
         shutil.copy2(asset, OUT / asset.name)
     etf_info = guarded("ETF-Suche", lambda: etfs.build(cfg, OUT, int(os.environ.get("ETF_NAMES_PER_RUN", "600"))),
                        lambda: {"note": "ETF-Suche diesmal nicht neu gebaut"})  # Suchliste und Verläufe als eigene Dateien
-    blob =json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    (OUT / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    site_pw = os.environ.get("SITE_PASSWORT")
+    if site_pw:  # Passwortschutz: ohne Passwort enthält die Seite keine lesbaren Inhalte
+        text = json.dumps(sitelock.seal(text, data["generated"], site_pw, data["repo"]), separators=(",", ":"))
+        print("Seite ist mit Passwort geschützt")
+    elif os.environ.get("GITHUB_ACTIONS"):
+        print("WARNUNG: Secret SITE_PASSWORT fehlt: die Seite ist ohne Passwort offen")
+    blob = text.replace("</", "<\\/")
+    (OUT / "data.json").write_text(text, encoding="utf-8")
     page = (ROOT / "template.html").read_text(encoding="utf-8").replace("__DATA__", blob)
     (OUT / "index.html").write_text(page, encoding="utf-8")
 

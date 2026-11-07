@@ -1,0 +1,212 @@
+{
+ "date": "2026-11-07",
+ "generated": "2026-11-07T04:40:30.794420+00:00",
+ "quotes": [
+  {
+   "name": "DAX",
+   "group": "index",
+   "price": 25820.36,
+   "pct": -1.917,
+   "alert": null
+  },
+  {
+   "name": "S&P 500",
+   "group": "index",
+   "price": 7376.86,
+   "pct": 0.315,
+   "alert": null
+  },
+  {
+   "name": "Nasdaq",
+   "group": "index",
+   "price": 24579.424,
+   "pct": 1.088,
+   "alert": null
+  },
+  {
+   "name": "Dow Jones",
+   "group": "index",
+   "price": 51285.73,
+   "pct": -0.461,
+   "alert": null
+  },
+  {
+   "name": "Euro Stoxx 50",
+   "group": "index",
+   "price": 6170.49,
+   "pct": -0.98,
+   "alert": null
+  },
+  {
+   "name": "Nikkei 225",
+   "group": "index",
+   "price": 57434.77,
+   "pct": -5.965,
+   "alert": "day"
+  },
+  {
+   "name": "Hang Seng",
+   "group": "index",
+   "price": 24481.86,
+   "pct": -1.271,
+   "alert": null
+  },
+  {
+   "name": "VIX (Angstindex)",
+   "group": "index",
+   "price": 25.64,
+   "pct": -9.013,
+   "alert": null
+  },
+  {
+   "name": "EUR/USD",
+   "group": "index",
+   "price": 1.1143,
+   "pct": -0.6686,
+   "alert": null
+  },
+  {
+   "name": "Gold",
+   "group": "index",
+   "price": 4079.5,
+   "pct": -0.827,
+   "alert": null
+  },
+  {
+   "name": "Öl (Brent)",
+   "group": "index",
+   "price": 97.76,
+   "pct": -0.539,
+   "alert": "week"
+  },
+  {
+   "name": "Bitcoin (EUR)",
+   "group": "index",
+   "price": 68009.98,
+   "pct": 0.593,
+   "alert": null
+  }
+ ],
+ "heute": [
+  {
+   "title": "Aktuelles zum Krieg in der Ukraine",
+   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "topic": "world",
+   "n": 23,
+   "alert": false
+  },
+  {
+   "title": "Nachfolge von Bundespräsident Steinmeier - Medienberichte: Auch CDU für Ilse Aigner",
+   "url": "https://www.deutschlandfunk.de/medienberichte-auch-cdu-fuer-ilse-aigner-104.html",
+   "topic": "germany",
+   "n": 15,
+   "alert": false
+  },
+  {
+   "title": "Antisemitismus-Vorwurf - Berliner Landesverband fordert Abgeordnete Emde zum Mandatsverzicht auf",
+   "url": "https://www.deutschlandfunk.de/berliner-landesverband-fordert-abgeordnete-emde-zum-mandatsverzicht-auf-102.html",
+   "topic": "germany",
+   "n": 9,
+   "alert": false
+  },
+  {
+   "title": "Tesla stellt Produktion von Cybertruck in Texas ein",
+   "url": "https://www.zdfheute.de/wirtschaft/unternehmen/tesla-cybertruck-produktion-cybercab-robotaxi-100.html",
+   "topic": "markets",
+   "n": 8,
+   "alert": false
+  },
+  {
+   "title": "Nach Wahlniederlage - Trump: Stabschefin Susie Wiles verlässt Weißes Haus - Nachfolger wird Stephen Miller",
+   "url": "https://www.deutschlandfunk.de/trump-stabschefin-susie-wiles-verlaesst-weisses-haus-nachfolger-wird-stephen-miller-108.html",
+   "topic": "world",
+   "n": 7,
+   "alert": false
+  },
+  {
+   "title": "Viele Festnahmen: Aktivisten besetzen Baustelle von Microsoft-Rechenzentrum in Amsterdam",
+   "url": "https://www.faz.net/aktuell/politik/ausland/protest-gegen-microsoft-rechenzentrum-200-festnahmen-in-amsterdam-accg-201660756.html",
+   "topic": "markets",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Tumult bei Tech-Aktien: Bringt der Tech-Abverkauf den Anthropic-Börsengang in Gefahr?",
+   "url": "https://www.wiwo.de/finanzen/boerse/anthropic-boersengang-in-gefahr-was-der-tech-abverkauf-bedeutet/100267738.html",
+   "topic": "markets",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Blaulicht: Zoll stellt 144 Tonnen Lachgas in Wuppertal sicher",
+   "url": "https://www.wz.de/nrw/wuppertal/zoll-findet-144-tonnen-lachgas-in-wuppertal-varresbeck_aid-157972751",
+   "topic": "markets",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Bomb Threats in Europe Probably a Coordinated Campaign, Ireland Says",
+   "url": "https://www.nytimes.com/2026/11/06/world/europe/bomb-threats-flights-campaign-ireland.html",
+   "topic": "world",
+   "n": 5,
+   "alert": false
+  },
+  {
+   "title": "Bundestag beschließt hohe Strafen für Einsatz von K.O.-Tropfen",
+   "url": "https://www.tagesschau.de/tagesschau_20_uhr/video-1679494.html",
+   "topic": "germany",
+   "n": 5,
+   "alert": false
+  }
+ ],
+ "pm": [
+  {
+   "title": "Democratic Presidential Nominee 2028",
+   "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
+   "source": "Polymarket",
+   "lead": "Jon Ossoff",
+   "p": 0.2725,
+   "d1": 0.008
+  },
+  {
+   "title": "US-Iran effective ceasefire continues through...?",
+   "url": "https://polymarket.com/event/us-iran-effective-ceasefire-continues-throughptptpt-20261103",
+   "source": "Polymarket",
+   "lead": "November 5",
+   "p": 0.9945,
+   "d1": 0.001
+  },
+  {
+   "title": "Republican Presidential Nominee 2028",
+   "url": "https://polymarket.com/event/republican-presidential-nominee-2028",
+   "source": "Polymarket",
+   "lead": "J.D. Vance",
+   "p": 0.3755,
+   "d1": null
+  },
+  {
+   "title": "Israel x Iran ceasefire continues through...?",
+   "url": "https://polymarket.com/event/israel-x-iran-ceasefire-continues-throughptptpt-20260716224448963",
+   "source": "Polymarket",
+   "lead": "November 4",
+   "p": 0.998,
+   "d1": 0.001
+  },
+  {
+   "title": "Presidential Election Winner 2028",
+   "url": "https://polymarket.com/event/presidential-election-winner-2028",
+   "source": "Polymarket",
+   "lead": "JD Vance",
+   "p": 0.194,
+   "d1": 0.0135
+  },
+  {
+   "title": "Fed Decision in December?",
+   "url": "https://polymarket.com/event/fed-decision-in-december-20260729232808632",
+   "source": "Polymarket",
+   "lead": "25 bps increase",
+   "p": 0.765,
+   "d1": 0.11
+  }
+ ]
+}

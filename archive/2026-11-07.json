@@ -1,6 +1,6 @@
 {
  "date": "2026-11-07",
- "generated": "2026-11-07T04:40:30.794420+00:00",
+ "generated": "2026-11-07T16:23:33.623135+00:00",
  "quotes": [
   {
    "name": "DAX",
@@ -68,145 +68,145 @@
   {
    "name": "Gold",
    "group": "index",
-   "price": 4079.5,
-   "pct": -0.827,
+   "price": 4074.9,
+   "pct": -0.938,
    "alert": null
   },
   {
    "name": "Öl (Brent)",
    "group": "index",
-   "price": 97.76,
-   "pct": -0.539,
+   "price": 98.32,
+   "pct": 0.031,
    "alert": "week"
   },
   {
    "name": "Bitcoin (EUR)",
    "group": "index",
-   "price": 68009.98,
-   "pct": 0.593,
+   "price": 67976.11,
+   "pct": -0.112,
    "alert": null
   }
  ],
  "heute": [
   {
-   "title": "Aktuelles zum Krieg in der Ukraine",
-   "url": "https://www.zdfheute.de/politik/ausland/ukraine-russland-konflikt-blog-102.html",
+   "title": "Ukraine-Krieg - Russen greifen ukrainische Energieversorung mit Raketen an",
+   "url": "https://www.deutschlandfunk.de/russen-greifen-ukrainische-energieversorung-mit-raketen-an-102.html",
    "topic": "world",
-   "n": 23,
+   "n": 19,
    "alert": false
   },
   {
-   "title": "Nachfolge von Bundespräsident Steinmeier - Medienberichte: Auch CDU für Ilse Aigner",
-   "url": "https://www.deutschlandfunk.de/medienberichte-auch-cdu-fuer-ilse-aigner-104.html",
+   "title": "Polen - Tote und Verletzte nach Schüssen in Krakau",
+   "url": "https://www.deutschlandfunk.de/tote-und-verletzte-nach-schuessen-in-krakau-102.html",
    "topic": "germany",
-   "n": 15,
+   "n": 10,
    "alert": false
   },
   {
-   "title": "Antisemitismus-Vorwurf - Berliner Landesverband fordert Abgeordnete Emde zum Mandatsverzicht auf",
-   "url": "https://www.deutschlandfunk.de/berliner-landesverband-fordert-abgeordnete-emde-zum-mandatsverzicht-auf-102.html",
+   "title": "Wahl zur Bundespräsidentin: Ist Ilse Aigner die Richtige?",
+   "url": "https://www.zeit.de/politik/2026-11/wahl-bundespraesidentin-ilse-aigner-csu-politikpodcast",
    "topic": "germany",
-   "n": 9,
+   "n": 8,
    "alert": false
   },
   {
    "title": "Tesla stellt Produktion von Cybertruck in Texas ein",
    "url": "https://www.zdfheute.de/wirtschaft/unternehmen/tesla-cybertruck-produktion-cybercab-robotaxi-100.html",
    "topic": "markets",
-   "n": 8,
-   "alert": false
-  },
-  {
-   "title": "Nach Wahlniederlage - Trump: Stabschefin Susie Wiles verlässt Weißes Haus - Nachfolger wird Stephen Miller",
-   "url": "https://www.deutschlandfunk.de/trump-stabschefin-susie-wiles-verlaesst-weisses-haus-nachfolger-wird-stephen-miller-108.html",
-   "topic": "world",
-   "n": 7,
-   "alert": false
-  },
-  {
-   "title": "Viele Festnahmen: Aktivisten besetzen Baustelle von Microsoft-Rechenzentrum in Amsterdam",
-   "url": "https://www.faz.net/aktuell/politik/ausland/protest-gegen-microsoft-rechenzentrum-200-festnahmen-in-amsterdam-accg-201660756.html",
-   "topic": "markets",
-   "n": 5,
-   "alert": false
-  },
-  {
-   "title": "Tumult bei Tech-Aktien: Bringt der Tech-Abverkauf den Anthropic-Börsengang in Gefahr?",
-   "url": "https://www.wiwo.de/finanzen/boerse/anthropic-boersengang-in-gefahr-was-der-tech-abverkauf-bedeutet/100267738.html",
-   "topic": "markets",
    "n": 6,
    "alert": false
   },
   {
-   "title": "Blaulicht: Zoll stellt 144 Tonnen Lachgas in Wuppertal sicher",
-   "url": "https://www.wz.de/nrw/wuppertal/zoll-findet-144-tonnen-lachgas-in-wuppertal-varresbeck_aid-157972751",
-   "topic": "markets",
-   "n": 5,
+   "title": "Antisemitismus-Vorwurf - Berliner Landesverband fordert Abgeordnete Emde zum Mandatsverzicht auf",
+   "url": "https://www.deutschlandfunk.de/berliner-landesverband-fordert-abgeordnete-emde-zum-mandatsverzicht-auf-102.html",
+   "topic": "germany",
+   "n": 6,
    "alert": false
   },
   {
-   "title": "Bomb Threats in Europe Probably a Coordinated Campaign, Ireland Says",
-   "url": "https://www.nytimes.com/2026/11/06/world/europe/bomb-threats-flights-campaign-ireland.html",
+   "title": "Wofür Trumps neuer Stabschef Miller steht",
+   "url": "https://www.tagesschau.de/ausland/amerika/trump-stabschef-miller-100.html",
+   "topic": "world",
+   "n": 6,
+   "alert": false
+  },
+  {
+   "title": "Ueno-Bank - Staatskrise in Paraguay: Präsident Peña abgesetzt und festgenommen",
+   "url": "https://www.deutschlandfunk.de/staatskrise-in-paraguay-praesident-pe-a-abgesetzt-und-festgenommen-100.html",
    "topic": "world",
    "n": 5,
    "alert": false
   },
   {
-   "title": "Bundestag beschließt hohe Strafen für Einsatz von K.O.-Tropfen",
-   "url": "https://www.tagesschau.de/tagesschau_20_uhr/video-1679494.html",
+   "title": "Blaulicht: Brand in Wuppertal-Vohwinkel: Polizei und Feuerwehr rücken aus",
+   "url": "https://www.wz.de/nrw/wuppertal/brand-in-wuppertal-vohwinkel-polizei-und-feuerwehr-ruecken-aus_aid-157952487",
    "topic": "germany",
    "n": 5,
+   "alert": false
+  },
+  {
+   "title": "New Zealand’s prime minister says election is ‘too close to call’",
+   "url": "https://www.aljazeera.com/video/newsfeed/2026/11/7/new-zealands-prime-minister-says-election-is-too-close-to?traffic_source=rss",
+   "topic": "world",
+   "n": 4,
+   "alert": false
+  },
+  {
+   "title": "Frankfurt am Main - Tausende Menschen demonstrieren für freie Gesellschaft im Iran - Preisverleihung für Reza Pahlavi",
+   "url": "https://www.deutschlandfunk.de/tausende-menschen-demonstrieren-fuer-freie-gesellschaft-im-iran-preisverleihung-fuer-reza-pahlavi-100.html",
+   "topic": "world",
+   "n": 4,
    "alert": false
   }
  ],
  "pm": [
   {
-   "title": "Democratic Presidential Nominee 2028",
-   "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
-   "source": "Polymarket",
-   "lead": "Jon Ossoff",
-   "p": 0.2725,
-   "d1": 0.008
-  },
-  {
    "title": "US-Iran effective ceasefire continues through...?",
    "url": "https://polymarket.com/event/us-iran-effective-ceasefire-continues-throughptptpt-20261103",
    "source": "Polymarket",
    "lead": "November 5",
-   "p": 0.9945,
-   "d1": 0.001
+   "p": 0.992,
+   "d1": null
   },
   {
    "title": "Republican Presidential Nominee 2028",
    "url": "https://polymarket.com/event/republican-presidential-nominee-2028",
    "source": "Polymarket",
    "lead": "J.D. Vance",
-   "p": 0.3755,
-   "d1": null
+   "p": 0.3655,
+   "d1": -0.015
   },
   {
    "title": "Israel x Iran ceasefire continues through...?",
    "url": "https://polymarket.com/event/israel-x-iran-ceasefire-continues-throughptptpt-20260716224448963",
    "source": "Polymarket",
    "lead": "November 4",
-   "p": 0.998,
-   "d1": 0.001
+   "p": 0.9995,
+   "d1": 0.002
+  },
+  {
+   "title": "Democratic Presidential Nominee 2028",
+   "url": "https://polymarket.com/event/democratic-presidential-nominee-2028",
+   "source": "Polymarket",
+   "lead": "Jon Ossoff",
+   "p": 0.2725,
+   "d1": -0.005
   },
   {
    "title": "Presidential Election Winner 2028",
    "url": "https://polymarket.com/event/presidential-election-winner-2028",
    "source": "Polymarket",
    "lead": "JD Vance",
-   "p": 0.194,
-   "d1": 0.0135
+   "p": 0.185,
+   "d1": -0.0155
   },
   {
-   "title": "Fed Decision in December?",
-   "url": "https://polymarket.com/event/fed-decision-in-december-20260729232808632",
+   "title": "Next French Presidential Election",
+   "url": "https://polymarket.com/event/next-french-presidential-election",
    "source": "Polymarket",
-   "lead": "25 bps increase",
-   "p": 0.765,
-   "d1": 0.11
+   "lead": "Marine Le Pen",
+   "p": 0.4515,
+   "d1": 0.006
   }
  ]
 }

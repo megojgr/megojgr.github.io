@@ -1,0 +1,31 @@
+name: Wächter
+
+# Unabhängige Absicherung der stündlichen Kette in daily.yml.
+# Ist die Seite älter als 80 Minuten oder wartet kein Lauf mehr auf den nächsten Start, wird daily.yml neu gestartet.
+# GitHub führt zeitgesteuerte Läufe nicht immer pünktlich aus; deshalb mehrere Zeitpunkte pro Stunde.
+on:
+  schedule:
+    - cron: "23,43 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: mego-waechter
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: Seite und Kette prüfen, falls nötig neu starten
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/scripts/watchdog.sh
